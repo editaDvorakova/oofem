@@ -47,7 +47,7 @@ namespace oofem {
 class OOFEM_EXPORT NURBSInterpolation : public BSplineInterpolation
 {
 public:
-    NURBSInterpolation(int nsd) : BSplineInterpolation(nsd) { }
+    NURBSInterpolation(int nsd, int fsd) : BSplineInterpolation(nsd, fsd) { }
     virtual ~NURBSInterpolation() {}
 
     void evalN(FloatArray &answer, const FloatArray &lcoords, const FEICellGeometry &cellgeo) override;

@@ -60,16 +60,16 @@ BSplineInterpolation :: initializeFrom(InputRecord *ir)
     };
 
     IR_GIVE_FIELD(ir, degree_tmp, _IFT_BSplineInterpolation_degree);
-    if ( degree_tmp.giveSize() != nsd ) {
+    if ( degree_tmp.giveSize() != fsd ) {
         OOFEM_WARNING("degree size mismatch");
         return IRRT_BAD_FORMAT;
     }
 
-    for ( int i = 0; i < nsd; i++ ) {
+    for ( int i = 0; i < fsd; i++ ) {
         degree [ i ] = degree_tmp.at(i + 1);
     }
 
-    for ( int n = 0; n < nsd; n++ ) {
+    for ( int n = 0; n < fsd; n++ ) {
         IR_GIVE_FIELD(ir, knotValues [ n ], IFT_knotVector [ n ]);
         int size = knotValues [ n ].giveSize();
         if ( size < 2 ) {
@@ -157,9 +157,9 @@ BSplineInterpolation :: initializeFrom(InputRecord *ir)
 void BSplineInterpolation :: evalN(FloatArray &answer, const FloatArray &lcoords, const FEICellGeometry &cellgeo)
 {
     const FEIIGAElementGeometryWrapper &gw = static_cast< const FEIIGAElementGeometryWrapper& >(cellgeo);
-    IntArray span(nsd);
+    IntArray span(fsd);
     int c = 1;
-    std :: vector< FloatArray > N(nsd);
+    std :: vector< FloatArray > N(fsd);
 
     if ( gw.knotSpan ) {
         span = * gw.knotSpan;
@@ -169,23 +169,23 @@ void BSplineInterpolation :: evalN(FloatArray &answer, const FloatArray &lcoords
         }
     }
 
-    for ( int i = 0; i < nsd; i++ ) {
-        this->basisFuns(N [ i ], span[i], lcoords[i], degree [ i ], knotVector [ i ]);
+    for ( int i = 0; i < fsd; i++ ) {
+      this->basisFuns(N [ i ], span[i], lcoords[i], degree [ i ], knotVector [ i ]);
     }
 
     answer.resize(giveNumberOfKnotSpanBasisFunctions(span));
 
-    if ( nsd == 1 ) {
+    if ( fsd == 1 ) {
         for ( int k = 0; k <= degree [ 0 ]; k++ ) {
             answer.at(c++) = N [ 0 ][k];
         }
-    } else if ( nsd == 2 ) {
+    } else if ( fsd == 2 ) {
         for ( int l = 0; l <= degree [ 1 ]; l++ ) {
             for ( int k = 0; k <= degree [ 0 ]; k++ ) {
                 answer.at(c++) = N [ 0 ][k] * N [ 1 ][l];
             }
         }
-    } else if ( nsd == 3 ) {
+    } else if ( fsd == 3 ) {
         for ( int m = 0; m <= degree [ 2 ]; m++ ) {
             for ( int l = 0; l <= degree [ 1 ]; l++ ) {
                 for ( int k = 0; k <= degree [ 0 ]; k++ ) {
@@ -202,28 +202,28 @@ void BSplineInterpolation :: evalN(FloatArray &answer, const FloatArray &lcoords
 double BSplineInterpolation :: evaldNdx(FloatMatrix &answer, const FloatArray &lcoords, const FEICellGeometry &cellgeo)
 {
     const FEIIGAElementGeometryWrapper &gw = static_cast< const FEIIGAElementGeometryWrapper& >(cellgeo);
-    FloatMatrix jacobian(nsd, nsd);
-    IntArray span(nsd);
+    FloatMatrix jacobian(fsd, fsd);
+    IntArray span(fsd);
     double Jacob = 0.;
-    std :: vector< FloatMatrix > ders(nsd);
+    std :: vector< FloatMatrix > ders(fsd);
 
     if ( gw.knotSpan ) {
         span = * gw.knotSpan;
     } else {
-        for ( int i = 0; i < nsd; i++ ) {
+        for ( int i = 0; i < fsd; i++ ) {
             span[i] = this->findSpan(numberOfControlPoints [ i ], degree [ i ], lcoords[i], knotVector [ i ]);
         }
     }
 
-    for ( int i = 0; i < nsd; i++ ) {
+    for ( int i = 0; i < fsd; i++ ) {
         this->dersBasisFuns(1, lcoords[i], span[i], degree [ i ], knotVector [ i ], ders [ i ]);
     }
 
     int count = giveNumberOfKnotSpanBasisFunctions(span);
-    answer.resize(count, nsd);
+    answer.resize(count, fsd);
     jacobian.zero();
 
-    if ( nsd == 1 ) {
+    if ( fsd == 1 ) {
         int uind = span[0] - degree [ 0 ];
         int ind = uind + 1;
         for ( int k = 0; k <= degree [ 0 ]; k++ ) {
@@ -242,8 +242,8 @@ double BSplineInterpolation :: evaldNdx(FloatMatrix &answer, const FloatArray &l
             answer(cnt, 0) = ders [ 0 ](1, k) / Jacob;         // dN/dx=dN/du / dx/du
             cnt++;
         }
-    } else if ( nsd == 2 ) {
-        FloatArray tmp1(nsd), tmp2(nsd);
+    } else if ( fsd == 2 ) {
+        FloatArray tmp1(fsd), tmp2(fsd);
 
         int uind = span[0] - degree [ 0 ];
         int vind = span[1] - degree [ 1 ];
@@ -286,9 +286,9 @@ double BSplineInterpolation :: evaldNdx(FloatMatrix &answer, const FloatArray &l
                 cnt++;
             }
         }
-    } else if ( nsd == 3 ) {
-        FloatArray tmp1(nsd), tmp2(nsd);
-        FloatArray temp1(nsd), temp2(nsd), temp3(nsd);
+    } else if ( fsd == 3 ) {
+        FloatArray tmp1(fsd), tmp2(fsd);
+        FloatArray temp1(fsd), temp2(fsd), temp3(fsd);
 
         int uind = span[0] - degree [ 0 ];
         int vind = span[1] - degree [ 1 ];
@@ -371,7 +371,7 @@ double BSplineInterpolation :: evaldNdx(FloatMatrix &answer, const FloatArray &l
             }
         }
     } else {
-        OOFEM_ERROR("evaldNdx not implemented for nsd = %d", nsd);
+        OOFEM_ERROR("evaldNdx not implemented for fsd = %d", fsd);
     }
 
     return Jacob;
@@ -571,12 +571,12 @@ int BSplineInterpolation :: giveKnotSpanBasisFuncMask(const IntArray &knotSpan, 
     int size = giveNumberOfKnotSpanBasisFunctions(knotSpan);
     mask.resize(size);
 
-    if ( nsd == 1 ) {
+    if ( fsd == 1 ) {
         for ( int i = 0; i <= degree [ 0 ]; i++ ) {
             int iindx = ( i + knotSpan[0] - degree [ 0 ] );
             mask.at(c++) = iindx + 1;
         }
-    } else if ( nsd == 2 ) {
+    } else if ( fsd == 2 ) {
         for ( int j = 0; j <= degree [ 1 ]; j++ ) {
             int jindx = ( j + knotSpan[1] - degree [ 1 ] );
             for ( int i = 0; i <= degree [ 0 ]; i++ ) {
@@ -584,7 +584,7 @@ int BSplineInterpolation :: giveKnotSpanBasisFuncMask(const IntArray &knotSpan, 
                 mask.at(c++) = jindx * numberOfControlPoints [ 0 ] + iindx + 1;
             }
         }
-    } else if ( nsd == 3 ) {
+    } else if ( fsd == 3 ) {
         for ( int k = 0; k <= degree [ 2 ]; k++ ) {
             int kindx = ( k + knotSpan[2] - degree [ 2 ] );
             for ( int j = 0; j <= degree [ 1 ]; j++ ) {
@@ -596,7 +596,7 @@ int BSplineInterpolation :: giveKnotSpanBasisFuncMask(const IntArray &knotSpan, 
             }
         }
     } else {
-        OOFEM_ERROR("not implemented for nsd = %d", nsd);
+        OOFEM_ERROR("not implemented for fsd = %d", fsd);
     }
     return 1;
 }
@@ -605,10 +605,10 @@ int BSplineInterpolation :: giveKnotSpanBasisFuncMask(const IntArray &knotSpan, 
 // for pure Bspline the number of nonzero basis functions is the same for each knot span
 int BSplineInterpolation :: giveNumberOfKnotSpanBasisFunctions(const IntArray &knotSpan)
 {
-    int answer = 1;
+    int i, answer = 1;
     // there are always degree+1 nonzero basis functions on each knot span
     ///@todo This loop seems meaningless. It just returns degree[nsd-1]+1 in the end ?
-    for ( int i = 0; i < nsd; i++ ) {
+    for ( i = 0; i < fsd; i++ ) {
         answer *= ( degree [ i ] + 1 );
     }
 

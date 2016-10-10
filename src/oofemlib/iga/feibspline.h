@@ -62,6 +62,8 @@ class OOFEM_EXPORT BSplineInterpolation : public FEInterpolation
 protected:
     /// Number of spatial directions.
     int nsd;
+    /// Number of formulation directions.
+    int fsd;
     /// Degree in each direction.
     std::array<int, 3> degree;                                   // eg. 2
     /// Knot values [nsd]
@@ -79,17 +81,17 @@ protected:
     /// Nonzero spans in each directions [nsd]
     std::array<int, 3> numberOfKnotSpans;                        // eg. 5 (0-1,1-2,2-3,3-4,4-5)
 public:
-    BSplineInterpolation(int nsd) : FEInterpolation(0),
-        nsd(nsd)
+      BSplineInterpolation(int nsd, int fsd) : FEInterpolation(0),
+      nsd(nsd), fsd(fsd)
     {}
     virtual ~BSplineInterpolation() {}
 
     integrationDomain giveIntegrationDomain() const override {
-        if ( nsd == 3 ) {
+        if ( fsd == 3 ) {
             return _Cube;
-        } else if ( nsd == 2 ) {
+        } else if ( fsd == 2 ) {
             return _Square;
-        } else if ( nsd == 1 ) {
+        } else if ( fsd == 1 ) {
             return _Line;
         } else {
             return _UnknownIntegrationDomain;
@@ -126,6 +128,7 @@ public:
     }
 
     int giveNsd() override { return nsd; }
+    virtual int giveFsd()  { return fsd; }
     IRResultType initializeFrom(InputRecord *ir) override;
 
     void boundaryEdgeGiveNodes(IntArray &answer, int boundary) override
@@ -165,6 +168,18 @@ public:
     { OOFEM_ERROR("boundaryGiveTransformationJacobian - Not implemented"); return 0.; }
     void boundaryLocal2Global(FloatArray &answer, int boundary, const FloatArray &lcoords, const FEICellGeometry &cellgeo) override
     { OOFEM_ERROR("boundaryLocal2Global - Not implemented"); }
+
+    // edita  - add answer
+    /**
+     * Computes curvature of given element.
+     * @param lcoords Array containing (local) coordinates.
+     * @param cellgeo Underlying cell geometry.
+     */
+
+    virtual double givedR(FloatMatrix &answer, const FloatArray &lcoords, const FEICellGeometry &cellgeo) {OOFEM_ERROR("givedR: Not supported.");return -1;} // iga beam2d edita
+
+
+
 
 
     int giveNumberOfKnotSpans(int dim) override { return numberOfKnotSpans [ dim - 1 ]; }
