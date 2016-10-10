@@ -69,7 +69,7 @@ protected:
      */
     FloatArray openLocalKnotVector;
 public:
-    TSplineInterpolation(int nsd) : BSplineInterpolation(nsd) { }
+ TSplineInterpolation(int nsd, int fsd) : BSplineInterpolation(nsd, fsd) { }
     virtual ~TSplineInterpolation() {}
 
     IRResultType initializeFrom(InputRecord *ir) override;

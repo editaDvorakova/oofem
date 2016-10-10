@@ -41,6 +41,7 @@
 #include "floatmatrix.h"
 #include "domain.h"
 #include "node.h"
+#include "load.h"
 #include "gausspoint.h"
 #include "gaussintegrationrule.h"
 #include "matresponsemode.h"
@@ -81,15 +82,12 @@ StructuralElementEvaluator :: StructuralElementEvaluator()
 int StructuralElementEvaluator :: giveIntegrationElementLocalCodeNumbers(IntArray &answer, Element *elem,
                                                                          IntegrationRule *ie)
 {
-    int nsd;
     IntArray mask, nodeDofIDMask, nodalArray;
     int dofmandof;
 
     // get number of dofs in node
     elem->giveDofManDofIDMask(1, nodeDofIDMask);
     dofmandof = nodeDofIDMask.giveSize();
-
-    nsd = elem->giveInterpolation()->giveNsd();
 
     // first evaluate nonzero basis function mask
     if ( elem->giveInterpolation()->hasSubPatchFormulation() ) {
@@ -99,13 +97,12 @@ int StructuralElementEvaluator :: giveIntegrationElementLocalCodeNumbers(IntArra
         answer.clear();
         for ( int i = 1; i <= mask.giveSize(); i++ ) {
             nodalArray.resize( nodeDofIDMask.giveSize() );
-            for ( int j = 1; j <= nsd; j++ ) {
+            for ( int j = 1; j <= nodeDofIDMask.giveSize(); j++ ) {
                 nodalArray.at(j) = dofmandof * ( mask.at(i) - 1 ) + j;
             }
 
             answer.followedBy(nodalArray);
         }
-
         return 1;
     } else {
         return 0;
@@ -119,6 +116,8 @@ void StructuralElementEvaluator :: giveCharacteristicVector(FloatArray &answer, 
         this->giveInternalForcesVector(answer, tStep, false); /// @todo Only for total value mode type (?)
     } else if ( type == LastEquilibratedInternalForcesVector ) {
         this->giveInternalForcesVector(answer, tStep, true); /// @todo Only for total value mode type (?)
+    } else if ( type == ExternalForcesVector ) {
+        this->computeForceLoadVector(answer, tStep, mode);
     } else {
         answer.clear();
     }
@@ -143,6 +142,12 @@ void StructuralElementEvaluator :: giveCharacteristicMatrix(FloatMatrix &answer,
     }
 }
 
+void StructuralElementEvaluator :: computeForceLoadVector(FloatArray &answer, TimeStep *tStep, ValueModeType mode)
+// computes the part of load vector, which is imposed by force loads acting
+// on element volume (surface).
+{
+    this->computeLocalForceLoadVector(answer, tStep, mode);
+}
 
 void StructuralElementEvaluator :: computeLumpedMassMatrix(FloatMatrix &answer, TimeStep *tStep)
 // Returns the lumped mass matrix of the receiver.
@@ -200,6 +205,68 @@ void StructuralElementEvaluator :: computeLumpedMassMatrix(FloatMatrix &answer, 
     }
 
     answer.times(dim * mass / summ);
+}
+
+
+void StructuralElementEvaluator :: computeLocalForceLoadVector(FloatArray &answer, TimeStep *tStep, ValueModeType mode)
+// computes the part of load vector, which is imposed by force loads acting
+// on element volume (surface).
+// Why is this function taken separately ?
+// When reactions forces are computed, they are computed from element::GiveRealStressVector
+// in this vector a real forces are stored (temperature part is subtracted).
+// so we need further subtract part corresponding to non-nodal loading.
+{
+    FloatArray helpLoadVector(1);
+    answer.clear();
+    /* edita to do*/
+    // loop over body load array first
+    IntArray* bodyLoad;
+    int nBodyLoads = this->giveElement()->giveBodyLoadArray()->giveSize();
+    bodyLoad = this->giveElement()->giveBodyLoadArray();
+    for ( int i = 1; i <= nBodyLoads; i++ ) {
+      int id = bodyLoad->at(i);
+      Load *load = this->giveElement()->giveDomain()->giveLoad(id);
+      bcGeomType ltype = load->giveBCGeoType();
+      if ( ( ltype == BodyLoadBGT ) && ( load->giveBCValType() == ForceLoadBVT ) ) {
+	this->computeBodyLoadVectorAt(helpLoadVector, load, tStep, mode);
+            
+	if ( helpLoadVector.giveSize() ) {
+	  answer.add(helpLoadVector);
+	}
+      } else {
+	if ( load->giveBCValType() != TemperatureBVT && load->giveBCValType() != EigenstrainBVT ) {
+	  // temperature and eigenstrain is handled separately at computeLoadVectorAt subroutine
+	  OOFEM_ERROR("body load %d is of unsupported type (%d)", id, ltype);
+	}
+      }
+    }
+
+    // loop over boundary load array
+    IntArray* boundaryLoad;
+    int nBoundaryLoads = this->giveElement()->giveBoundaryLoadArray()->giveSize() / 2 ;
+    for ( int i = 1; i <= nBoundaryLoads; i++ ) {
+      boundaryLoad = this->giveElement()->giveBoundaryLoadArray();
+      int n = boundaryLoad->at(1 + ( i - 1 ) * 2);
+        int id = boundaryLoad->at(i * 2);
+        Load *load = this->giveElement()->giveDomain()->giveLoad(n);
+        bcGeomType ltype = load->giveBCGeoType();
+        if ( ltype == EdgeLoadBGT ) {
+            this->computeEdgeLoadVectorAt(helpLoadVector, load, id, tStep, mode);
+            if ( helpLoadVector.giveSize() ) {
+                answer.add(helpLoadVector);
+            }
+	    // edita - to do?
+/*
+        } else if ( ltype == PointLoadBGT ) {
+            // id not used
+            this->computePointLoadVectorAt(helpLoadVector, load, tStep, mode);
+            if ( helpLoadVector.giveSize() ) {
+                answer.add(helpLoadVector);
+		}*/
+        } else {
+            OOFEM_ERROR("boundary load %d is of unsupported type (%d)", id, ltype);
+        }
+    }
 }
 
 
@@ -307,6 +374,8 @@ void StructuralElementEvaluator :: giveInternalForcesVector(FloatArray &answer, 
         answer.zero();
     }
 }
+
+
 
 
 void StructuralElementEvaluator :: computeStrainVector(FloatArray &answer, GaussPoint *gp, TimeStep *tStep, FloatArray &u)
