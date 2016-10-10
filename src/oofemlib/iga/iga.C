@@ -50,7 +50,7 @@
 namespace oofem {
 IRResultType IGAElement :: initializeFrom(InputRecord *ir)
 {
-    int indx = 0, nsd;
+    int indx = 0, fsd;
     numberOfGaussPoints = 1;
     double du, dv, dw;
     FloatArray newgpcoords;
@@ -69,10 +69,43 @@ IRResultType IGAElement :: initializeFrom(InputRecord *ir)
     this->giveInterpolation()->initializeFrom(ir); // read geometry
 
     // generate individual IntegrationElements; one for each nonzero knot span
-    nsd = this->giveNsd();
-    if ( nsd == 1 ) {
-        //HUHU
-    } else if ( nsd == 2 ) {
+    fsd = this->giveFsd();
+    if ( fsd == 1 ) {
+        int numberOfKnotSpansU = this->giveInterpolation()->giveNumberOfKnotSpans(1);
+
+#ifdef __PARALLEL_MODE
+        numberOfKnotSpans = numberOfKnotSpansU;
+#endif
+        const IntArray *knotMultiplicityU = this->giveInterpolation()->giveKnotMultiplicity(1);
+        const FloatArray *knotValuesU = this->giveInterpolation()->giveKnotValues(1);
+
+        newgpcoords.resize(1);
+        knotSpan.resize(1);
+
+        int numberOfIntegrationRules = numberOfKnotSpansU;
+        integrationRulesArray.resize( numberOfIntegrationRules );
+	
+	knotSpan.at(1) = -1;
+	for ( int ui = 1; ui <= numberOfKnotSpansU; ui++ ) {
+	  du = knotValuesU->at(ui + 1) - knotValuesU->at(ui);
+	  knotSpan.at(1) += knotMultiplicityU->at(ui);
+	  
+	  integrationRulesArray [ indx ].reset( new IGAIntegrationElement(indx, this, knotSpan) );
+	  integrationRulesArray [ indx ]->SetUpPointsOnLine(numberOfGaussPoints, _2dBeam); // HUHU 
+
+	  // remap local subelement gp coordinates into knot span coordinates and update integration weight
+	  for ( GaussPoint *gp: *integrationRulesArray [ indx ] ) {
+	    const FloatArray &gpcoords = gp->giveNaturalCoordinates();
+	    
+	    newgpcoords.at(1) = knotValuesU->at(ui) + du * ( gpcoords.at(1) / 2.0 + 0.5 );
+	    gp->setNaturalCoordinates(newgpcoords);
+	    gp->setWeight(gp->giveWeight() / 2.0 * du );
+	  }
+	  indx++;
+        }
+	
+	
+    } else if ( fsd == 2 ) {
         int numberOfKnotSpansU = this->giveInterpolation()->giveNumberOfKnotSpans(1);
         int numberOfKnotSpansV = this->giveInterpolation()->giveNumberOfKnotSpans(2);
 #ifdef __PARALLEL_MODE
@@ -115,7 +148,7 @@ IRResultType IGAElement :: initializeFrom(InputRecord *ir)
                 indx++;
             }
         }
-    } else if ( nsd == 3 ) {
+    } else if ( fsd == 3 ) {
         int numberOfKnotSpansU = this->giveInterpolation()->giveNumberOfKnotSpans(1);
         int numberOfKnotSpansV = this->giveInterpolation()->giveNumberOfKnotSpans(2);
         int numberOfKnotSpansW = this->giveInterpolation()->giveNumberOfKnotSpans(3);
@@ -169,7 +202,7 @@ IRResultType IGAElement :: initializeFrom(InputRecord *ir)
             }
         }
     } else {
-        OOFEM_WARNING("unsupported number of spatial dimensions (nsd = %d)", nsd);
+        OOFEM_WARNING("unsupported number of formulation dimensions (fsd = %d)", fsd);
         return IRRT_BAD_FORMAT;
     }
 
@@ -213,7 +246,7 @@ IRResultType IGATSplineElement :: initializeFrom(InputRecord *ir)
 {
     TSplineInterpolation *interpol = static_cast< TSplineInterpolation * >( this->giveInterpolation() );
 
-    int indx = 0, ui, vi, nsd, numberOfGaussPoints = 1;
+    int indx = 0, ui, vi, fsd, numberOfGaussPoints = 1;
     double du, dv;
     FloatArray newgpcoords;
     IntArray knotSpan;
@@ -233,8 +266,8 @@ IRResultType IGATSplineElement :: initializeFrom(InputRecord *ir)
 
 
     // generate individual IntegrationElements; one for each nonzero knot span
-    nsd = giveNsd();
-    if ( nsd == 2 ) {
+    fsd = giveFsd();
+    if ( fsd == 2 ) {
         int numberOfKnotSpansU = this->giveInterpolation()->giveNumberOfKnotSpans(1);
         int numberOfKnotSpansV = this->giveInterpolation()->giveNumberOfKnotSpans(2);
         const IntArray *knotMultiplicityU = this->giveInterpolation()->giveKnotMultiplicity(1);
@@ -275,7 +308,7 @@ IRResultType IGATSplineElement :: initializeFrom(InputRecord *ir)
             }
         }
     } else {
-        OOFEM_WARNING("unsupported number of spatial dimensions (nsd = %d)", nsd);
+        OOFEM_WARNING("unsupported number of formulation dimensions (fsd = %d)", fsd);
         return IRRT_BAD_FORMAT;
     }
 

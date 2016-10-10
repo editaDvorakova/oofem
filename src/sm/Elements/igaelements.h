@@ -38,8 +38,10 @@
 #include "iga/iga.h"
 #include "iga/feibspline.h"
 #include "iga/feinurbs.h"
+#include "iga/feinurbsline2d.h"
 #include "iga/feitspline.h"
 #include "../sm/Elements/PlaneStress/planestresselementevaluator.h"
+#include "../sm/Elements/Beams/beam2delementevaluator.h"
 #include "../sm/Elements/3D/space3delementevaluator.h"
 #include "floatarray.h"
 #include "floatmatrix.h"
@@ -50,6 +52,7 @@
 #define _IFT_NURBSPlaneStressElement_Name "nurbsplanestresselement"
 #define _IFT_TSplinePlaneStressElement_Name "tsplineplanestresselement"
 #define _IFT_NURBSSpace3dElement_Name "nurbs3delement"
+#define _IFT_NURBSBeam2dElement_Name "nurbsbeam2delement"
 
 namespace oofem {
 class BsplinePlaneStressElement : public IGAElement, public PlaneStressStructuralElementEvaluator
@@ -91,6 +94,7 @@ public:
 
 protected:
     virtual int giveNsd() { return 2; }
+    virtual int giveFsd() { return 2; }
 };
 
 
@@ -135,6 +139,7 @@ public:
 
 protected:
     virtual int giveNsd() { return 2; }
+    virtual int giveFsd() { return 2; }
 };
 
 
@@ -177,6 +182,8 @@ public:
 
 protected:
     virtual int giveNsd() { return 2; }
+    virtual int giveFsd() { return 2; }
+
 };
 
 
@@ -219,6 +226,62 @@ public:
 
 protected:
     virtual int giveNsd() { return 3; }
+    virtual int giveFsd() { return 3; }
 };
+
+class NURBSBeam2dElement : public IGAElement, public Beam2dElementEvaluator
+{
+protected:
+    NURBSInterpolationLine2d interpolation;
+
+public:
+    NURBSBeam2dElement(int n, Domain * aDomain);
+
+    virtual IRResultType initializeFrom(InputRecord *ir);
+    virtual int checkConsistency();
+
+    virtual void giveCharacteristicMatrix(FloatMatrix &answer, CharType mtrx, TimeStep *tStep) {
+        Beam2dElementEvaluator :: giveCharacteristicMatrix(answer, mtrx, tStep);
+    }
+    virtual void giveCharacteristicVector(FloatArray &answer, CharType type, ValueModeType mode, TimeStep *t) {
+        Beam2dElementEvaluator :: giveCharacteristicVector(answer, type, mode, t);
+    }
+
+    virtual FEInterpolation *giveInterpolation() const { return const_cast< NURBSInterpolationLine2d * >(& this->interpolation); }
+    virtual Element *giveElement() { return this; }
+    virtual void giveDofManDofIDMask(int inode, IntArray &answer) const {
+        Beam2dElementEvaluator :: giveDofManDofIDMask(inode, answer);
+    }
+    virtual int computeNumberOfDofs() { return numberOfDofMans * 3; } 
+    virtual void updateInternalState(TimeStep *tStep) { Beam2dElementEvaluator :: updateInternalState(tStep); }
+    // transformation
+     virtual bool computeGtoLRotationMatrix(FloatMatrix &answer) {
+      return (Beam2dElementEvaluator :: computeGtoLRotationMatrix(answer));
+      }
+    // definition & identification
+    virtual const char *giveInputRecordName() const { return _IFT_NURBSBeam2dElement_Name; }
+    virtual const char *giveClassName() const { return "NURBSBeam2dElement"; }
+    
+
+    // edita - OOFEG ?
+    void computeNormal (FloatArray &n, FloatArray c, int knotSpan) { Beam2dElementEvaluator :: computeNormal ( n, c, knotSpan); }
+#ifdef __OOFEG
+    //
+    // Graphics output
+    //
+    //virtual void  drawScalar(oofegGraphicContext &gc, TimeStep *tStep);
+
+    virtual void drawRawGeometry(oofegGraphicContext &gc, TimeStep *tStep);
+    virtual void drawDeformedGeometry(oofegGraphicContext &gc, TimeStep *tStep, UnknownType ut) ;
+    virtual void drawScalar(oofegGraphicContext &gc, TimeStep *tStep);
+
+#endif
+
+protected:
+    virtual int giveNsd() { return 3; }
+    virtual int giveFsd() { return 1; }
+};
+
+
 } // end namespace oofem
 #endif //igaelements_h

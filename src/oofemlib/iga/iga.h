@@ -113,7 +113,8 @@ public:
 #endif
 
 protected:
-    virtual int giveNsd() = 0; // this info is available also from interpolation. Do we need it here ???
+    virtual int giveNsd() = 0;
+    virtual int giveFsd() = 0; // this info is available also from interpolation. Do we need it here ???
 };
 
 
@@ -128,6 +129,7 @@ public:
 
 protected:
     virtual int giveNsd() = 0;
+    virtual int giveFsd() = 0;
 };
 } // end namespace oofem
 #endif //iga_h

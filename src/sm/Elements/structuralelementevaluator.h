@@ -168,6 +168,15 @@ protected:
      */
     virtual int giveIntegrationElementLocalCodeNumbers(IntArray &answer, Element *elem,
                                                        IntegrationRule *ie);
+
+    void computeForceLoadVector(FloatArray &answer, TimeStep *tStep, ValueModeType mode);
+    void computeLocalForceLoadVector(FloatArray &answer, TimeStep *tStep, ValueModeType mode);
+    virtual void computeEdgeLoadVectorAt(FloatArray &answer, Load *load, int edge, TimeStep *tStep, ValueModeType mode)
+    { OOFEM_ERROR("computeEdgeLoadVectorAt - Not implemented"); }
+    virtual void computeBodyLoadVectorAt(FloatArray &answer, Load *load, TimeStep *tStep, ValueModeType mode)
+    { OOFEM_ERROR("computeBodyLoadVectorAt - Not implemented"); }
+
+
 #ifdef __OOFEG
     friend void drawIGAPatchDeformedGeometry(Element *elem, StructuralElementEvaluator *se, oofegGraphicContext &gc, TimeStep *tStep, UnknownType);
 #endif

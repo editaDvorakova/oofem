@@ -47,7 +47,7 @@ namespace oofem {
 class OOFEM_EXPORT NURBSInterpolation : public BSplineInterpolation
 {
 public:
-    NURBSInterpolation(int nsd) : BSplineInterpolation(nsd) { }
+ NURBSInterpolation(int nsd, int fsd) : BSplineInterpolation(nsd, fsd) { }
     virtual ~NURBSInterpolation();
 
     virtual void evalN(FloatArray &answer, const FloatArray &lcoords, const FEICellGeometry &cellgeo);
@@ -57,7 +57,8 @@ public:
         OOFEM_ERROR("Not yet implemented.");
         return 0;
     }
-    virtual void giveJacobianMatrixAt(FloatMatrix &jacobianMatrix, const FloatArray &lcoords, const FEICellGeometry &cellgeo);
+    //virtual void giveJacobianMatrixAt(FloatMatrix &jacobianMatrix, const FloatArray &lcoords, const FEICellGeometry &cellgeo);
+    virtual double giveTransformationJacobian(const FloatArray &lcoords, const FEICellGeometry &cellgeo);
 
     virtual const char *giveClassName() const { return "NURBSInterpolation"; }
 };

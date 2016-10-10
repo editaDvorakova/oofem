@@ -62,11 +62,13 @@ class OOFEM_EXPORT BSplineInterpolation : public FEInterpolation
 protected:
     /// Number of spatial directions.
     int nsd;
+    /// Number of formulation directions.
+    int fsd;
     /// Degree in each direction.
     int *degree;                                   // eg. 2
-    /// Knot values [nsd]
+    /// Knot values [fsd]
     FloatArray *knotValues;                        // eg. 0 1 2 3 4 5
-    /// Knot multiplicity [nsd]
+    /// Knot multiplicity [fsd]
     IntArray *knotMultiplicity;                    // eg. 3 1 1 1 2 3
     /// numberOfControlPoints[nsd]
     /**
@@ -74,22 +76,23 @@ protected:
      * (i.e. TSpline = BSpline)
      */
     int *numberOfControlPoints;
-    /// Knot vectors [nsd][knot_vector_size]
+    /// Knot vectors [fsd][knot_vector_size]
     double **knotVector;                           // eg. 0 0 0 1 2 3 4 4 5 5 5
     /// Nonzero spans in each directions [nsd]
     int *numberOfKnotSpans;                        // eg. 5 (0-1,1-2,2-3,3-4,4-5)
 public:
-    BSplineInterpolation(int nsd) : FEInterpolation(0) {
+ BSplineInterpolation(int nsd, int fsd) : FEInterpolation(0) {
         this->nsd = nsd;
+        this->fsd = fsd;
     }
     virtual ~BSplineInterpolation();
 
     virtual integrationDomain giveIntegrationDomain() const {
-        if ( nsd == 3 ) {
+        if ( fsd == 3 ) {
             return _Cube;
-        } else if ( nsd == 2 ) {
+        } else if ( fsd == 2 ) {
             return _Square;
-        } else if ( nsd == 1 ) {
+        } else if ( fsd == 1 ) {
             return _Line;
         } else {
             return _UnknownIntegrationDomain;
@@ -128,6 +131,7 @@ public:
 
     
     virtual int giveNsd() { return nsd; }
+    virtual int giveFsd() { return fsd; }
     virtual IRResultType initializeFrom(InputRecord *ir);
 
     virtual void boundaryEdgeGiveNodes(IntArray &answer, int boundary)
@@ -176,6 +180,18 @@ public:
       return 0.; }
     virtual void boundaryLocal2Global(FloatArray &answer, int boundary, const FloatArray &lcoords, const FEICellGeometry &cellgeo)
     { OOFEM_ERROR("boundaryLocal2Global - Not implemented"); }
+
+    // edita  - add answer
+    /**
+     * Computes curvature of given element.
+     * @param lcoords Array containing (local) coordinates.
+     * @param cellgeo Underlying cell geometry.
+     */
+
+    virtual double givedR(FloatMatrix &answer, const FloatArray &lcoords, const FEICellGeometry &cellgeo) {OOFEM_ERROR("givedR: Not supported.");return -1;} // iga beam2d edita
+
+
+
 
 
     virtual int giveNumberOfKnotSpans(int dim) { return numberOfKnotSpans [ dim - 1 ]; }

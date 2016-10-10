@@ -182,6 +182,7 @@ set (core_iga
     iga/iga.C
     iga/feibspline.C
     iga/feinurbs.C
+    iga/feinurbsline2d.C
     iga/feitspline.C
     )
 

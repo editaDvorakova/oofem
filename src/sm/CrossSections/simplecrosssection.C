@@ -802,8 +802,13 @@ SimpleCrossSection :: giveTemperatureVector(FloatArray &answer, GaussPoint *gp, 
     Element *elem = gp->giveElement();
     answer.clear();
     //sum up all prescribed temperatures over an element
+    // edita -  if selem == NULL -> answer.clear() else .. to do
+    // .. to do: pretypovat na StructuralElementEvaluator, na tom napsat fci computeResultingIPTempratureAt(..)
+
     StructuralElement *selem = dynamic_cast< StructuralElement * >(elem);
-    selem->computeResultingIPTemperatureAt(answer, tStep, gp, VM_Total);
+    if (selem!=NULL){ 
+      selem->computeResultingIPTemperatureAt(answer, tStep, gp, VM_Total);
+    }
 
     /* add external source, if provided */
     FieldManager *fm = this->domain->giveEngngModel()->giveContext()->giveFieldManager();
