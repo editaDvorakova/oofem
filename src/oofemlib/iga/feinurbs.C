@@ -50,7 +50,7 @@ void NURBSInterpolation :: evalN(FloatArray &answer, const FloatArray &lcoords, 
     FEIIGAElementGeometryWrapper *gw = ( FEIIGAElementGeometryWrapper * ) & cellgeo;
     IntArray span(fsd);
     double sum = 0.0, val;
-    int count, c = 1, i, l, k, m, ind, indx, uind, vind, tind;
+    int count, c = 1, i, l, k, ind, indx, uind, vind, tind;
     std :: vector< FloatArray >N;
     N.resize(fsd); 
     if ( gw->knotSpan ) {
@@ -122,7 +122,7 @@ double NURBSInterpolation :: evaldNdx(FloatMatrix &answer, const FloatArray &lco
     FloatMatrix jacobian(fsd, fsd);
     IntArray span(fsd);
     double Jacob = 0., product, w, weight;
-    int count, cnt, i, l, k, m, ind, indx, uind, vind, tind;
+    int count, cnt, i, k, ind, indx, uind, vind, tind;
     std :: vector< FloatArray > N(fsd);
     std :: vector< FloatMatrix > ders(fsd);
 
@@ -689,8 +689,8 @@ double NURBSInterpolation :: giveTransformationJacobian(const FloatArray &lcoord
     const FloatArray *vertexCoordsPtr;
     FloatMatrix jacobian(fsd, fsd);
     IntArray span(fsd);
-    double Jacob, w, weight;
-    int i, l, k, m, ind, indx, uind, vind, tind;
+    double w, weight;
+    int i, ind, indx, uind, vind, tind;
     std :: vector< FloatMatrix > ders(fsd);
 
     if ( gw->knotSpan ) {

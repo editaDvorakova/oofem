@@ -232,7 +232,7 @@ double BSplineInterpolation :: evaldNdx(FloatMatrix &answer, const FloatArray &l
     FloatMatrix jacobian(fsd, fsd);
     IntArray span(fsd);
     double Jacob = 0.;
-    int count, cnt, i, l, k, m, ind, indx, uind, vind, tind;
+    int count, cnt, i, ind, indx, uind, vind, tind;
     std :: vector< FloatMatrix > ders(fsd);
 
 

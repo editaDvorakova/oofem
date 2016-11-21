@@ -132,6 +132,8 @@ public:
     
     virtual int giveNsd() { return nsd; }
     virtual int giveFsd() { return fsd; }
+    //virtual int giveNumberOfCP() {return *numberOfControlPoints;}
+    virtual int giveDegree() {return *degree;}
     virtual IRResultType initializeFrom(InputRecord *ir);
 
     virtual void boundaryEdgeGiveNodes(IntArray &answer, int boundary)
