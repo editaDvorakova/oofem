@@ -380,10 +380,10 @@ double NURBSInterpolationLine2d :: evaldNdx(FloatMatrix &answer, const FloatArra
 
   }
 
-
+  /*
 int NURBSInterpolationLine2d :: global2local(FloatArray &answer, const FloatArray &lcoords, const FEICellGeometry &cellgeo)
 {
-    /* Based on SurfacePoint A4.3 implementation*/
+// Based on SurfacePoint A4.3 implementation
     FEIIGAElementGeometryWrapper *gw = ( FEIIGAElementGeometryWrapper * ) & cellgeo;
     const FloatArray *vertexCoordsPtr;
     IntArray span(fsd);
@@ -429,6 +429,7 @@ int NURBSInterpolationLine2d :: global2local(FloatArray &answer, const FloatArra
 #ifndef HAVE_VARIABLE_ARRAY_SIZE
     delete [] N;
 #endif
-}
+}*/
+
 
 } // end namespace oofem

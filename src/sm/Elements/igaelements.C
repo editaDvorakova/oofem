@@ -58,6 +58,7 @@ REGISTER_Element(NURBSPlaneStressElement);
 REGISTER_Element(TSplinePlaneStressElement);
 REGISTER_Element(NURBSSpace3dElement);
 REGISTER_Element(NURBSBeam2dElement);
+REGISTER_Element(NURBSBeam2dElementDsg);
 
 
   BsplinePlaneStressElement :: BsplinePlaneStressElement(int n, Domain *aDomain) : IGAElement(n, aDomain), PlaneStressStructuralElementEvaluator(), interpolation(2, 2) { }
@@ -121,6 +122,26 @@ int NURBSSpace3dElement :: checkConsistency()
 {
     NURBSInterpolation *interpol = static_cast< NURBSInterpolation * >( this->giveInterpolation() );
     if ( giveNumberOfDofManagers() != interpol->giveNumberOfControlPoints(1) * interpol->giveNumberOfControlPoints(2) * interpol->giveNumberOfControlPoints(3) ) {
+        OOFEM_WARNING("number of control points mismatch");
+        return 0;
+    }
+    return 1;
+}
+
+
+  NURBSBeam2dElementDsg :: NURBSBeam2dElementDsg(int n, Domain *aDomain) : IGAElement(n, aDomain), Beam2dElementEvaluatorDsg(), interpolation(3, 1) { }
+  // interpolation(nsd, fsd)
+
+IRResultType NURBSBeam2dElementDsg :: initializeFrom(InputRecord *ir)
+{
+    return IGAElement :: initializeFrom(ir);
+}
+
+
+int NURBSBeam2dElementDsg :: checkConsistency()
+{
+    NURBSInterpolationLine2d *interpol = static_cast< NURBSInterpolationLine2d * >( this->giveInterpolation() );
+    if ( giveNumberOfDofManagers() != interpol->giveNumberOfControlPoints(1) ) {
         OOFEM_WARNING("number of control points mismatch");
         return 0;
     }
@@ -876,7 +897,7 @@ void NURBSSpace3dElement :: drawScalar(oofegGraphicContext &gc, TimeStep *tStep)
 
 
 void
-NURBSBeam2dElement::drawRawGeometry(oofegGraphicContext &gc, TimeStep *tStep)
+NURBSBeam2dElementDsg::drawRawGeometry(oofegGraphicContext &gc, TimeStep *tStep)
 {
     int indx;
     WCRec p [ 2 ];
@@ -903,7 +924,7 @@ NURBSBeam2dElement::drawRawGeometry(oofegGraphicContext &gc, TimeStep *tStep)
 
     // loop over individual integration rules (i.e., knot spans)
     for ( auto &iRule: integrationRulesArray ) {
-      int i, k, nseg = 4;
+      int i, k, nseg = 20;
         span = iRule->giveKnotSpan();
 	double du = ( knotVector [ 0 ] [ span->at(1) + 1 ] - knotVector [ 0 ] [ span->at(1) ] ) / nseg;
 	for ( i = 1; i <= nseg; i++ ) {
@@ -925,7 +946,7 @@ NURBSBeam2dElement::drawRawGeometry(oofegGraphicContext &gc, TimeStep *tStep)
 
 
 void 
-NURBSBeam2dElement::drawDeformedGeometry(oofegGraphicContext &gc, TimeStep *tStep, UnknownType ut) 
+NURBSBeam2dElementDsg::drawDeformedGeometry(oofegGraphicContext &gc, TimeStep *tStep, UnknownType ut) 
 {
 
     WCRec p [ 2 ];
@@ -933,8 +954,9 @@ NURBSBeam2dElement::drawDeformedGeometry(oofegGraphicContext &gc, TimeStep *tSte
     int i, j, k, m, n, nseg;
     FloatArray u;
     FloatMatrix N;
-    FloatArray ur, d;
+    FloatArray ur;
     IntArray lc;
+    FloatArray normal;
     FEInterpolation *interp = this->giveInterpolation();
     double defScale = gc.getDefScale();
     StructuralElementEvaluator *se = (StructuralElementEvaluator*) this;
@@ -960,7 +982,8 @@ NURBSBeam2dElement::drawDeformedGeometry(oofegGraphicContext &gc, TimeStep *tSte
 
     this->StructuralElementEvaluator::computeVectorOf(VM_Total, tStep, u);
 
-    FloatArray c [ 2 ], cg [ 2 ];
+    FloatArray c [ 2 ], cg [ 2 ], d, dg;
+    dg.resize(2);
     double du;
 
     for ( j = 0; j < 2; j++ ) {
@@ -996,8 +1019,16 @@ NURBSBeam2dElement::drawDeformedGeometry(oofegGraphicContext &gc, TimeStep *tSte
 	  d.beProductOf(N, ur);
 
 	  interp->local2global( cg [ k ], c [ k ], FEIIGAElementGeometryWrapper( this, iRule->giveKnotSpan() ) );
-	  p [ k ].x = ( FPNum ) ( cg [ k ].at(1) + d.at(1) * defScale );
-	  p [ k ].y = ( FPNum ) ( cg [ k ].at(2) + d.at(2) * defScale );
+
+	  this->computeNormal (normal, c[k], ir);
+
+	  dg.at(1) = d.at(1) * normal.at(2) + d.at(2) * normal.at(1);
+	  dg.at(2) = d.at(1) * normal.at(1) + d.at(2) * normal.at(2);
+	  // interp->local2global( dg , d , FEIIGAElementGeometryWrapper( this, iRule->giveKnotSpan() ) );
+	  // dg.beVectorProductOf(normal, d);
+
+	  p [ k ].x = ( FPNum ) ( cg [ k ].at(1) + dg.at(1) * defScale );
+	  p [ k ].y = ( FPNum ) ( cg [ k ].at(2) + dg.at(2) * defScale );
 	  p [ k ].z = 0.;
 	}
 
@@ -1011,9 +1042,11 @@ NURBSBeam2dElement::drawDeformedGeometry(oofegGraphicContext &gc, TimeStep *tSte
   
 
 void 
-NURBSBeam2dElement::drawScalar(oofegGraphicContext &gc, TimeStep *tStep)
+NURBSBeam2dElementDsg::drawScalar(oofegGraphicContext &gc, TimeStep *tStep)
 {
   WCRec p [ 2 ];
+  WCRec p2 [ 2 ];
+  WCRec p3 [ 2 ];
   int indx;
     GraphicObj *go;
     int i, j, k, m,  nseg;
@@ -1022,7 +1055,7 @@ NURBSBeam2dElement::drawScalar(oofegGraphicContext &gc, TimeStep *tStep)
     FloatArray ur, d, n, val;
     IntArray lc;
     FEInterpolation *interp = this->giveInterpolation();
-    double defScale = gc.getDefScale();
+    // double defScale = gc.getDefScale();
     StructuralElementEvaluator *se = (StructuralElementEvaluator*) this;
 
     if ( !gc.testElementGraphicActivity(this) ) {
@@ -1038,7 +1071,7 @@ NURBSBeam2dElement::drawScalar(oofegGraphicContext &gc, TimeStep *tStep)
     EASValsSetFillStyle(FILL_SOLID);
     EASValsSetLineWidth(0);
 
-    nseg = 40;
+    nseg = 10;
 
     const double *const *knotVector = interp->giveKnotVector();
     const IntArray *span;
@@ -1073,28 +1106,56 @@ NURBSBeam2dElement::drawScalar(oofegGraphicContext &gc, TimeStep *tStep)
 	  // create a dummy ip's
 	  GaussPoint gp(iRule, 999, c [ k ], 1.0, _2dBeam);
 	  FloatArray strain;
-	  this->computeStrainVector(val, & gp, tStep, u);
-	  //	  this->computeStressVector(val, strain, & gp, tStep);
+	  if ((gc.giveIntVarType() == IST_StrainTensor)){
+	    // copy to array of size 1x6
+	    this->computeStrainVector(val, & gp, tStep, u);
+	  }
+	    else if (gc.giveIntVarType() == IST_StressTensor) {
+		// copy to array of size 1x6
+		this->computeStrainVector(strain, & gp, tStep, u);
+		this->computeStressVector(val, strain, & gp, tStep);
+	    } else{
+		OOFEM_ERROR ("Internal Variable Type not recognized");
+	    }
 	  s [ k ] = val.at(indx);
-	  // fprintf (stderr, " %e",  s [ k ]);
+	  fprintf (stderr, " %e",  s [ k ]);
 	  
 	  interp->local2global( cg [ k ], c [ k ], FEIIGAElementGeometryWrapper( this, iRule->giveKnotSpan() ) );
 	  this->computeNormal (n, c[k], ir);
-	  // n = {1, 1, 0};
+	  //n = {0, 1, 0};
 	  p [ k ].x = ( FPNum ) ( cg [ k ].at(1) + n.at(1) * s[k] * scale );
 	  p [ k ].y = ( FPNum ) ( cg [ k ].at(2) + n.at(2) * s[k] * scale );
 	  p [ k ].z = 0.;
+
+	  p2 [ k ].x = ( FPNum ) ( cg [ 0 ].at(1) + (1-k) * n.at(1) * s[k] * scale );
+	  p2 [ k ].y = ( FPNum ) ( cg [ 0 ].at(2) + (1-k) * n.at(2) * s[k] * scale );
+	  p2 [ k ].z = 0.;
+
 	}
-
-
 
 	go =  CreateLine3D(p);
 	EGWithMaskChangeAttributes(WIDTH_MASK | STYLE_MASK | COLOR_MASK | LAYER_MASK, go);
 	EGAttachObject(go, ( EObjectP ) this);
 	EMAddGraphicsToModel(ESIModel(), go);
-      }
-    }                 // end loop over knot spans (irules)
 
+	go =  CreateLine3D(p2);
+	EGWithMaskChangeAttributes(WIDTH_MASK | STYLE_MASK | COLOR_MASK | LAYER_MASK, go);
+	EGAttachObject(go, ( EObjectP ) this);
+	EMAddGraphicsToModel(ESIModel(), go);
+      }
+    }                // end loop over knot spans (irules)
+
+	    this->computeNormal (n, c[1], this->giveNumberOfIntegrationRules()-1);
+	  p2 [ 0 ].x = ( FPNum ) ( cg [ 1 ].at(1) + n.at(1) * s[1] * scale );
+	  p2 [ 0 ].y = ( FPNum ) ( cg [ 1 ].at(2) + n.at(2) * s[1] * scale );
+
+	  p2 [ 1 ].x = ( FPNum ) ( cg [ 1 ].at(1) );
+	  p2 [ 1 ].y = ( FPNum ) ( cg [ 1 ].at(2) );
+
+	go =  CreateLine3D(p2);
+	EGWithMaskChangeAttributes(WIDTH_MASK | STYLE_MASK | COLOR_MASK | LAYER_MASK, go);
+	EGAttachObject(go, ( EObjectP ) this);
+	EMAddGraphicsToModel(ESIModel(), go);
  
 }
 #endif

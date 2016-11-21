@@ -133,6 +133,7 @@ public:
 
     void boundaryEdgeGiveNodes(IntArray &answer, int boundary) override
     { OOFEM_ERROR("Functions not supported for this interpolator."); }
+
     void boundaryEdgeEvalN(FloatArray &answer, int boundary, const FloatArray &lcoords, const FEICellGeometry &cellgeo) override
     { OOFEM_ERROR("Functions not supported for this interpolator."); }
     double boundaryEdgeGiveTransformationJacobian(int boundary, const FloatArray &lcoords, const FEICellGeometry &cellgeo) override
@@ -184,6 +185,8 @@ public:
 
     int giveNumberOfKnotSpans(int dim) override { return numberOfKnotSpans [ dim - 1 ]; }
     virtual int giveNumberOfControlPoints(int dim) { return numberOfControlPoints [ dim - 1 ]; }
+    virtual int giveDegree(int dim) { return degree [ dim - 1 ]; }
+    
     const FloatArray *giveKnotVector() override {
         return this->knotVector.data();
     }
