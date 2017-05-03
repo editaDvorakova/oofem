@@ -52,11 +52,11 @@
 #include "classfactory.h"
 
 namespace oofem {
-REGISTER_Element(DegeneratedBeam);
+REGISTER_Element(DegeneratedBeam3d);
 
-FEI1dLin DegeneratedBeam :: interp_lin(1);
+FEI1dLin DegeneratedBeam3d :: interp_lin(1);
 
-DegeneratedBeam :: DegeneratedBeam(int n, Domain *aDomain) :
+DegeneratedBeam3d :: DegeneratedBeam3d(int n, Domain *aDomain) :
     NLStructuralElement(n, aDomain)
 {
     nDofMans = 2;
@@ -68,17 +68,17 @@ DegeneratedBeam :: DegeneratedBeam(int n, Domain *aDomain) :
 }
 
 FEInterpolation *
-DegeneratedBeam :: giveInterpolation() const { return & interp_lin; }
+DegeneratedBeam3d :: giveInterpolation() const { return & interp_lin; }
 
 
 FEInterpolation *
-DegeneratedBeam :: giveInterpolation(DofIDItem id) const
+DegeneratedBeam3d :: giveInterpolation(DofIDItem id) const
 {
     return & interp_lin;
 }
 
 void
-DegeneratedBeam :: giveDofManDofIDMask(int inode, IntArray &answer) const
+DegeneratedBeam3d :: giveDofManDofIDMask(int inode, IntArray &answer) const
 {
     answer = {
         D_u, D_v, D_w, R_u, R_v, R_w
@@ -86,23 +86,23 @@ DegeneratedBeam :: giveDofManDofIDMask(int inode, IntArray &answer) const
 }
 
 IRResultType
-DegeneratedBeam :: initializeFrom(InputRecord *ir)
+DegeneratedBeam3d :: initializeFrom(InputRecord *ir)
 {
     IRResultType result;                   // Required by IR_GIVE_FIELD macro
 
-    IR_GIVE_OPTIONAL_FIELD(ir, nPointsX, _IFT_DegeneratedBeam_nipX); // move to element?
-    IR_GIVE_OPTIONAL_FIELD(ir, nPointsT, _IFT_DegeneratedBeam_nipY);
-    IR_GIVE_OPTIONAL_FIELD(ir, nPointsZ, _IFT_DegeneratedBeam_nipZ);
+    IR_GIVE_OPTIONAL_FIELD(ir, nPointsX, _IFT_DegeneratedBeam3d_nipX); // move to element?
+    IR_GIVE_OPTIONAL_FIELD(ir, nPointsT, _IFT_DegeneratedBeam3d_nipY);
+    IR_GIVE_OPTIONAL_FIELD(ir, nPointsZ, _IFT_DegeneratedBeam3d_nipZ);
     IR_GIVE_OPTIONAL_FIELD(ir, nlGeometry, _IFT_NLStructuralElement_nlgeoflag);
 
     directorType = 0; // default
-    IR_GIVE_OPTIONAL_FIELD(ir, directorType, _IFT_DegeneratedBeam_directorType); // move to element?
+    IR_GIVE_OPTIONAL_FIELD(ir, directorType, _IFT_DegeneratedBeam3d_directorType); // move to element?
 
     return this->NLStructuralElement :: initializeFrom(ir);
 }
 
 void
-DegeneratedBeam :: computeGaussPoints()
+DegeneratedBeam3d :: computeGaussPoints()
 // Sets up the array containing the eight Gauss points of the receiver.
 {
     if ( integrationRulesArray.size() == 0 ) {
@@ -115,7 +115,7 @@ DegeneratedBeam :: computeGaussPoints()
 
 
 void
-DegeneratedBeam ::  giveDirectorVectors(FloatMatrix &Vs, FloatMatrix &Vt)
+DegeneratedBeam3d ::  giveDirectorVectors(FloatMatrix &Vs, FloatMatrix &Vt)
 {
     Vs.resize(3 ,nDofMans);
     Vt.resize(3 ,nDofMans);
@@ -139,7 +139,7 @@ DegeneratedBeam ::  giveDirectorVectors(FloatMatrix &Vs, FloatMatrix &Vt)
 
 
 void
-DegeneratedBeam :: computeNmatrixAt(const FloatArray &lCoords, FloatMatrix &answer)
+DegeneratedBeam3d :: computeNmatrixAt(const FloatArray &lCoords, FloatMatrix &answer)
 // Returns the [6x24] displacement interpolation matrix {N} of the receiver,
 // evaluated at gp.
 // Zeroes in rows 4, 5, 6.
@@ -165,17 +165,17 @@ DegeneratedBeam :: computeNmatrixAt(const FloatArray &lCoords, FloatMatrix &answ
 }
 
 void
-DegeneratedBeam :: computeConstitutiveMatrixAt(FloatMatrix &answer, MatResponseMode rMode, GaussPoint *gp, TimeStep *tStep)
+DegeneratedBeam3d :: computeConstitutiveMatrixAt(FloatMatrix &answer, MatResponseMode rMode, GaussPoint *gp, TimeStep *tStep)
 {
     StructuralCrossSection *scs = dynamic_cast< StructuralCrossSection * >( this->giveCrossSection() );
     //SimpleCrossSection *cs = dynamic_cast< SimpleCrossSection * >( this->giveCrossSection() );
-    scs->give3dDegeneratedBeamStiffMtrx(answer, rMode, gp, tStep);
+    scs->give3dDegeneratedBeam3dStiffMtrx(answer, rMode, gp, tStep);
 }
 
 
 
 double
-DegeneratedBeam :: computeVolumeAround(GaussPoint *gp)
+DegeneratedBeam3d :: computeVolumeAround(GaussPoint *gp)
 // Returns the portion of the receiver which is attached to gp.
 {
     double detJ, weight;
@@ -196,7 +196,7 @@ DegeneratedBeam :: computeVolumeAround(GaussPoint *gp)
 
 
 void
-DegeneratedBeam :: giveJacobian(FloatArray lcoords, FloatMatrix &jacobianMatrix)
+DegeneratedBeam3d :: giveJacobian(FloatArray lcoords, FloatMatrix &jacobianMatrix)
 // Returns the jacobianMatrix
 {
     FloatArray h(nDofMans);
@@ -237,7 +237,7 @@ DegeneratedBeam :: giveJacobian(FloatArray lcoords, FloatMatrix &jacobianMatrix)
 
 
 void
-DegeneratedBeam :: computeBmatrixAt(GaussPoint *gp, FloatMatrix &answer, int li, int ui)
+DegeneratedBeam3d :: computeBmatrixAt(GaussPoint *gp, FloatMatrix &answer, int li, int ui)
 // Returns the [6x20] strain-displacement matrix {B} of the receiver,
 // evaluated at gp.
 {

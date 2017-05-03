@@ -40,7 +40,7 @@
 #include "load.h"
 
 
-#define _IFT_DegeneratedBeam_Name "degbeam"
+#define _IFT_DegeneratedBeam3d_Name "degbeam"
 
 namespace oofem {
 
@@ -54,7 +54,7 @@ namespace oofem {
  * - calculating its B,D matrices and dV.
  */
 
-class DegeneratedBeam : public NLStructuralElement
+class DegeneratedBeam3d : public NLStructuralElement
 {
 protected:
     /// Element geometry approximation
@@ -64,7 +64,7 @@ protected:
 
 public:
 
-    DegeneratedBeam(int n, Domain *d);
+    DegeneratedBeam3d(int n, Domain *d);
     virtual ~MITC4Shell() { }
 
     virtual FEInterpolation *giveInterpolation() const;
