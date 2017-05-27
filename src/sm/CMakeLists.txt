@@ -35,6 +35,7 @@ set (sm_element
     Elements/Beams/beam3d.C
     Elements/Beams/degbeam.C
     Elements/Beams/degbeamlin.C
+    Elements/Beams/degbeamquad.C
     Elements/Plates/cct.C
     Elements/Plates/dkt.C 
     Elements/Plates/qdkt.C

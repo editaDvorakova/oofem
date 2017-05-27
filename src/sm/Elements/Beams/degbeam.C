@@ -54,7 +54,8 @@
 namespace oofem {
 REGISTER_Element(DegeneratedBeam3d);
 
-FEI1dLin DegeneratedBeam3d :: interpolation(1);
+FEI1dLin DegeneratedBeam3d :: interp_lin(1);
+
 
 DegeneratedBeam3d :: DegeneratedBeam3d(int n, Domain *aDomain) :
     NLStructuralElement(n, aDomain)
@@ -71,13 +72,13 @@ DegeneratedBeam3d :: DegeneratedBeam3d(int n, Domain *aDomain) :
 }
 
 FEInterpolation *
-DegeneratedBeam3d :: giveInterpolation() const { return & interpolation; }
+DegeneratedBeam3d :: giveInterpolation() const { return & interp_lin; }
 
 
 FEInterpolation *
 DegeneratedBeam3d :: giveInterpolation(DofIDItem id) const
 {
-    return & interpolation;
+    return & interp_lin;
 }
 
 
@@ -195,7 +196,7 @@ DegeneratedBeam3d :: computeNmatrixAt(const FloatArray &lCoords, FloatMatrix &an
 {
     answer.resize(3, numberOfDofMans*6);
     FloatArray h(numberOfDofMans);
-    interpolation.evalN( h, lCoords,  FEIElementGeometryWrapper(this) );
+    this->giveInterpolation()->evalN( h, lCoords,  FEIElementGeometryWrapper(this) );
 
     FloatArray a, b;
     this->giveWidth(a);
@@ -265,8 +266,8 @@ DegeneratedBeam3d :: giveJacobian(FloatArray lcoords, FloatMatrix &jacobianMatri
     this->giveWidth(a);
     this->giveThickness(b);
 
-    interpolation.evalN( h, lcoords,  FEIElementGeometryWrapper(this) );
-    interpolation.evaldNdx( dh, lcoords,  FEIElementGeometryWrapper(this) );
+    this->giveInterpolation()->evalN( h, lcoords,  FEIElementGeometryWrapper(this) );
+    this->giveInterpolation()->evaldNdx( dh, lcoords,  FEIElementGeometryWrapper(this) );
     // interpolation.giveDerivatives(dh, lcoords);
 
     double t = lcoords.at(2);
@@ -275,8 +276,9 @@ DegeneratedBeam3d :: giveJacobian(FloatArray lcoords, FloatMatrix &jacobianMatri
     double ds = 1;
 
     // FloatArray x - x-coordinates, z_i = 0, y_i = 0
-    FloatArray x = {0, 1};
+    FloatArray x(numberOfDofMans);
     for (int j=0; j<numberOfDofMans; j++){
+	x(j) = ((double)j) / (numberOfDofMans-1); // change this to arbitrary location of points
 	jacobianMatrix.at(1, 1) += dh.at(j+1,1) * x.at(j+1);
 	for (int i=0; i<3; i++){
 	    jacobianMatrix.at(1, i+1) += t/2 * a.at(j+1) * dh.at(j+1,1) * Vt.at(i+1,j+1) + s/2 * b.at(j+1) * dh.at(j+1,1) * Vs.at(i+1,j+1); // dx_i/dr
@@ -312,8 +314,8 @@ DegeneratedBeam3d :: computeBmatrixAt(GaussPoint *gp, FloatMatrix &answer, int l
 
     FloatArray lcoords = gp -> giveNaturalCoordinates();
 
-    interpolation.evalN( h, lcoords,  FEIElementGeometryWrapper(this) );
-    interpolation.evaldNdx( dh, lcoords,  FEIElementGeometryWrapper(this) );
+    this->giveInterpolation()->evalN( h, lcoords,  FEIElementGeometryWrapper(this) );
+    this->giveInterpolation()->evaldNdx( dh, lcoords,  FEIElementGeometryWrapper(this) );
     // interpolation.giveDerivatives(dh, lcoords);
 
     // get gp coordinates

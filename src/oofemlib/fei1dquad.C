@@ -55,12 +55,12 @@ FEI1dQuad :: evaldNdx(FloatMatrix &answer, const FloatArray &lcoords, const FEIC
 {
     double J = this->giveTransformationJacobian(lcoords, cellgeo);
     double ksi = lcoords.at(1);
-    answer.resize(1, 3);
+    answer.resize(3, 1);
     answer.zero();
 
     answer.at(1, 1) = ( -1. / 2. + ksi ) / J;
-    answer.at(1, 2) =  ( 1. / 2. + ksi ) / J;
-    answer.at(1, 3) =  -2. * ksi / J;
+    answer.at(2, 1) =  ( 1. / 2. + ksi ) / J;
+    answer.at(3, 1) =  -2. * ksi / J;
     return J;
 }
 

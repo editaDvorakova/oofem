@@ -10,7 +10,7 @@
  *
  *             OOFEM : Object Oriented Finite Element Code
  *
- *               Copyright (C) 1993 - 2013   Borek Patzak
+ *               Copyright (C) 1993 - 2017   Borek Patzak
  *
  *
  *
@@ -32,54 +32,46 @@
  *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#ifndef degbeamlin_h
-#define degbeamlin_h
-
-#include "../sm/Elements/nlstructuralelement.h"
-#include "spatiallocalizer.h"
+#include "../sm/Elements/Beams/degbeam.h"
+#include "../sm/Elements/Beams/degbeamquad.h"
+#include "../sm/Materials/structuralms.h"
+#include "../sm/Materials/structuralmaterial.h"
+#include "../sm/CrossSections/structuralcrosssection.h"
+#include "fei1dquad.h"
+#include "node.h"
+#include "material.h"
+#include "crosssection.h"
+#include "gausspoint.h"
+#include "../sm/CrossSections/variablecrosssection.h"
+#include "gaussintegrationrule.h"
+#include "floatmatrix.h"
+#include "floatarray.h"
+#include "intarray.h"
 #include "load.h"
-#include "degbeam.h"
-
-
-
-#define _IFT_DegeneratedBeamLin3d_Name "degeneratedbeamlin3d"
+#include "boundaryload.h"
+#include "mathfem.h"
+#include "classfactory.h"
 
 namespace oofem {
-    class FEI1dLin;
+REGISTER_Element(DegeneratedBeamQuad3d);
 
-/// Comment or uncomment the following line to force full or reduced integration
-// #define DegeneratedBeam3d_reducedShearIntegration
+FEI1dQuad DegeneratedBeamQuad3d :: interpolation(1);
 
-/**
- * This class implements an quad element based on Mixed Interpolation of Tensorial Components (MITC).
- * This element is a shell element suitable for both thin and thick shells.
- * The element has 24 DOFs (u,v,w-displacements and three rotations) in each node
- *
- * Tasks:
- * - calculating its B,D matrices and dV.
- */
-
-class DegeneratedBeamLin3d : public DegeneratedBeam3d
+DegeneratedBeamQuad3d :: DegeneratedBeamQuad3d(int n, Domain *aDomain) :
+    DegeneratedBeam3d(n, aDomain)
 {
-protected:
-    /// Element geometry approximation
-    static FEI1dLin interpolation;
+    numberOfDofMans = 3;
+    nGaussPoints = 8;
+}
+
+FEInterpolation *
+DegeneratedBeamQuad3d :: giveInterpolation() const { return & interpolation; }
 
 
-public:
+FEInterpolation *
+DegeneratedBeamQuad3d :: giveInterpolation(DofIDItem id) const
+{
+    return & interpolation;
+}
 
-    DegeneratedBeamLin3d(int n, Domain *d);
-    virtual ~DegeneratedBeamLin3d() { }
-
-    virtual FEInterpolation *giveInterpolation() const;
-    virtual FEInterpolation *giveInterpolation(DofIDItem id) const;
-
-private:
-
-    // definition & identification
-    virtual const char *giveClassName() const { return "DegeneratedBeamLin3d"; }
-    virtual const char *giveInputRecordName() const { return _IFT_DegeneratedBeamLin3d_Name; }
-
-};
-} // end namespace oofem
-#endif // degbeamlin_h
+}

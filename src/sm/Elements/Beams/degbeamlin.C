@@ -64,4 +64,14 @@ DegeneratedBeamLin3d :: DegeneratedBeamLin3d(int n, Domain *aDomain) :
     nGaussPoints = 8;
 }
 
+FEInterpolation *
+DegeneratedBeamLin3d :: giveInterpolation() const { return & interpolation; }
+
+
+FEInterpolation *
+DegeneratedBeamLin3d :: giveInterpolation(DofIDItem id) const
+{
+    return & interpolation;
+}
+
 }

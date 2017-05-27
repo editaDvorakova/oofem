@@ -32,8 +32,8 @@
  *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#ifndef degbeamlin_h
-#define degbeamlin_h
+#ifndef degbeamquad_h
+#define degbeamquad_h
 
 #include "../sm/Elements/nlstructuralelement.h"
 #include "spatiallocalizer.h"
@@ -42,10 +42,10 @@
 
 
 
-#define _IFT_DegeneratedBeamLin3d_Name "degeneratedbeamlin3d"
+#define _IFT_DegeneratedBeamQuad3d_Name "degeneratedbeamquad3d"
 
 namespace oofem {
-    class FEI1dLin;
+    class FEI1dQuad;
 
 /// Comment or uncomment the following line to force full or reduced integration
 // #define DegeneratedBeam3d_reducedShearIntegration
@@ -59,17 +59,17 @@ namespace oofem {
  * - calculating its B,D matrices and dV.
  */
 
-class DegeneratedBeamLin3d : public DegeneratedBeam3d
+class DegeneratedBeamQuad3d : public DegeneratedBeam3d
 {
 protected:
     /// Element geometry approximation
-    static FEI1dLin interpolation;
+    static FEI1dQuad interpolation;
 
 
 public:
 
-    DegeneratedBeamLin3d(int n, Domain *d);
-    virtual ~DegeneratedBeamLin3d() { }
+    DegeneratedBeamQuad3d(int n, Domain *d);
+    virtual ~DegeneratedBeamQuad3d() { }
 
     virtual FEInterpolation *giveInterpolation() const;
     virtual FEInterpolation *giveInterpolation(DofIDItem id) const;
@@ -77,9 +77,9 @@ public:
 private:
 
     // definition & identification
-    virtual const char *giveClassName() const { return "DegeneratedBeamLin3d"; }
-    virtual const char *giveInputRecordName() const { return _IFT_DegeneratedBeamLin3d_Name; }
+    virtual const char *giveClassName() const { return "DegeneratedBeamQuad3d"; }
+    virtual const char *giveInputRecordName() const { return _IFT_DegeneratedBeamQuad3d_Name; }
 
 };
 } // end namespace oofem
-#endif // degbeamlin_h
+#endif // degbeamquad_h

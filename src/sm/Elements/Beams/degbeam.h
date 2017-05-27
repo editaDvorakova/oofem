@@ -81,7 +81,8 @@ class DegeneratedBeam3d : public NLStructuralElement
 {
 protected:
     /// Element geometry approximation
-    static FEI1dLin interpolation;
+    static FEI1dLin interp_lin;
+
     int nPointsX, nPointsY, nPointsZ;
     int directorType, nDofMans, nGaussPoints;
     FloatArray yaxis, zaxis;
