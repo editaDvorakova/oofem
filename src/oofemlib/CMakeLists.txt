@@ -168,6 +168,7 @@ set (core_material
 set (core_export
     outputmanager.C
     exportmodule.C
+    ghexportmodule.C
     exportmodulemanager.C
     outputexportmodule.C
     errorcheckingexportmodule.C
@@ -183,6 +184,7 @@ set (core_iga
     iga/feibspline.C
     iga/feinurbs.C
     iga/feinurbsline2d.C
+    iga/feinurbsline3d.C
     iga/feitspline.C
     )
 
