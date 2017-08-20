@@ -177,7 +177,8 @@ public:
      * @param cellgeo Underlying cell geometry.
      */
 
-    virtual double givedR(FloatMatrix &answer, const FloatArray &lcoords, const FEICellGeometry &cellgeo) {OOFEM_ERROR("givedR: Not supported.");return -1;} // iga beam2d edita
+    // edita : delete this
+    //   virtual double givedR(FloatMatrix &answer, const FloatArray &lcoords, const FEICellGeometry &cellgeo) {OOFEM_ERROR("givedR: Not supported.");return -1;} // iga beam2d edita
 
 
 
@@ -212,6 +213,23 @@ public:
     { OOFEM_ERROR("Not supported."); return NULL; }
     IntegrationRule *giveBoundaryEdgeIntegrationRule(int order, int boundary) override
     { OOFEM_ERROR("Not supported."); return NULL; }
+
+    // edita: changed protected to public
+  /**
+     * Determines the knot span index (Algorithm A2.1 from the NURBS book)
+     *
+     * Determines the knot span for which there exists non-zero basis
+     * functions. The span is the index k for which the parameter
+     * u is valid in the (u_k,u_{k+1}] range.
+     *
+     * @param n Number of control points - 1.
+     * @param u Parametric value.
+     * @param p Degree.
+     * @param U Knot vector.
+     * @return Span index at u (zero based).
+     * @warning Parameter u must be in a valid range.
+     */
+    int findSpan(int n, int p, double u, const double *U) const;
 
 protected:
     /**

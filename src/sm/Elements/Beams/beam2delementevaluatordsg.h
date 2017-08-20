@@ -35,16 +35,16 @@
 #ifndef beam2delementevaluatordsg_h
 #define beam2delementevaluatordsg_h
 
-#include "../sm/Elements/structuralelementevaluator.h"
+#include "../sm/Elements/Beams/beam2delementevaluator.h"
 
 namespace oofem {
 /**
  * General purpose Beam structural element evaluator.
  */
-class Beam2dElementEvaluatorDsg : public StructuralElementEvaluator
+class Beam2dElementEvaluatorDsg : public Beam2dElementEvaluator
 {
 public:
-    Beam2dElementEvaluatorDsg() : StructuralElementEvaluator() { }
+    Beam2dElementEvaluatorDsg() : Beam2dElementEvaluator() { }
 
 protected:
     FloatMatrix BDSG;
@@ -71,32 +71,25 @@ protected:
     void giveKnotSpanAt(IntArray &knotSpan, double lcoord);
     virtual int giveIntegrationElementLocalCodeNumbers(IntArray &answer, Element *elem, IntegrationRule *ie);
 
-    virtual double computeVolumeAround(GaussPoint *gp);
-    virtual void computeStressVector(FloatArray &answer, const FloatArray &strain, GaussPoint *gp, TimeStep *tStep);
-    virtual void computeConstitutiveMatrixAt(FloatMatrix &answer, MatResponseMode rMode, GaussPoint *gp, TimeStep *tStep);
-    void giveDofManDofIDMask(int inode, IntArray &answer) const {
-      answer = {D_u, D_w, R_v};
-    }
-
     
     // transformation
     // virtual void giveLocalCoordinates( FloatArray &lcoords, FloatArray &gcoords );
-    virtual bool computeGtoLRotationMatrix(FloatMatrix &answer);
     //int computeIFGToLRotationMtrx(FloatMatrix &answer);
 
-    void computeDofsGtoLMatrix(FloatMatrix &answer, FloatArray coords, int knotSpan);
-    int computeLoadGToLRotationMtrx(FloatMatrix &answer, GaussPoint *gp);
     //void computeLToDirectorRotationMatrix(FloatMatrix &answer1, FloatMatrix &answer2, FloatMatrix &answer3, FloatMatrix &answer4);
     //int computeLoadLEToLRotationMatrix(FloatMatrix &answer, int iEdge, GaussPoint *gp);
     
 
-    //loading
-    virtual void computeEdgeLoadVectorAt(FloatArray &answer, Load *load,				     int edge, TimeStep *tStep, ValueModeType mode);
-
-    void computeBodyLoadVectorAt(FloatArray &answer, Load *load, TimeStep *tStep, ValueModeType mode);
-
     // draw
-    void computeNormal (FloatArray &n, FloatArray c, int knotSpan);
+    // void computeNormal (FloatArray &n, FloatArray c, int knotSpan);
+
+ public:
+
+    //loading
+
+     virtual void boundaryEdgeGiveNodes(IntArray& bNodes, int boundary);
+
+
 }; // end of Beam2dElementEvaluator definition
 } // end namespace oofem
 #endif //beam2delementevaluator_h

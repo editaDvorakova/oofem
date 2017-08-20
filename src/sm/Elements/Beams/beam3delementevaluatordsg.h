@@ -32,21 +32,29 @@
  *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#ifndef beam2delementevaluator_h
-#define beam2delementevaluator_h
+#ifndef beam3delementevaluatordsg_h
+#define beam3delementevaluatordsg_h
 
+#include "../sm/Elements/Beams/beam3delementevaluator.h"
 #include "../sm/Elements/structuralelementevaluator.h"
 
 namespace oofem {
 /**
  * General purpose Beam structural element evaluator.
  */
-class Beam2dElementEvaluator : public StructuralElementEvaluator
+class Beam3dElementEvaluatorDsg : public Beam3dElementEvaluator
 {
 public:
-    Beam2dElementEvaluator() : StructuralElementEvaluator() { }
+    Beam3dElementEvaluatorDsg() : Beam3dElementEvaluator() { }
 
 protected:
+    FloatMatrix BDSG;
+    FloatMatrix invA;
+    FloatArray collocationPts;
+
+    void computeStiffnessMatrix(FloatMatrix &answer, MatResponseMode rMode, TimeStep *tStep) {
+	StructuralElementEvaluator :: computeStiffnessMatrix(answer, rMode, tStep);
+    }
     /**
      * Assemble interpolation matrix at given IP.
      * In case of IGAElements, N is assumed to contain only nonzero interpolation functions.
@@ -57,41 +65,33 @@ protected:
      * In case of IGAElements, B is assumed to contain only contribution from nonzero interpolation functions.
      */
     virtual void computeBMatrixAt( FloatMatrix &answer, GaussPoint *gp);
-    //virtual void computeBMatrixAt(GaussPoint *gp, FloatMatrix &answer, int lowerIndx, int upperIndx);
-    virtual double computeVolumeAround(GaussPoint *gp);
-    virtual void computeStressVector(FloatArray &answer, const FloatArray &strain, GaussPoint *gp, TimeStep *tStep);
-    virtual void computeConstitutiveMatrixAt(FloatMatrix &answer, MatResponseMode rMode, GaussPoint *gp, TimeStep *tStep);
-    void giveDofManDofIDMask(int inode, IntArray &answer) const {
-      answer = {D_u, D_w, R_v};
-    }
 
-  //TO DO: edita
+
+    virtual void computeBendingPartOfBMatrix(FloatMatrix &Bb, GaussPoint *gp);
+    virtual const FloatMatrix * computeInvAMatrix();
+    virtual const FloatMatrix * computeDSGMatrix();
+    virtual const FloatArray * computeCollocationPoints();
+    void giveKnotSpanAt(IntArray &knotSpan, double lcoord);
+    virtual int giveIntegrationElementLocalCodeNumbers(IntArray &answer, Element *elem, IntegrationRule *ie);
+
+
     
     // transformation
     // virtual void giveLocalCoordinates( FloatArray &lcoords, FloatArray &gcoords );
-    virtual bool computeGtoLRotationMatrix(FloatMatrix &answer);
+
     //int computeIFGToLRotationMtrx(FloatMatrix &answer);
 
-    void computeDofsGtoLMatrix(FloatMatrix &answer, FloatArray coords, int knotSpan);
-    int computeLoadGToLRotationMtrx(FloatMatrix &answer, GaussPoint *gp);
+    // void computeDofsGtoLMatrix(FloatMatrix &answer, FloatArray coords,  const FEICellGeometry &cellgeo);
     //void computeLToDirectorRotationMatrix(FloatMatrix &answer1, FloatMatrix &answer2, FloatMatrix &answer3, FloatMatrix &answer4);
     //int computeLoadLEToLRotationMatrix(FloatMatrix &answer, int iEdge, GaussPoint *gp);
-    
-    
-    void givedxds(FloatMatrix &answer, const FloatArray &lcoords, const FEICellGeometry &cellgeo);
-    double giveCurvature(const FloatArray &lcoords, const FEICellGeometry &cellgeo);
+    IntegrationRule *setIR(int i) ;
+    int giveNumberOfIR(int knotSpan);
 
-    //loading
-    virtual void  computeBoundaryEdgeLoadVector(FloatArray &answer, BoundaryLoad *load, int edge, CharType type, ValueModeType mode, TimeStep *tStep, bool global);
-    virtual void boundaryEdgeGiveNodes(IntArray& bNodes, int boundary);
+    int giveLocalCoordinateSystem(FloatMatrix &answer, FloatArray lcoords, const FEICellGeometry &cellgeo);
+   
+    // draw    
 
-    void computeBodyLoadVectorAt(FloatArray &answer, Load *load, TimeStep *tStep, ValueModeType mode);
-
-    // GRASSHOPPER EXPORT
-    void computeInternalForces(FloatMatrix &internalForces, int divisions, TimeStep *tStep);
-
-    // draw
-    void computeNormal (FloatArray &n, FloatArray c, int knotSpan);
-}; // end of Beam2dElementEvaluator definition
+    // void computeNormal (FloatArray &n, FloatArray c, int knotSpan);
+}; // end of Beam3dElementEvaluator definition
 } // end namespace oofem
-#endif //beam2delementevaluator_h
+#endif //beam3delementevaluator_h
