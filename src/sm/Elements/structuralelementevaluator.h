@@ -176,6 +176,8 @@ protected:
     virtual void computeBodyLoadVectorAt(FloatArray &answer, Load *load, TimeStep *tStep, ValueModeType mode)
     { OOFEM_ERROR("computeBodyLoadVectorAt - Not implemented"); }
 
+    virtual void computeBoundaryEdgeLoadVector(FloatArray &answer, BoundaryLoad *load, int edge, CharType type, ValueModeType mode, TimeStep *tStep, bool global)
+    { OOFEM_ERROR("computeBoundaryEdgeLoadVector - Not implemented"); }
 
 #ifdef __OOFEG
     friend void drawIGAPatchDeformedGeometry(Element *elem, StructuralElementEvaluator *se, oofegGraphicContext &gc, TimeStep *tStep, UnknownType);

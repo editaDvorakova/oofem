@@ -112,6 +112,11 @@ public:
     virtual void  drawRawGeometry(oofegGraphicContext &gc, TimeStep *tStep);
 #endif
 
+    // support for beam elements
+    virtual FloatArray giveZaxis() { OOFEM_ERROR("Not supported."); }
+    virtual int giveIntegrationType() { OOFEM_ERROR("Not supported."); }
+    virtual IntegrationRule *giveReducedIntegrationRule(int i) { OOFEM_ERROR("Not supported."); }
+
 protected:
     virtual int giveNsd() = 0;
     virtual int giveFsd() = 0; // this info is available also from interpolation. Do we need it here ???

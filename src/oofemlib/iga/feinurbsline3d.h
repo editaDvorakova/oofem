@@ -32,8 +32,8 @@
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
-#ifndef feinurbsline2d_h
-#define feinurbsline2d_h
+#ifndef feinurbsline3d_h
+#define feinurbsline3d_h
 
 #include "feibspline.h"
 #include "floatarray.h"
@@ -44,11 +44,11 @@ namespace oofem {
 /**
  * Interpolation class for NURBS.
  */
-class NURBSInterpolationLine2d : public BSplineInterpolation
+class NURBSInterpolationLine3d : public BSplineInterpolation
 {
 public:
- NURBSInterpolationLine2d(int nsd, int fsd) : BSplineInterpolation(nsd, fsd) { }
-    virtual ~NURBSInterpolationLine2d();
+ NURBSInterpolationLine3d(int nsd, int fsd) : BSplineInterpolation(nsd, fsd) { }
+    virtual ~NURBSInterpolationLine3d();
 
     virtual void evalN(FloatArray &answer, const FloatArray &lcoords, const FEICellGeometry &cellgeo);
     virtual double evaldNdx(FloatMatrix &answer, const FloatArray &lcoords, const FEICellGeometry &cellgeo);
@@ -59,10 +59,8 @@ public:
         return 0;
       }
     virtual double giveTransformationJacobian(const FloatArray &lcoords, const FEICellGeometry &cellgeo);
-    // double  givedY(const FloatArray &lcoords, const FEICellGeometry &cellgeo);
-    virtual const char *giveClassName() const { return "NURBSInterpolationLine2d"; }
+    virtual const char *giveClassName() const { return "NURBSInterpolationLine3d"; }
 
-    //virtual double givedR(FloatMatrix &answer, const FloatArray &lcoords, const FEICellGeometry &cellgeo);
 };
 } // end namespace oofem
 #endif // feinurbs_h
