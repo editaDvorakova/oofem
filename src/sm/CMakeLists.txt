@@ -37,6 +37,7 @@ set (sm_element
     Elements/Beams/beam3delementevaluator.C
     Elements/Beams/beam2delementevaluatordsg.C
     Elements/Beams/beam3delementevaluatordsg.C
+    Elements/Beams/beam3delementevaluatorbbar.C
     Elements/Plates/cct.C
     Elements/Plates/dkt.C 
     Elements/Plates/qdkt.C

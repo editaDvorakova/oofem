@@ -115,6 +115,7 @@ public:
     virtual FloatArray giveZaxis() { OOFEM_ERROR("Not supported."); }
     virtual int giveIntegrationType() { OOFEM_ERROR("Not supported."); }
     virtual IntegrationRule *giveReducedIntegrationRule(int i) { OOFEM_ERROR("Not supported."); }
+    virtual FEInterpolation *giveBbarInterpolation() const { OOFEM_ERROR("Not supported."); }
 
 protected:
     virtual int giveNsd() = 0;

@@ -61,6 +61,8 @@ public:
     virtual double giveTransformationJacobian(const FloatArray &lcoords, const FEICellGeometry &cellgeo);
     virtual const char *giveClassName() const { return "NURBSInterpolationLine3d"; }
 
+    virtual void lowerDegree();
+
 };
 } // end namespace oofem
 #endif // feinurbs_h
