@@ -46,6 +46,7 @@
 #include "../sm/Elements/Beams/beam2delementevaluatordsg.h"
 #include "../sm/Elements/Beams/beam3delementevaluator.h"
 #include "../sm/Elements/Beams/beam3delementevaluatordsg.h"
+#include "../sm/Elements/Beams/beam3delementevaluatorbbar.h"
 #include "../sm/Elements/3D/space3delementevaluator.h"
 #include "floatarray.h"
 #include "floatmatrix.h"
@@ -60,8 +61,10 @@
 #define _IFT_NURBSBeam3dElement_Name "nurbsbeam3delement"
 #define _IFT_NURBSBeam2dElementDsg_Name "nurbsbeam2delementdsg"
 #define _IFT_NURBSBeam3dElementDsg_Name "nurbsbeam3delementdsg"
+#define _IFT_NURBSBeam3dElementBbar_Name "nurbsbeam3delementbbar"
 #define _IFT_NURBSBeam3dElement_zaxis "zaxis"
 #define _IFT_NURBSBeam3dElementDsg_zaxis "zaxis"
+#define _IFT_NURBSBeam3dElementBbar_zaxis "zaxis"
 #define _IFT_NURBSBeam3dElement_integrationType "integrationtype"
 
 namespace oofem {
@@ -548,6 +551,87 @@ protected:
     virtual int giveNsd() { return 3; }
     virtual int giveFsd() { return 1; }
 };
+
+
+
+class NURBSBeam3dElementBbar : public IGAElement, public Beam3dElementEvaluatorBbar
+{
+protected:
+    NURBSInterpolationLine3d interpolation;
+    NURBSInterpolationLine3d bBarInterpolation;
+    FloatArray zaxis;
+
+public:
+    NURBSBeam3dElementBbar(int n, Domain * aDomain);
+
+    virtual IRResultType initializeFrom(InputRecord *ir);
+    virtual int checkConsistency();
+
+    virtual void giveCharacteristicMatrix(FloatMatrix &answer, CharType mtrx, TimeStep *tStep) {
+        Beam3dElementEvaluatorBbar :: giveCharacteristicMatrix(answer, mtrx, tStep);
+    }
+    virtual void giveCharacteristicVector(FloatArray &answer, CharType type, ValueModeType mode, TimeStep *t) {
+        Beam3dElementEvaluatorBbar :: giveCharacteristicVector(answer, type, mode, t);
+    }
+
+    virtual FloatArray giveZaxis() { return  this->zaxis; }
+    virtual FEInterpolation *giveInterpolation() const { return const_cast< NURBSInterpolationLine3d * >(& this->interpolation); }
+    virtual FEInterpolation *giveBbarInterpolation() const { return const_cast< NURBSInterpolationLine3d * >(& this->bBarInterpolation); }
+    virtual Element *giveElement() { return this; }
+    virtual void giveDofManDofIDMask(int inode, IntArray &answer) const {
+        Beam3dElementEvaluatorBbar :: giveDofManDofIDMask(inode, answer);
+    }
+    virtual int computeNumberOfDofs() { return numberOfDofMans * 6; } 
+    virtual void updateInternalState(TimeStep *tStep) { Beam3dElementEvaluatorBbar :: updateInternalState(tStep); }
+    // transformation
+     virtual bool computeGtoLRotationMatrix(FloatMatrix &answer) {
+      return (Beam3dElementEvaluatorBbar :: computeGtoLRotationMatrix(answer));
+      }
+    // definition & identification
+    virtual const char *giveInputRecordName() const { return _IFT_NURBSBeam3dElementBbar_Name; }
+    virtual const char *giveClassName() const { return "NURBSBeam3dElementBbar"; }
+    
+    // edge load support
+    virtual void computeBoundaryEdgeLoadVector(FloatArray &answer, BoundaryLoad *load, int edge, CharType type, ValueModeType mode, TimeStep *tStep, bool global) {
+	Beam3dElementEvaluatorBbar :: computeBoundaryEdgeLoadVector(answer, load, edge, type, mode, tStep, global);
+    }
+    virtual void giveBoundaryEdgeNodes (IntArray& bNodes, int boundary){
+	Beam3dElementEvaluatorBbar :: boundaryEdgeGiveNodes(bNodes, boundary);
+    }
+
+    // body load support
+    void computeLoadVector(FloatArray &answer, BodyLoad *load, CharType type, ValueModeType mode, TimeStep *tStep);
+    virtual void computeBodyLoadVectorAt(FloatArray &answer, Load *load, TimeStep *tStep, ValueModeType mode) {
+	Beam3dElementEvaluatorBbar :: computeBodyLoadVectorAt(answer, load, tStep, mode);
+    }
+
+    // point load
+    virtual void computePointLoadVectorAt(FloatArray &answer, Load *load, TimeStep *tStep, ValueModeType mode) {
+        OOFEM_ERROR("PointLoad - not supported. ");
+    }
+
+    // edita - OOFEG ?
+    void computeNormal (FloatArray &n, FloatArray c, int knotSpan) { Beam3dElementEvaluatorBbar :: computeNormal ( n, c, knotSpan); }
+#ifdef __OOFEG
+    //
+    // Graphics output
+    //
+    virtual void  drawScalar(oofegGraphicContext &gc, TimeStep *tStep);
+
+    virtual void drawRawGeometry(oofegGraphicContext &gc, TimeStep *tStep);
+    virtual void drawDeformedGeometry(oofegGraphicContext &gc, TimeStep *tStep, UnknownType ut) ;
+
+#endif
+
+protected:
+    virtual int giveNsd() { return 3; }
+    virtual int giveFsd() { return 1; }
+};
+
+
+
+
+
 
 } // end namespace oofem
 #endif //igaelements_h

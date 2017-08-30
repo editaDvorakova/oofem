@@ -179,7 +179,28 @@ double NURBSInterpolationLine3d :: giveTransformationJacobian(const FloatArray &
     return Jacob;
 }
 
+void NURBSInterpolationLine3d :: lowerDegree()
+{
+    // change degree
+    this->degree[0] = this->degree[0]-1;
 
+    int kvSize = 0;
+    int n = this->knotMultiplicity->giveSize();
+    for (int i = 0; i < n; i++) {
+	kvSize += this->knotMultiplicity[0](i);
+    }
+
+    // change knotVector
+    for (int i = 0; i < kvSize-2; i++) {
+	knotVector[0][i] = knotVector[0][i+1]; 
+    }
+
+    // change multiplicity
+    knotMultiplicity[0](0) = knotMultiplicity[0](0) -1;
+    knotMultiplicity[0](n) = knotMultiplicity[0](n) -1;
+
+    
+}
 
 void NURBSInterpolationLine3d :: local2global(FloatArray &answer, const FloatArray &lcoords, const FEICellGeometry &cellgeo)
 {
