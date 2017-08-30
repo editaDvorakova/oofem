@@ -63,6 +63,7 @@ REGISTER_Element(NURBSBeam2dElement);
 REGISTER_Element(NURBSBeam3dElement);
 REGISTER_Element(NURBSBeam2dElementDsg);
 REGISTER_Element(NURBSBeam3dElementDsg);
+REGISTER_Element(NURBSBeam3dElementBbar);
 
 
   BsplinePlaneStressElement :: BsplinePlaneStressElement(int n, Domain *aDomain) : IGAElement(n, aDomain), PlaneStressStructuralElementEvaluator(), interpolation(2, 2) { }
@@ -224,6 +225,58 @@ void NURBSBeam3dElementDsg :: computeLoadVector(FloatArray &answer, BodyLoad *lo
         this->computeBodyLoadVectorAt(answer, load, tStep, mode);
     }
 }
+
+
+NURBSBeam3dElementBbar :: NURBSBeam3dElementBbar(int n, Domain *aDomain) : IGAElement(n, aDomain), Beam3dElementEvaluatorBbar(), interpolation(3, 1), bBarInterpolation(3, 1) { }
+  // interpolation(nsd, fsd)
+
+IRResultType NURBSBeam3dElementBbar :: initializeFrom(InputRecord *ir)
+{
+    IRResultType result;                    // Required by IR_GIVE_FIELD macro
+
+    this->zaxis.clear();
+    if ( ir->hasField(_IFT_NURBSBeam3dElementBbar_zaxis) ) {
+        IR_GIVE_FIELD(ir, this->zaxis, _IFT_NURBSBeam3dElementBbar_zaxis);
+    }
+
+    this->giveBbarInterpolation()->initializeFrom(ir); // read geometry
+    // change the degree, knotspan, ...
+    bBarInterpolation.lowerDegree();
+
+
+    return IGAElement :: initializeFrom(ir);
+}
+
+
+int NURBSBeam3dElementBbar :: checkConsistency()
+{
+    NURBSInterpolationLine2d *interpol = static_cast< NURBSInterpolationLine2d * >( this->giveInterpolation() );
+    if ( giveNumberOfDofManagers() != interpol->giveNumberOfControlPoints(1) ) {
+        OOFEM_WARNING("number of control points mismatch");
+        return 0;
+    }
+    return 1;
+}
+
+void NURBSBeam3dElementBbar :: computeLoadVector(FloatArray &answer, BodyLoad *load, CharType type, ValueModeType mode, TimeStep *tStep)
+{
+    if ( type != ExternalForcesVector ) {
+        answer.clear();
+        return;
+    }
+    // Just a wrapper for the deadweight body load computations:
+    PointLoad *p = dynamic_cast< PointLoad * >(load);
+    if ( p ) {
+        FloatArray lcoords;
+        if ( this->computeLocalCoordinates(lcoords, p->giveCoordinates()) ) {
+            this->computePointLoadVectorAt(answer, load, tStep, mode);
+        }
+    } else {
+        ///@todo This assumption of dead-weight loads needs to be lifted. We can have other body loads, such as
+        this->computeBodyLoadVectorAt(answer, load, tStep, mode);
+    }
+}
+
 
 
   NURBSBeam2dElement :: NURBSBeam2dElement(int n, Domain *aDomain) : IGAElement(n, aDomain), Beam2dElementEvaluator(), interpolation(3, 1) { }

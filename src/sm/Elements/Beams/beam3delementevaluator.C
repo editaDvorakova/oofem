@@ -168,52 +168,6 @@ void Beam3dElementEvaluator :: computeBMatrixAt(FloatMatrix &answer, GaussPoint 
     
     answer = B1;
     answer.add(B2);
-
-/*
-    FloatMatrix d;
-    FloatMatrix help;
-    FloatArray n;
-    double J, iJ, kappa, tau;
-  
-    BSplineInterpolation *interp = dynamic_cast<BSplineInterpolation*> (gp->giveElement()->giveInterpolation());
-  
-    interp->evalN( n, gp->giveNaturalCoordinates(), FEIIGAElementGeometryWrapper( gp->giveElement(), gp->giveIntegrationRule()->giveKnotSpan() ) );
-    interp->evaldNdx( d, gp->giveNaturalCoordinates(), FEIIGAElementGeometryWrapper( gp->giveElement(), gp->giveIntegrationRule()->giveKnotSpan() ) );  
-    J = interp->giveTransformationJacobian( gp->giveNaturalCoordinates(), FEIIGAElementGeometryWrapper( gp->giveElement(), gp->giveIntegrationRule()->giveKnotSpan() ) );
-    iJ = 1./J;
-  
-    kappa = this->giveCurvature( gp->giveNaturalCoordinates(), FEIIGAElementGeometryWrapper( gp->giveElement(), gp->giveIntegrationRule()->giveKnotSpan() ) );
-
-    tau = this->giveTorsion( gp->giveNaturalCoordinates(), FEIIGAElementGeometryWrapper( gp->giveElement(), gp->giveIntegrationRule()->giveKnotSpan() ) );
-
-    answer.resize(6, d.giveNumberOfRows() * 6);
-    answer.zero();
-  
-    for ( int i = 1; i <= d.giveNumberOfRows(); i++ ) {
-	answer.at(1, i*6 - 5) = d.at(i, 1) * iJ;
-	answer.at(1, i*6 - 4) = -kappa * n.at(i);
-      
-	answer.at(2, i*6 - 5) = kappa * n.at(i);
-	answer.at(2, i*6 - 4) = d.at(i, 1) * iJ;
-	answer.at(2, i*6 - 3) = -tau * n.at(i);
-	answer.at(2, i*6) = -n.at(i);
-
-	answer.at(3, i*6 - 4) = tau * n.at(i);
-	answer.at(3, i*6 - 3) = d.at(i, 1) * iJ;
-	answer.at(3, i*6 - 1) = n.at(i);
-
-	answer.at(4, i*6 - 2) = d.at(i, 1) * iJ;
-	answer.at(4, i*6 - 1) = -kappa * n.at(i);
-      
-	answer.at(5, i*6 - 2) = kappa * n.at(i);
-	answer.at(5, i*6 - 1) = d.at(i, 1) * iJ;
-	answer.at(5, i*6) = -tau * n.at(i);
-
-	answer.at(6, i*6 - 1) = tau * n.at(i);
-	answer.at(6, i*6) = d.at(i, 1) * iJ;
-
-	}*/
-
 }
 
 void Beam3dElementEvaluator :: computeB1MatrixAt(FloatMatrix &answer, GaussPoint *gp)
@@ -285,19 +239,6 @@ void Beam3dElementEvaluator :: computeB2MatrixAt(FloatMatrix &answer, GaussPoint
     answer.zero();
   
     for ( int i = 1; i <= d.giveNumberOfRows(); i++ ) {
-	/*
-	answer.at(1, i*6 - 5) = d.at(i, 1) * iJ;
-	answer.at(1, i*6 - 4) = -kappa * n.at(i);
-      
-	answer.at(2, i*6 - 5) = kappa * n.at(i);
-	answer.at(2, i*6 - 4) = d.at(i, 1) * iJ;
-	answer.at(2, i*6 - 3) = -tau * n.at(i);
-	answer.at(2, i*6) = -n.at(i);
-
-	answer.at(3, i*6 - 4) = tau * n.at(i);
-	answer.at(3, i*6 - 3) = d.at(i, 1) * iJ;
-	answer.at(3, i*6 - 1) = n.at(i);
-	*/
 	answer.at(4, i*6 - 2) = d.at(i, 1) * iJ;
 	answer.at(4, i*6 - 1) = -kappa * n.at(i);
       

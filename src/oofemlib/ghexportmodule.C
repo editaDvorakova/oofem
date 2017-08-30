@@ -131,8 +131,6 @@ GHExportModule :: doOutput(TimeStep *tStep, bool forcedOutput)
     FloatMatrix internalForces;
     int nelem = d->giveNumberOfElements();
     for ( int ielem = 1; ielem <= nelem; ielem++ ) {
-	Element *elem = d->giveElement(ielem);
-
 	NURBSBeam2dElementDsg *beamelem = dynamic_cast<NURBSBeam2dElementDsg*>( d->giveElement(ielem) );
 	beamelem->computeInternalForces(internalForces, divisions, tStep);
 
