@@ -97,6 +97,7 @@ protected:
     void giveNormal(FloatArray &answer, const FloatArray &lcoords, const FEICellGeometry &cellgeo);
     void giveBinormal(FloatArray &answer, const FloatArray &lcoords, const FEICellGeometry &cellgeo);
 
+    void computeInternalForces(FloatMatrix &internalForces, int divisions, TimeStep *tStep);
 
     // draw
     void computeNormal (FloatArray &n, FloatArray c, int knotSpan);

@@ -116,7 +116,10 @@ public:
     virtual int giveIntegrationType() { OOFEM_ERROR("Not supported."); }
     virtual IntegrationRule *giveReducedIntegrationRule(int i) { OOFEM_ERROR("Not supported."); }
     virtual FEInterpolation *giveBbarInterpolation() const { OOFEM_ERROR("Not supported."); }
-
+    virtual void computeMidUnknownVector(FloatArray &local, FloatArray &global, TimeStep *tStep) { OOFEM_ERROR("Not supported."); }
+    // grasshopper export
+    void computeInternalForces( FloatMatrix &internalForces, int divisions, TimeStep *tStep){ OOFEM_ERROR("computeInternalForces - not supported")
+    }
 protected:
     virtual int giveNsd() = 0;
     virtual int giveFsd() = 0; // this info is available also from interpolation. Do we need it here ???
