@@ -87,7 +87,7 @@ protected:
     IntegrationRule *setIR(int i) ;
     int giveNumberOfIR(int knotSpan);
 
-    int giveLocalCoordinateSystem(FloatMatrix &answer, FloatArray lcoords, const FEICellGeometry &cellgeo);
+    // int giveLocalCoordinateSystem(FloatMatrix &answer, FloatArray lcoords, const FEICellGeometry &cellgeo);
    
     // draw    
 

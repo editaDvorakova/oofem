@@ -107,7 +107,7 @@ GHExportModule :: doOutput(TimeStep *tStep, bool forcedOutput)
         return;
     }
 
-
+    
     // DISPLACEMENTS
     FILE *stream = this->giveOutputStream("d");
     Domain *d  = emodel->giveDomain(1);
@@ -131,7 +131,7 @@ GHExportModule :: doOutput(TimeStep *tStep, bool forcedOutput)
     FloatMatrix internalForces;
     int nelem = d->giveNumberOfElements();
     for ( int ielem = 1; ielem <= nelem; ielem++ ) {
-	NURBSBeam2dElementDsg *beamelem = dynamic_cast<NURBSBeam2dElementDsg*>( d->giveElement(ielem) );
+	IGAElement *beamelem = dynamic_cast<IGAElement*>( d->giveElement(ielem) );
 	beamelem->computeInternalForces(internalForces, divisions, tStep);
 
       for ( int i = 1; i <= internalForces.giveNumberOfRows(); i++ ) {
@@ -140,9 +140,32 @@ GHExportModule :: doOutput(TimeStep *tStep, bool forcedOutput)
 	}
         fprintf(stream, "\n");
       }
-    }
-    fclose(stream);
+      }
 
+    /*
+    FILE *stream = this->giveOutputStream("d");
+    Domain *d  = emodel->giveDomain(1);
+    int nelem = d->giveNumberOfElements();
+    int midelem = ceil( (double) (nelem) /2);
+    IGAElement *beamelem = dynamic_cast<IGAElement*>( d->giveElement(midelem) );
+    FloatArray uloc, uglob;
+    beamelem->computeMidUnknownVector(uloc, uglob, tStep);
+
+
+    fprintf(stream, "Local:\n");
+    for ( int i = 1; i <= uloc.giveSize(); i++ ) {  
+	fprintf( stream, "%e ", uloc.at(i) );
+        fprintf(stream, "\n");
+    }
+
+    fprintf(stream, "Global:\n");
+    for ( int i = 1; i <= uglob.giveSize(); i++ ) {  
+	fprintf( stream, "%e ", uglob.at(i) );
+        fprintf(stream, "\n");
+    }
+
+    fclose(stream);
+    */
 }
 
 }

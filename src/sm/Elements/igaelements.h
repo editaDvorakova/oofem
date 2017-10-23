@@ -377,6 +377,9 @@ public:
 	Beam3dElementEvaluator :: computeBodyLoadVectorAt(answer, load, tStep, mode);
     }
 
+    //GH
+    void computeMidUnknownVector(FloatArray &local, FloatArray &global, TimeStep *tStep);
+
     // point load
     virtual void computePointLoadVectorAt(FloatArray &answer, Load *load, TimeStep *tStep, ValueModeType mode) {
         OOFEM_ERROR("PointLoad - not supported. ");
@@ -529,6 +532,9 @@ public:
 	Beam3dElementEvaluatorDsg :: computeBodyLoadVectorAt(answer, load, tStep, mode);
     }
 
+    //GH
+    void computeMidUnknownVector(FloatArray &local, FloatArray &global, TimeStep *tStep) ;
+
     // point load
     virtual void computePointLoadVectorAt(FloatArray &answer, Load *load, TimeStep *tStep, ValueModeType mode) {
         OOFEM_ERROR("PointLoad - not supported. ");
@@ -591,6 +597,9 @@ public:
     virtual const char *giveInputRecordName() const { return _IFT_NURBSBeam3dElementBbar_Name; }
     virtual const char *giveClassName() const { return "NURBSBeam3dElementBbar"; }
     
+    //GH
+    void computeMidUnknownVector(FloatArray &local, FloatArray &global, TimeStep *tStep) ;
+
     // edge load support
     virtual void computeBoundaryEdgeLoadVector(FloatArray &answer, BoundaryLoad *load, int edge, CharType type, ValueModeType mode, TimeStep *tStep, bool global) {
 	Beam3dElementEvaluatorBbar :: computeBoundaryEdgeLoadVector(answer, load, edge, type, mode, tStep, global);

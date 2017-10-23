@@ -48,6 +48,7 @@
 #include "mathfem.h"
 #include "iga/iga.h"
 #include "iga/feibspline.h"
+#include "timer.h"
 
 namespace oofem {
 void Beam3dElementEvaluatorDsg :: computeNMatrixAt(FloatMatrix &answer, GaussPoint *gp)
@@ -118,7 +119,9 @@ const FloatMatrix *
 Beam3dElementEvaluatorDsg :: computeDSGMatrix()
 {
     if ( !BDSG.isNotEmpty() ) {
-	
+	//	Timer timer;
+	//	timer.startTimer();
+
 	BSplineInterpolation *interp = dynamic_cast<BSplineInterpolation*> (this->giveElement()->giveInterpolation());
 	Element *elem = this->giveElement();
 	int nCP;
@@ -140,6 +143,7 @@ Beam3dElementEvaluatorDsg :: computeDSGMatrix()
 		// to optimize: copy all knotSpans(irules) <= ir-2
 		giveKnotSpanAt(*knotSpan, collocationPts.at(icp));
 		irn = this->giveNumberOfIR(knotSpan[0][0]);
+		irn = knotSpan[0].at(1)-interp->giveDegree(); 
 		// KNOTSPAN
 		for ( int ir = 0; ir <= irn/*knotSpan[0].at(1)-interp->giveDegree()*/; ir++ ) { // whole knotSpans including the actual one
 #ifdef __PARALLEL_MODE
@@ -154,6 +158,7 @@ Beam3dElementEvaluatorDsg :: computeDSGMatrix()
 		    // iRule = this->setIR(ir);
 		    else {
 			int numberOfGaussPoints = elem->giveIntegrationRule(0)->giveNumberOfIntegrationPoints(); 
+			//	numberOfGaussPoints = 1;
 			const FloatArray *knotValues; 
 			knotValues = interp -> giveKnotValues(1);
 			
@@ -188,7 +193,7 @@ Beam3dElementEvaluatorDsg :: computeDSGMatrix()
 				       FEIIGAElementGeometryWrapper( gp->giveElement(), gp->giveIntegrationRule()->giveKnotSpan() ) );
 			J = interp->giveTransformationJacobian( gp->giveNaturalCoordinates(),
 					FEIIGAElementGeometryWrapper( gp->giveElement(), gp->giveIntegrationRule()->giveKnotSpan() ) );
-			//	iJ = 1./J;
+			double	iJ = 1./J;
 			
 			kappa = this->giveCurvature( gp->giveNaturalCoordinates(),
 			      FEIIGAElementGeometryWrapper( gp->giveElement(), gp->giveIntegrationRule()->giveKnotSpan() ) );
@@ -202,39 +207,33 @@ Beam3dElementEvaluatorDsg :: computeDSGMatrix()
 			for ( int i = 1; i <= d.giveNumberOfRows(); i++ ) {
 			    // BmDSG
 			    BDSG.at(icp, (mask(0) + i-1)*6 - 5) += d.at(i, 1) * wgp; // mask goes from 0, otherwise i must go from zero
-			    BDSG.at(icp, (mask(0) + i-1)*6 - 4) += -n.at(i) * kappa * J * wgp;
-			    // answer.at(1, i*6 - 5) = d.at(i, 1) * iJ;
-			    // answer.at(1, i*6 - 4) = -kappa * n.at(i);
-			    
+			    BDSG.at(icp, (mask(0) + i-1)*6 - 4) += -n.at(i) * kappa * J * wgp; // check this column 
+ 
 			    // BsDSG
-			    BDSG.at(nCP+icp, (mask(0) + i-1)*6 - 5) += n.at(i) * kappa * J * wgp;
+			    BDSG.at(nCP+icp, (mask(0) + i-1)*6 - 5) += n.at(i) * kappa * J * wgp; // check this column
 			    BDSG.at(nCP+icp, (mask(0) + i-1)*6 - 4) += d.at(i, 1) * wgp;
 			    BDSG.at(nCP+icp, (mask(0) + i-1)*6 - 3) += -n.at(i) * tau * J * wgp;
 			    BDSG.at(nCP+icp, (mask(0) + i-1)*6 ) += -n.at(i) * J * wgp;
-			    // answer.at(2, i*6 - 5) = kappa * n.at(i);
-			    // answer.at(2, i*6 - 4) = d.at(i, 1) * iJ;
-			    // answer.at(2, i*6 - 3) = -tau * n.at(i);
-			    // answer.at(2, i*6) = -n.at(i);
-
+        
 			    // BbDSG
 			    BDSG.at(2*nCP+icp, (mask(0) + i-1)*6 - 4) += n.at(i) * tau * J * wgp;
 			    BDSG.at(2*nCP+icp, (mask(0) + i-1)*6 - 3) += d.at(i, 1) * wgp;
-			    BDSG.at(2*nCP+icp, (mask(0) + i-1)*6 - 1) += n.at(i) * J * wgp;
-			    // answer.at(3, i*6 - 4) = tau * n.at(i);
-			    // answer.at(3, i*6 - 3) = d.at(i, 1) * iJ;
-			    // answer.at(3, i*6 - 1) = n.at(i);
+			    BDSG.at(2*nCP+icp, (mask(0) + i-1)*6 - 1) += n.at(i) * J * wgp; // check this column
 
+	
 			}
 		    }
 		} // end loop over irules
 		
 	    }
+	// timer.stopTimer();
+	// OOFEM_LOG_INFO( "BDSG: %.2fs\n", timer.getUtime() );
     }
     return & BDSG;
 }
   
 void Beam3dElementEvaluatorDsg :: giveKnotSpanAt(IntArray &knotSpan, double lcoord)
-{
+{/*
     BSplineInterpolation *interp = dynamic_cast<BSplineInterpolation*> (this->giveElement()->giveInterpolation());
     knotSpan.resize(1);
 
@@ -242,23 +241,21 @@ void Beam3dElementEvaluatorDsg :: giveKnotSpanAt(IntArray &knotSpan, double lcoo
 
     //    const double *knt = interp->giveKnotVector()[0];
     knotSpan(0) = interp->findSpan(interp->giveNumberOfControlPoints(1), interp->giveDegree(), lcoord, interp->giveKnotVector()[0]);
-    
-    /*
+    */
+    BSplineInterpolation *interp = dynamic_cast<BSplineInterpolation*> (this->giveElement()->giveInterpolation());
     const FloatArray *knotValues; 
     knotValues = interp -> giveKnotValues(1);
-    const IntArray *knotMultiplicity; 
-    knotMultiplicity = interp -> giveKnotMultiplicity(1);
    
     int count = 1;
     for (int i = 2; i <= knotValues[0].giveSize(); i++)
 	{
 	    if (knotValues[0].at(i)>=lcoord)
 		    break;
-	    count += knotMultiplicity[0].at(i);
+	    count++;
 	}
     knotSpan.resize(1);
     knotSpan(0) = count + interp->giveDegree()-1; // CHANGE THIS ! ! !
-    */
+ 
     return;
 
 }
@@ -266,6 +263,9 @@ void Beam3dElementEvaluatorDsg :: giveKnotSpanAt(IntArray &knotSpan, double lcoo
 const FloatMatrix * Beam3dElementEvaluatorDsg :: computeInvAMatrix()
 {
     if ( !invA.isNotEmpty() ) {
+	//	Timer timer;
+	//	timer.startTimer();
+
         FloatMatrix A;;
 	BSplineInterpolation *interp = dynamic_cast<BSplineInterpolation*> (this->giveElement()->giveInterpolation());
 	Element *elem = this->giveElement();
@@ -293,6 +293,9 @@ const FloatMatrix * Beam3dElementEvaluatorDsg :: computeInvAMatrix()
 	    A.copySubVectorRow(n, i+1, mask.at(1));
 	}
 	invA.beInverseOf(A);
+
+	//	timer.stopTimer();
+	//	OOFEM_LOG_INFO( "invA: %.2fs\n", timer.getUtime() );
     }
   
   return & invA;
@@ -384,12 +387,14 @@ int Beam3dElementEvaluatorDsg :: giveIntegrationElementLocalCodeNumbers(IntArray
 	answer.followedBy(nodalArray);	    
     }
     return 1;
-}
+    }
 
 void Beam3dElementEvaluatorDsg :: computeBMatrixAt(FloatMatrix &answer, GaussPoint *gp)
 {
+    //    Timer timer;
+    //    timer.startTimer();
+
     FloatArray ders, patchDers;  // row
-    FloatMatrix help;
 
     Element *elem = this->giveElement();
     // IntegrationRule *iRule = gp->giveIntegrationRule();
@@ -438,23 +443,34 @@ void Beam3dElementEvaluatorDsg :: computeBMatrixAt(FloatMatrix &answer, GaussPoi
     patchDers.assemble(ders, mask);
     
 
+
+    FloatArray help;
     FloatArray Bsn;
     FloatMatrix BsnDSG;
     BsnDSG.beSubMatrixOf (BDSG, nCP+1, 2*nCP, 1, BDSG.giveNumberOfColumns());
-    help.beProductOf(invA, BsnDSG);
-    Bsn.beTProductOf(help, patchDers);
+    // help.beProductOf(invA, BsnDSG);
+    // Bsn.beTProductOf(help, patchDers);
+    help.beTProductOf(invA, patchDers);
+    Bsn.beTProductOf(BsnDSG, help);
 
     FloatArray Bm;
     FloatMatrix BmDSG;
     BmDSG.beSubMatrixOf (BDSG, 1, nCP, 1, BDSG.giveNumberOfColumns());
-    help.beProductOf(invA, BmDSG);
-    Bm.beTProductOf(help, patchDers);
+    //  help.beProductOf(invA, BmDSG);
+    //  Bm.beTProductOf(help, patchDers);
+    help.beTProductOf(invA, patchDers);
+    Bm.beTProductOf(BmDSG, help);
 
     FloatArray Bsb;
     FloatMatrix BsbDSG;
     BsbDSG.beSubMatrixOf (BDSG, 2*nCP+1, 3*nCP, 1, BDSG.giveNumberOfColumns());
-    help.beProductOf(invA, BsbDSG);
-    Bsb.beTProductOf(help, patchDers);
+
+    // help.beProductOf(invA, BsbDSG);
+    // Bsb.beTProductOf(help, patchDers);
+    help.beTProductOf(invA, patchDers);
+    Bsb.beTProductOf(BsbDSG, help);
+
+
 
     FloatMatrix Bb, patchBb;
     IntArray rloc = {1,2,3};
@@ -463,12 +479,16 @@ void Beam3dElementEvaluatorDsg :: computeBMatrixAt(FloatMatrix &answer, GaussPoi
     patchBb.zero();
     patchBb.assemble(Bb, rloc, irlocnum);
 
+
     answer.resize(6,6 * nCP);
     answer.copySubVectorRow (Bm, 1, 1);
     answer.copySubVectorRow (Bsn, 2, 1);
     answer.copySubVectorRow (Bsb, 3, 1);
   
     answer.setSubMatrix (patchBb, 4, 1);
+
+    //    timer.stopTimer();
+    //    OOFEM_LOG_INFO( "computeBmatrixAt: elem %d gp %d gpcoords %f  %.4fs\n", this->giveElement()->giveNumber(), gp->giveNumber(), gp->giveNaturalCoordinate(1),timer.getUtime() );
     return;
 }
 
@@ -495,7 +515,7 @@ void Beam3dElementEvaluatorDsg :: computeBMatrixAt(FloatMatrix &answer, GaussPoi
   }
     */
        
-
+    /*
 int
 Beam3dElementEvaluatorDsg  :: giveLocalCoordinateSystem(FloatMatrix &answer, FloatArray lcoords, const FEICellGeometry &cellgeo)
 // move this function to beam3delementevaluator????
@@ -546,6 +566,6 @@ Beam3dElementEvaluatorDsg  :: giveLocalCoordinateSystem(FloatMatrix &answer, Flo
 
     return 1;
 }
-
+    */
 
 } // end namespace oofem

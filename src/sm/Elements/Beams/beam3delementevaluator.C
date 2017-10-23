@@ -78,8 +78,10 @@ void Beam3dElementEvaluator :: computeStiffnessMatrix(FloatMatrix &answer, MatRe
     m2.zero();
 
     FloatMatrix *m = & answer;
+    // FloatMatrix *m2 = & answer;
     if ( elem->giveInterpolation()->hasSubPatchFormulation() ) {
         m = & temp;
+	//  m2 = & temp;
     }
 
     numberOfIntegrationRules = elem->giveNumberOfIntegrationRules();
@@ -115,7 +117,7 @@ void Beam3dElementEvaluator :: computeStiffnessMatrix(FloatMatrix &answer, MatRe
 	    // loop over individual integration points
 	    for ( GaussPoint *gp: *iRule ) {
 		double dV = this->computeVolumeAround(gp);
-		this->computeB1MatrixAt(bj, gp);
+		this->computeB2MatrixAt(bj, gp);
 		this->computeConstitutiveMatrixAt(d, rMode, gp, tStep);
 
 		dbj.beProductOf(d, bj);
@@ -131,17 +133,19 @@ void Beam3dElementEvaluator :: computeStiffnessMatrix(FloatMatrix &answer, MatRe
 	    // loop over individual integration points
 	    for ( GaussPoint *gp: *iRule ) {
 		double dV = this->computeVolumeAround(gp);
-		this->computeBMatrixAt(bj, gp);
+		this->computeB1MatrixAt(bj, gp);
 		this->computeConstitutiveMatrixAt(d, rMode, gp, tStep);
 
 		dbj.beProductOf(d, bj);
 		if ( matStiffSymmFlag ) {
-		    m2.plusProductSymmUpper(bj, dbj, dV);
+		    m->plusProductSymmUpper(bj, dbj, dV);
+		    // m2.plusProductSymmUpper(bj, dbj, dV);
 		} else {
-		    m2.plusProductUnsym(bj, dbj, dV);
+		    m->plusProductUnsym(bj, dbj, dV);
+		    // m2.plusProductUnsym(bj, dbj, dV);
 		}
 	    }
-	    m->add(m2);
+	    // m->add(m2);
 
 	} else {
 	    OOFEM_ERROR("Unsupported integrationType == %d", elem->giveIntegrationType());
@@ -769,6 +773,39 @@ double Beam3dElementEvaluator :: giveTorsion(const FloatArray &lcoords, const FE
     return tau;
 }
 
+
+
+void
+Beam3dElementEvaluator :: computeInternalForces(FloatMatrix &internalForces, int divisions, TimeStep *tStep)
+{
+    Element *elem = this->giveElement();
+    FloatArray strain, stress;
+
+    internalForces.resize(divisions+1, 8);
+
+    int numberOfIntegrationRules = elem->giveNumberOfIntegrationRules();
+    FloatArray gpcoords;
+    gpcoords.resize(3);
+    gpcoords.zero();
+
+    int count = 1;
+    FloatArray u;
+    elem->computeVectorOf(VM_Total, tStep, u);
+    for (int ir = 0; ir < numberOfIntegrationRules; ir++)
+	{
+	    IntegrationRule *iRule = elem->giveIntegrationRule(ir);
+	    GaussPoint *gp = iRule->getIntegrationPoint(0);
+	    for (int j = 0; j < divisions+1; j++)
+		{
+		    gpcoords.at(1) = (double) j*(1./divisions);
+		    gp->setNaturalCoordinates(gpcoords);
+		    this->computeStrainVector(strain, gp, tStep, u);
+		    this->computeStressVector(stress, strain, gp, tStep);
+		    internalForces.copySubVectorRow(stress, count, 1);
+		    count++;
+		}
+	}
+}
 
 
 } // end namespace oofem
