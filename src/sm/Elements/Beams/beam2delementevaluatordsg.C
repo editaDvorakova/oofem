@@ -104,7 +104,9 @@ Beam2dElementEvaluatorDsg :: computeDSGMatrix()
 		    if ( ir < knotSpan[0].at(1)-interp->giveDegree(1) )
 			iRule = elem->giveIntegrationRule(ir);
 		    else {
-			int numberOfGaussPoints = elem->giveIntegrationRule(0)->giveNumberOfIntegrationPoints(); 
+			int numberOfGaussPoints =  elem->giveIntegrationRule(0)->giveNumberOfIntegrationPoints(); 
+			numberOfGaussPoints = 16;
+
 			const FloatArray *knotValues; 
 			knotValues = interp -> giveKnotValues(1);
 			double du = collocationPts.at(icp) - knotValues->at(knotSpan[0](0)-interp->giveDegree(1)+1);

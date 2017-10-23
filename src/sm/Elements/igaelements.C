@@ -406,12 +406,29 @@ void NURBSBeam3dElement :: giveRINumberOfGaussPoints(IntArray &answer, int nkns)
 
     NURBSInterpolationLine3d *interpol = static_cast< NURBSInterpolationLine3d * >( this->giveInterpolation() );
     int degree = interpol->giveDegree();
-    if (degree == 80){
-	
-    } else {
+    if (degree == 3){
 	for (int i = 1; i<=nkns; i++){
-	    answer.at(i) = numberOfGaussPoints-2;
+	    answer.at(i) = 1;
 	}
+	answer.at(1) ++;
+	answer.at(nkns) ++;
+    } else if (degree == 4){
+	for (int i = 1; i<=nkns; i++){
+	    answer.at(i) = 1;
+	}
+	answer.at(1) ++;
+	answer.at(nkns) ++;
+	answer.at(ceil(nkns/2)) ++;
+    } else if (degree == 5){
+	for (int i = 1; i<=nkns; i++){
+	    answer.at(i) = 1;
+	}
+	answer.at(1) ++;
+	answer.at(ceil(nkns/2)) ++;
+       	answer.at(floor(nkns/2)) ++;
+	answer.at(nkns) ++;
+    }  else {
+	OOFEM_ERROR("Reduced integration not supported for degree %d", degree);
     }
 }
 
@@ -460,6 +477,131 @@ void NURBSBeam3dElement :: computeLoadVector(FloatArray &answer, BodyLoad *load,
     }
 }
 
+void NURBSBeam3dElement :: computeMidUnknownVector(FloatArray &local, FloatArray &global, TimeStep *tStep)
+{
+
+    FloatArray displ;
+    // beamelem->computeMidUnknownVector(displ, tStep);
+    FloatMatrix N;
+    IntArray lc;
+
+    int numberOfIntegrationRules = this->giveNumberOfIntegrationRules();
+    FloatArray gpcoords;
+    gpcoords.resize(3);
+    gpcoords.at(1) = 0.5;
+    int midRule = floor( (double) (numberOfIntegrationRules) /2);
+    IntegrationRule *iRule = this->giveIntegrationRule(midRule);
+    GaussPoint *gp = iRule->getIntegrationPoint(0);
+    gp->setNaturalCoordinates(gpcoords);
+
+    FloatArray u, ur;
+    this->StructuralElementEvaluator::computeVectorOf(VM_Total, tStep, u);
+    this->computeNMatrixAt(N,  gp);
+
+    IntArray irlocnum;
+    this->giveIntegrationElementLocalCodeNumbers(irlocnum, this, iRule) ;
+    // get local code numbers corresponding to ir
+    ur.resize( N.giveNumberOfColumns() );
+    for (int n = 1; n <= irlocnum.giveSize(); n++ ) {
+	ur.at(n) = u.at( irlocnum.at(n) );
+    }
+    
+    // interpolate displacements
+    local.beProductOf(N, ur);
+    global.beProductOf(N, ur);
+
+    FloatMatrix T;
+    this->computeLoadGToLRotationMtrx(T, gp); 
+    global.rotatedWith(T, 't');
+
+    
+
+    // interp->local2global( cg [ k ], c [ k ], FEIIGAElementGeometryWrapper( this, iRule->giveKnotSpan() ) );
+    
+}
+    
+
+void NURBSBeam3dElementDsg :: computeMidUnknownVector(FloatArray &local, FloatArray &global, TimeStep *tStep)
+{
+
+    FloatArray displ;
+    // beamelem->computeMidUnknownVector(displ, tStep);
+    FloatMatrix N;
+    IntArray lc;
+
+    int numberOfIntegrationRules = this->giveNumberOfIntegrationRules();
+    FloatArray gpcoords;
+    gpcoords.resize(3);
+    gpcoords.at(1) = 0.5;
+    int midRule = floor( (double) (numberOfIntegrationRules) /2);
+    IntegrationRule *iRule = this->giveIntegrationRule(midRule);
+    GaussPoint *gp = iRule->getIntegrationPoint(0);
+    gp->setNaturalCoordinates(gpcoords);
+
+    FloatArray u, ur;
+    this->StructuralElementEvaluator::computeVectorOf(VM_Total, tStep, u);
+    this->computeNMatrixAt(N,  gp);
+    
+    IntArray irlocnum;
+    this->giveIntegrationElementLocalCodeNumbers(irlocnum, this, iRule) ;
+    // get local code numbers corresponding to ir
+    ur.resize( N.giveNumberOfColumns() );
+    for (int n = 1; n <= irlocnum.giveSize(); n++ ) {
+	ur.at(n) = u.at( irlocnum.at(n) );
+    }
+    
+    // interpolate displacements
+    local.beProductOf(N, ur);
+    global.beProductOf(N, ur);
+
+    FloatMatrix T;
+    this->computeLoadGToLRotationMtrx(T, gp); 
+    global.rotatedWith(T, 't');
+
+    
+}
+    
+
+
+void NURBSBeam3dElementBbar :: computeMidUnknownVector(FloatArray &local, FloatArray &global, TimeStep *tStep)
+{
+
+    FloatArray displ;
+    // beamelem->computeMidUnknownVector(displ, tStep);
+    FloatMatrix N;
+    IntArray lc;
+
+    int numberOfIntegrationRules = this->giveNumberOfIntegrationRules();
+    FloatArray gpcoords;
+    gpcoords.resize(3);
+    gpcoords.at(1) = 0.5;
+    int midRule = floor( (double) (numberOfIntegrationRules) /2);
+    IntegrationRule *iRule = this->giveIntegrationRule(midRule);
+    GaussPoint *gp = iRule->getIntegrationPoint(0);
+    gp->setNaturalCoordinates(gpcoords);
+
+    FloatArray u, ur;
+    this->StructuralElementEvaluator::computeVectorOf(VM_Total, tStep, u);
+    this->computeNMatrixAt(N,  gp);
+    
+    IntArray irlocnum;
+    this->giveIntegrationElementLocalCodeNumbers(irlocnum, this, iRule) ;
+    // get local code numbers corresponding to ir
+    ur.resize( N.giveNumberOfColumns() );
+    for (int n = 1; n <= irlocnum.giveSize(); n++ ) {
+	ur.at(n) = u.at( irlocnum.at(n) );
+    }
+    
+    // interpolate displacements
+    local.beProductOf(N, ur);
+    global.beProductOf(N, ur);
+
+    FloatMatrix T;
+    this->computeLoadGToLRotationMtrx(T, gp); 
+    global.rotatedWith(T, 't');
+
+}
+    
 // HUHU should be implemented by IGA element (it is the same for Bspline NURBS and TSpline)
 // however in such a case it should be generalized in terms of appropriately multiplying
 // nseq for those integration elements which span more than just a single knot span
