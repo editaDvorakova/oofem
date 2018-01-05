@@ -258,14 +258,14 @@ void Beam3dElementEvaluator :: computeB2MatrixAt(FloatMatrix &answer, GaussPoint
 
 double Beam3dElementEvaluator :: computeVolumeAround(GaussPoint *gp)
 {
-    double determinant, weight, area, volume;
+    double determinant, weight, volume;
     determinant = fabs( this->giveElement()->giveInterpolation()
 			->giveTransformationJacobian( gp->giveNaturalCoordinates(),
 						      FEIIGAElementGeometryWrapper( this->giveElement(),
 										    gp->giveIntegrationRule()->giveKnotSpan() ) ) );
     weight      = gp->giveWeight();
-    area   = this->giveElement()->giveCrossSection()->give(CS_Area, gp);
-    volume   = determinant * weight * area;
+    //  area   = this->giveElement()->giveCrossSection()->give(CS_Area, gp);
+    volume   = determinant * weight;// * area;
 
     return volume;
 }
@@ -364,9 +364,9 @@ Beam3dElementEvaluator :: computeNormal (FloatArray &n, FloatArray c, int knotSp
 // edita : 3D not supported
 FloatMatrix d;
 // BSplineInterpolation *interp = dynamic_cast<BSplineInterpolation*> (this->giveElement()->giveInterpolation());
-this->givedxds( d, c, FEIIGAElementGeometryWrapper( this->giveElement(), this->giveElement() ->giveIntegrationRule(knotSpan)->giveKnotSpan() ) );
-n = {-d.at(2,1),  d.at(1,1), 0};
-
+//this->givedxds( d, c, FEIIGAElementGeometryWrapper( this->giveElement(), this->giveElement() ->giveIntegrationRule(knotSpan)->giveKnotSpan() ) );
+//n = {-d.at(2,1),  d.at(1,1), 0};
+ n = {0, 0, 1};
 return;
 }
 
@@ -451,6 +451,34 @@ void Beam3dElementEvaluator :: computeDofsGtoLMatrix(FloatMatrix &answer, FloatA
             answer.at(i + 3, j + 3) = lcs.at(i, j);
         }
     }
+
+}
+    void Beam3dElementEvaluator :: computeLtoCSMatrix(FloatMatrix &answer, FloatArray coordSys, FloatArray coords,  const FEICellGeometry &cellgeo)
+{
+    // returns transformation matrix from local cs to given coordSys 
+    FloatMatrix lcs;
+    
+    FloatMatrix cs;
+    cs.resize(3,3);
+    FloatArray csX, csY, csZ;
+    csX = {coordSys.at(1), coordSys.at(2), coordSys.at(3)};
+    csY = {coordSys.at(4), coordSys.at(5), coordSys.at(6)};
+    csZ.beVectorProductOf(csX, csY);
+
+    cs.copySubVectorRow (csX, 1, 1);
+    cs.copySubVectorRow (csY, 2, 1);
+    cs.copySubVectorRow (csZ, 3, 1);
+
+    this->giveLocalCoordinateSystem(lcs, coords, cellgeo);
+
+    FloatMatrix help;
+    //  help.beProductTOf(cs, lcs);
+    help.beProductTOf(cs, lcs);
+
+    answer.resize(6, 6);
+    answer.setSubMatrix(help, 1, 1);
+    answer.setSubMatrix(help, 4, 4);
+
 
 }
      
@@ -543,7 +571,24 @@ bool Beam3dElementEvaluator :: computeGtoLRotationMatrix(FloatMatrix &answer)
 	  
     return true;
 }  
+   
+   void Beam3dElementEvaluator :: computeKnotspanGtoLRotationMatrix(FloatMatrix &answer, IntArray knotSpan)
+{
+    FloatMatrix R;
+    this->computeGtoLRotationMatrix(R);
 
+    BSplineInterpolation *interp = dynamic_cast<BSplineInterpolation*> (this->giveElement()->giveInterpolation());
+
+    IntArray mask;
+    interp->giveKnotSpanBasisFuncMask(knotSpan, mask);
+
+    int si, ei;
+    si  = mask.at(1) * 6 - 5;
+    int size = mask.giveSize();
+    ei = (mask.at(size)) * 6;
+
+    answer.beSubMatrixOf(R, si, ei, si, ei);
+}  
 
 void Beam3dElementEvaluator :: computeBodyLoadVectorAt(FloatArray &answer, Load *load, TimeStep *tStep, ValueModeType mode)
 {
