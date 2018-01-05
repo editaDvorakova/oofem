@@ -45,6 +45,9 @@ class Beam3dElementEvaluator : public StructuralElementEvaluator
 {
 public:
     Beam3dElementEvaluator() : StructuralElementEvaluator() { }
+    virtual void computeDofsGtoLMatrix(FloatMatrix &answer, FloatArray coords,  const FEICellGeometry &cellgeo);
+    virtual void computeLtoCSMatrix(FloatMatrix &answer, FloatArray coordSys, FloatArray coords,  const FEICellGeometry &cellgeo);
+    virtual void computeKnotspanGtoLRotationMatrix(FloatMatrix &answer, IntArray knotSpan);
 
 protected:
     /**
@@ -77,7 +80,6 @@ protected:
 
     int giveLocalCoordinateSystem(FloatMatrix &answer, FloatArray lcoords, const FEICellGeometry &cellgeo);
     void computeDofsGtoLMatrix(FloatMatrix &answer, FloatArray coords, int knotSpan);
-    void computeDofsGtoLMatrix(FloatMatrix &answer, FloatArray coords,  const FEICellGeometry &cellgeo);
     int computeLoadGToLRotationMtrx(FloatMatrix &answer, GaussPoint *gp);
     //void computeLToDirectorRotationMatrix(FloatMatrix &answer1, FloatMatrix &answer2, FloatMatrix &answer3, FloatMatrix &answer4);
     //int computeLoadLEToLRotationMatrix(FloatMatrix &answer, int iEdge, GaussPoint *gp);

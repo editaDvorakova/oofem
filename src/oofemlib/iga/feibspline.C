@@ -774,4 +774,5 @@ int BSplineInterpolation :: findSpan(int n, int p, double u, const FloatArray &U
 
     return mid;
 }
+
 } // end namespace oofem

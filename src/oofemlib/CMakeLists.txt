@@ -169,6 +169,7 @@ set (core_export
     outputmanager.C
     exportmodule.C
     ghexportmodule.C
+    igaexportmodule.C
     exportmodulemanager.C
     outputexportmodule.C
     errorcheckingexportmodule.C
@@ -301,6 +302,7 @@ set (core_bc
     reinforcement.C
     surfacetensionbc.C
     linearconstraintbc.C
+    igaconstraintbc.C
     )
 
 if (USE_PYTHON)
