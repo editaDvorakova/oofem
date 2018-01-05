@@ -371,6 +371,18 @@ public:
 	Beam3dElementEvaluator :: boundaryEdgeGiveNodes(bNodes, boundary);
     }
 
+    // lagrange multipliers
+    virtual void computeDofsGtoLMatrix(FloatMatrix &answer, FloatArray coords,  const FEICellGeometry &cellgeo) {
+	Beam3dElementEvaluator :: computeDofsGtoLMatrix(answer, coords, cellgeo) ;
+    }
+    virtual void computeLtoCSMatrix(FloatMatrix &answer, FloatArray coordSys, FloatArray coords,  const FEICellGeometry &cellgeo) {
+	Beam3dElementEvaluator :: computeLtoCSMatrix(answer, coordSys, coords, cellgeo) ;
+    }
+    virtual void computeKnotspanGtoLRotationMatrix(FloatMatrix &answer, IntArray knotSpan){
+	Beam3dElementEvaluator :: computeKnotspanGtoLRotationMatrix(answer, knotSpan) ;
+    }
+
+    
     // body load support
     void computeLoadVector(FloatArray &answer, BodyLoad *load, CharType type, ValueModeType mode, TimeStep *tStep);
     virtual void computeBodyLoadVectorAt(FloatArray &answer, Load *load, TimeStep *tStep, ValueModeType mode) {
@@ -526,6 +538,17 @@ public:
 	Beam3dElementEvaluatorDsg :: boundaryEdgeGiveNodes(bNodes, boundary);
     }
 
+    // lagrange multipliers
+    virtual void computeDofsGtoLMatrix(FloatMatrix &answer, FloatArray coords,  const FEICellGeometry &cellgeo) {
+	Beam3dElementEvaluatorDsg :: computeDofsGtoLMatrix(answer, coords, cellgeo) ;
+    }
+    virtual void computeLtoCSMatrix(FloatMatrix &answer, FloatArray coordSys, FloatArray coords,  const FEICellGeometry &cellgeo) {
+	Beam3dElementEvaluatorDsg :: computeLtoCSMatrix(answer, coordSys, coords, cellgeo) ;
+    }
+    virtual void computeKnotspanGtoLRotationMatrix(FloatMatrix &answer, IntArray knotSpan){
+	Beam3dElementEvaluatorDsg :: computeKnotspanGtoLRotationMatrix(answer, knotSpan) ;
+    }
+
     // body load support
     void computeLoadVector(FloatArray &answer, BodyLoad *load, CharType type, ValueModeType mode, TimeStep *tStep);
     virtual void computeBodyLoadVectorAt(FloatArray &answer, Load *load, TimeStep *tStep, ValueModeType mode) {
@@ -618,6 +641,18 @@ public:
     virtual void computePointLoadVectorAt(FloatArray &answer, Load *load, TimeStep *tStep, ValueModeType mode) {
         OOFEM_ERROR("PointLoad - not supported. ");
     }
+
+    // lagrange multipliers
+    virtual void computeDofsGtoLMatrix(FloatMatrix &answer, FloatArray coords,  const FEICellGeometry &cellgeo) {
+	Beam3dElementEvaluatorBbar :: computeDofsGtoLMatrix(answer, coords, cellgeo) ;
+    }
+    virtual void computeLtoCSMatrix(FloatMatrix &answer, FloatArray coordSys, FloatArray coords,  const FEICellGeometry &cellgeo) {
+	Beam3dElementEvaluatorBbar :: computeLtoCSMatrix(answer, coordSys, coords, cellgeo) ;
+    }
+    virtual void computeKnotspanGtoLRotationMatrix(FloatMatrix &answer, IntArray knotSpan){
+	Beam3dElementEvaluatorBbar :: computeKnotspanGtoLRotationMatrix(answer, knotSpan) ;
+    }
+
 
     // edita - OOFEG ?
     void computeNormal (FloatArray &n, FloatArray c, int knotSpan) { Beam3dElementEvaluatorBbar :: computeNormal ( n, c, knotSpan); }

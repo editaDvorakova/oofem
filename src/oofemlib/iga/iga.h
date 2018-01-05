@@ -118,8 +118,13 @@ public:
     virtual IntegrationRule *giveReducedIntegrationRule(int i) { OOFEM_ERROR("Not supported."); }
     virtual FEInterpolation *giveBbarInterpolation() const { OOFEM_ERROR("Not supported."); }
     virtual void computeMidUnknownVector(FloatArray &local, FloatArray &global, TimeStep *tStep) { OOFEM_ERROR("Not supported."); }
+    // lagrange multipliers
+    virtual void computeDofsGtoLMatrix(FloatMatrix &answer, FloatArray coords,  const FEICellGeometry &cellgeo) { OOFEM_ERROR("computeDofsGtoLMatrix - not supported") }
+    virtual void computeLtoCSMatrix(FloatMatrix &answer, FloatArray coordSys, FloatArray coords,  const FEICellGeometry &cellgeo) { OOFEM_ERROR("computeLtoCSMatrix - not supported") }
+    virtual void computeKnotspanGtoLRotationMatrix(FloatMatrix &answer, IntArray knotSpan){ OOFEM_ERROR("computeKnotspanGtoLRotationMatrix - not supported")  }
+
     // grasshopper export
-    void computeInternalForces( FloatMatrix &internalForces, int divisions, TimeStep *tStep){ OOFEM_ERROR("computeInternalForces - not supported")
+    virtual void computeInternalForces( FloatMatrix &internalForces, int divisions, TimeStep *tStep){ OOFEM_ERROR("computeInternalForces - not supported")
     }
 protected:
     virtual int giveNsd() = 0;

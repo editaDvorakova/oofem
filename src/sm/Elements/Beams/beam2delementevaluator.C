@@ -97,11 +97,11 @@ void Beam2dElementEvaluator :: computeBMatrixAt(FloatMatrix &answer, GaussPoint 
 
 double Beam2dElementEvaluator :: computeVolumeAround(GaussPoint *gp)
 {
-    double determinant, weight, area, volume;
+    double determinant, weight, volume;
     determinant = fabs( this->giveElement()->giveInterpolation()->giveTransformationJacobian( gp->giveNaturalCoordinates(), FEIIGAElementGeometryWrapper( this->giveElement(), gp->giveIntegrationRule()->giveKnotSpan() ) ) );
     weight      = gp->giveWeight();
-    area   = this->giveElement()->giveCrossSection()->give(CS_Area, gp);
-    volume   = determinant * weight * area;
+    // area   = this->giveElement()->giveCrossSection()->give(CS_Area, gp);
+    volume   = determinant * weight;// * area;
 
     return volume;
 }

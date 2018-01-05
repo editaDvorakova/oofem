@@ -32,7 +32,7 @@
  *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#include "ghexportmodule.h"
+#include "igaexportmodule.h"
 #include "timestep.h"
 #include "engngm.h"
 #include "domain.h"
@@ -55,44 +55,45 @@
 
 
 namespace oofem {
-REGISTER_ExportModule(GHExportModule)
+REGISTER_ExportModule(IGAExportModule)
 
 
-  GHExportModule :: GHExportModule(int n, EngngModel *e) : ExportModule(n,e)
+  IGAExportModule :: IGAExportModule(int n, EngngModel *e) : ExportModule(n,e)
 { }
 
 
-GHExportModule :: ~GHExportModule()
+IGAExportModule :: ~IGAExportModule()
 { }
 
 IRResultType
-GHExportModule :: initializeFrom(InputRecord *ir)
+IGAExportModule :: initializeFrom(InputRecord *ir)
 {
     IRResultType result;  // Required by IR_GIVE_FIELD macro
-    IR_GIVE_OPTIONAL_FIELD(ir, divisions, _IFT_GHExportModule_divisions);
+    IR_GIVE_OPTIONAL_FIELD(ir, divisions, _IFT_IGAExportModule_divisions);
 
     return ExportModule :: initializeFrom(ir);
 }
 
 bool
-  GHExportModule :: testTimeStepOutput(TimeStep *tStep)
+  IGAExportModule :: testTimeStepOutput(TimeStep *tStep)
 {
   return true;
 }
 
 bool
-GHExportModule :: testDomainOutput(int n)
+IGAExportModule :: testDomainOutput(int n)
 {
   return true;
 }
 
 
 FILE *
-GHExportModule :: giveOutputStream(const char *extension)
+IGAExportModule :: giveOutputStream(const char *extension)
 {
     std :: string fileName;
     FILE *answer;
-    fileName = this->emodel->giveOutputBaseFileName()+ "." + extension + ".gh.out";
+    // fileName = this->emodel->giveOutputBaseFileName()+ "." + extension + ".iga";
+    fileName = this->emodel->giveOutputBaseFileName() + ".iga";
     if ( ( answer = fopen(fileName.c_str(), "w") ) == NULL ) {
         OOFEM_ERROR("failed to open file %s", fileName.c_str());
     }
@@ -101,50 +102,43 @@ GHExportModule :: giveOutputStream(const char *extension)
 
 
 void
-GHExportModule :: doOutput(TimeStep *tStep, bool forcedOutput)
+IGAExportModule :: doOutput(TimeStep *tStep, bool forcedOutput)
 {
     if ( !( testTimeStepOutput(tStep) || forcedOutput ) ) {
         return;
     }
 
-    
-    // DISPLACEMENTS
     FILE *stream = this->giveOutputStream("d");
     Domain *d  = emodel->giveDomain(1);
-
-    int nnodes = d->giveNumberOfDofManagers();
-    FloatArray answer;
-    for ( int inode = 1; inode <= nnodes; inode++ ) { 
-      d->giveNode( inode )->giveUnknownVectorOfType(answer, DisplacementVector, VM_Total, tStep);
-        for ( int i = 1; i <= answer.giveSize(); i++ ) {
-            fprintf( stream, "%e ", answer.at(i) );
-        }
-
-        fprintf(stream, "\n");
-    }
-    fclose(stream);
-
-    // FORCES
-    stream = this->giveOutputStream("f");
-    d  = emodel->giveDomain(1);
-    
-    FloatMatrix internalForces;
     int nelem = d->giveNumberOfElements();
+
+    /*
+    int midelem = ceil( (double) (nelem) /2);
+    IGAElement *beamelem = dynamic_cast<IGAElement*>( d->giveElement(midelem) );
+    FloatArray uloc, uglob;
+    beamelem->computeMidUnknownVector(uloc, uglob, tStep);
+    */
+
     for ( int ielem = 1; ielem <= nelem; ielem++ ) {
 	IGAElement *beamelem = dynamic_cast<IGAElement*>( d->giveElement(ielem) );
-	beamelem->computeInternalForces(internalForces, divisions, tStep);
+	FloatArray uloc, uglob;
+	beamelem->computeMidUnknownVector(uloc, uglob, tStep);
 
-      for ( int i = 1; i <= internalForces.giveNumberOfRows(); i++ ) {
-	for (int j = 1; j <= internalForces.giveNumberOfColumns(); j++) {  
-	  fprintf( stream, "%e ", internalForces.at(i, j) );
+	fprintf(stream, "Local %d:\n", ielem);
+	for ( int i = 1; i <= uloc.giveSize(); i++ ) {  
+	    fprintf( stream, "%e ", uloc.at(i) );
+	    fprintf(stream, "\n");
 	}
-        fprintf(stream, "\n");
-      }
-      }
-   
+
+	fprintf(stream, "Global %d:\n", ielem);
+	for ( int i = 1; i <= uglob.giveSize(); i++ ) {  
+	    fprintf( stream, "%e ", uglob.at(i) );
+	    fprintf(stream, "\n");
+	}
+    }
 
     fclose(stream);
-   
+    
 }
 
 }

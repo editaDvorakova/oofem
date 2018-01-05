@@ -158,7 +158,7 @@ Beam3dElementEvaluatorDsg :: computeDSGMatrix()
 		    // iRule = this->setIR(ir);
 		    else {
 			int numberOfGaussPoints = elem->giveIntegrationRule(0)->giveNumberOfIntegrationPoints(); 
-			//	numberOfGaussPoints = 1;
+			// numberOfGaussPoints *= 2;
 			const FloatArray *knotValues; 
 			knotValues = interp -> giveKnotValues(1);
 			
@@ -193,7 +193,6 @@ Beam3dElementEvaluatorDsg :: computeDSGMatrix()
 				       FEIIGAElementGeometryWrapper( gp->giveElement(), gp->giveIntegrationRule()->giveKnotSpan() ) );
 			J = interp->giveTransformationJacobian( gp->giveNaturalCoordinates(),
 					FEIIGAElementGeometryWrapper( gp->giveElement(), gp->giveIntegrationRule()->giveKnotSpan() ) );
-			double	iJ = 1./J;
 			
 			kappa = this->giveCurvature( gp->giveNaturalCoordinates(),
 			      FEIIGAElementGeometryWrapper( gp->giveElement(), gp->giveIntegrationRule()->giveKnotSpan() ) );
