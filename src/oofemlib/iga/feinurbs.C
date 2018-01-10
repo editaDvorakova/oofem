@@ -677,22 +677,19 @@ void NURBSInterpolation :: local2global(FloatArray &answer, const FloatArray &lc
     answer.times(1.0 / weight);
 }
 
-double NURBSInterpolation :: giveTransformationJacobian(const FloatArray &lcoords, const FEICellGeometry &cellgeo)
-{
-
-  /*void NURBSInterpolation :: giveJacobianMatrixAt(FloatMatrix &jacobian, const FloatArray &lcoords, const FEICellGeometry &cellgeo)
-    {*/
+void NURBSInterpolation :: giveJacobianMatrixAt(FloatMatrix &jacobian, const FloatArray &lcoords, const FEICellGeometry &cellgeo)
+  {
     //
     // Based on Algorithm A4.4 (p. 137) for d=1
     //
     FEIIGAElementGeometryWrapper *gw = ( FEIIGAElementGeometryWrapper * ) & cellgeo;
     const FloatArray *vertexCoordsPtr;
-    FloatMatrix jacobian(fsd, fsd);
     IntArray span(fsd);
     double w, weight;
     int i, ind, indx, uind, vind, tind;
     std :: vector< FloatMatrix > ders(fsd);
-
+    jacobian.resize(fsd,fsd);
+    
     if ( gw->knotSpan ) {
         span = * gw->knotSpan;
     } else {

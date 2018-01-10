@@ -57,9 +57,8 @@ public:
         OOFEM_ERROR("Not yet implemented.");
         return 0;
     }
-    //virtual void giveJacobianMatrixAt(FloatMatrix &jacobianMatrix, const FloatArray &lcoords, const FEICellGeometry &cellgeo);
-    virtual double giveTransformationJacobian(const FloatArray &lcoords, const FEICellGeometry &cellgeo);
-
+    virtual void giveJacobianMatrixAt(FloatMatrix &jacobianMatrix, const FloatArray &lcoords, const FEICellGeometry &cellgeo);
+    
     virtual const char *giveClassName() const { return "NURBSInterpolation"; }
 };
 } // end namespace oofem
