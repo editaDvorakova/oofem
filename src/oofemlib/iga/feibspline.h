@@ -215,7 +215,7 @@ public:
     { OOFEM_ERROR("Not supported."); return NULL; }
 
     // edita: changed protected to public
-  /**
+    /**
      * Determines the knot span index (Algorithm A2.1 from the NURBS book)
      *
      * Determines the knot span for which there exists non-zero basis
@@ -229,8 +229,8 @@ public:
      * @return Span index at u (zero based).
      * @warning Parameter u must be in a valid range.
      */
-    int findSpan(int n, int p, double u, const double *U) const;
-
+    int findSpan(int n, int p, double u, const FloatArray &U) const;
+    
 protected:
     /**
      * Evaluates the nonvanishing basis functions of 1d BSpline (algorithm A2.2 from NURBS book)
@@ -264,21 +264,6 @@ protected:
      * @warning Parameters n, u and span must be in a valid range.
      */
     void dersBasisFuns(int n, double u, int span, int p, const FloatArray &U, FloatMatrix &ders);
-    /**
-     * Determines the knot span index (Algorithm A2.1 from the NURBS book)
-     *
-     * Determines the knot span for which there exists non-zero basis
-     * functions. The span is the index k for which the parameter
-     * u is valid in the (u_k,u_{k+1}] range.
-     *
-     * @param n Number of control points - 1.
-     * @param u Parametric value.
-     * @param p Degree.
-     * @param U Knot vector.
-     * @return Span index at u (zero based).
-     * @warning Parameter u must be in a valid range.
-     */
-    int findSpan(int n, int p, double u, const FloatArray &U) const;
     /**
      * Returns the range of nonzero basis functions for given knot span and given degree.
      */

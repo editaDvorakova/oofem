@@ -405,7 +405,7 @@ void NURBSBeam3dElement :: giveRINumberOfGaussPoints(IntArray &answer, int nkns)
     answer.zero();
 
     NURBSInterpolationLine3d *interpol = static_cast< NURBSInterpolationLine3d * >( this->giveInterpolation() );
-    int degree = interpol->giveDegree();
+    int degree = interpol->giveDegree(1);
     if (degree == 3){
 	for (int i = 1; i<=nkns; i++){
 	    answer.at(i) = 1;

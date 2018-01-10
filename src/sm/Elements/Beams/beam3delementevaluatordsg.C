@@ -78,7 +78,7 @@ IntegrationRule * Beam3dElementEvaluatorDsg :: setIR(int i)
     BSplineInterpolation *interp = dynamic_cast<BSplineInterpolation*> (this->giveElement()->giveInterpolation());
     
     mp = interp->giveKnotMultiplicity(1);
-    deg = interp->giveDegree();
+    deg = interp->giveDegree(1);
 
     ks = deg-1;
     ir = 0;
@@ -100,7 +100,7 @@ int Beam3dElementEvaluatorDsg ::giveNumberOfIR(int knotSpan)
     BSplineInterpolation *interp = dynamic_cast<BSplineInterpolation*> (this->giveElement()->giveInterpolation());
     
     mp = interp->giveKnotMultiplicity(1);
-    deg = interp->giveDegree();
+    deg = interp->giveDegree(1);
 
     ks = deg;
     irn = 0;
@@ -143,7 +143,7 @@ Beam3dElementEvaluatorDsg :: computeDSGMatrix()
 		// to optimize: copy all knotSpans(irules) <= ir-2
 		giveKnotSpanAt(*knotSpan, collocationPts.at(icp));
 		irn = this->giveNumberOfIR(knotSpan[0][0]);
-		irn = knotSpan[0].at(1)-interp->giveDegree(); 
+		irn = knotSpan[0].at(1)-interp->giveDegree(1); 
 		// KNOTSPAN
 		for ( int ir = 0; ir <= irn/*knotSpan[0].at(1)-interp->giveDegree()*/; ir++ ) { // whole knotSpans including the actual one
 #ifdef __PARALLEL_MODE
@@ -253,7 +253,7 @@ void Beam3dElementEvaluatorDsg :: giveKnotSpanAt(IntArray &knotSpan, double lcoo
 	    count++;
 	}
     knotSpan.resize(1);
-    knotSpan(0) = count + interp->giveDegree()-1; // CHANGE THIS ! ! !
+    knotSpan(0) = count + interp->giveDegree(1)-1; // CHANGE THIS ! ! !
  
     return;
 
@@ -310,9 +310,9 @@ const FloatArray * Beam3dElementEvaluatorDsg :: computeCollocationPoints()
 	nCP = interp->giveNumberOfControlPoints(1);
 	
 	int degree;
-	degree = interp->giveDegree();
+	degree = interp->giveDegree(1);
 
-	const double *const *knotVector; 
+	const FloatArray *knotVector; 
 	knotVector = interp -> giveKnotVector();
         collocationPts.resize(nCP);
 

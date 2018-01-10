@@ -118,8 +118,8 @@ void IGAConstraintBC :: giveLocArray(const UnknownNumberingScheme &r_s,  IntArra
 	BSplineInterpolation *interp = dynamic_cast<BSplineInterpolation*> (elem->giveInterpolation());
 	IntArray knotSpan(1);
 	int nCP = interp->giveNumberOfControlPoints(1);
-	const double * const* knotVector = interp->giveKnotVector();
-	int p = interp->giveDegree();
+	const FloatArray * knotVector = interp->giveKnotVector();
+	int p = interp->giveDegree(1);
 	knotSpan.at(1) = interp->findSpan(nCP, p, locArray.at(i), *knotVector); 
 	IntArray mask;
 	interp->giveKnotSpanBasisFuncMask(knotSpan, mask);
@@ -168,8 +168,8 @@ void IGAConstraintBC :: assemble(SparseMtrx &answer, TimeStep *tStep,
 	    IntArray knotSpan(1);
 	    BSplineInterpolation *bspInterp = dynamic_cast<BSplineInterpolation*> ( elem->giveInterpolation());
 	    int nCP = bspInterp->giveNumberOfControlPoints(1);
-	    const double * const* knotVector = bspInterp->giveKnotVector();
-	    int p = bspInterp->giveDegree();
+	    const FloatArray* knotVector = bspInterp->giveKnotVector();
+	    int p = bspInterp->giveDegree(1);
 	    knotSpan.at(1) = bspInterp->findSpan(nCP, p, locArray.at(i), *knotVector); 
 
 	    IntArray mask;
