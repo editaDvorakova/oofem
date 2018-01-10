@@ -1,0 +1,60 @@
+testhelix.out
+comment
+linearstatic nsteps 1 nmodules 1
+errorcheck
+#gh divisions 30
+domain 3dshell
+OutputManager tstep_all dofman_all element_all
+ndofman 6 nelem 1 ncrosssect 1 nmat 1  nbc 4 nic 0 nltf 1 nset 4
+node 1 coords 4 100 0 0 1
+node 2 coords 4 100 32.037724101704 5 0.882842712475
+node 3 coords 4 87.867965644036 63.603896932107 9 0.824264068712
+node 4 coords 4 63.603896932107 87.867965644036 12 0.824264068712
+node 5 coords 4 32.037724101704 100 14 0.882842712475
+node 6 coords 4 0 100 15 1
+NURBSBeam3dElementDsg 1 nodes 6 1 2 3 4 5 6 crosssect 1 mat 1 knotvectoru 2 0.0 1.0 knotmultiplicityu 2 6 6 degree 1 5 nip 8
+SimpleCS 1 area 1.000000e+00 Iy 8.333333e-02  Iz 8.333333e-02  Ik 1 shearareay 1. shearareaz 1. thick 1.0
+IsoLE 1 d 1. E 1.000000e+04 n 0.00 talpha 0.000012
+BoundaryCondition  1 loadTimeFunction 1 dofs 6 1 2 3 4 5 6 values 6 0 0 0 0 0 0 set 3
+NodalLoad 2 loadTimeFunction 1 dofs 6 1 2 3 4 5 6 Components 6 10.0 0.0 0.0 0 0 0 set 4
+ConstantEdgeLoad 3 loadTimeFunction 1 dofs 6 1 2 3 4 5 6 Components 6 0 1 0 0 0 0 loadType 3 set 1
+DeadWeight 4 loadTimeFunction 1 dofs 6 1 2 3 4 5 6 Components 6 0 0 10 0 0 0 set 2
+ConstantFunction 1 f(t) 1.0
+set 1 elementedges 2 1 1
+set 2 elementranges {1} 
+set 3 nodes 1 1
+set 4 nodes 1 6
+#
+#%BEGIN_CHECK% tolerance 5.e-1
+#
+#REACTION tStep 1 number 1 dof 1 value -1.0004e+01
+#REACTION tStep 1 number 1 dof 2 value -1.5790e+02
+#REACTION tStep 1 number 1 dof 3 value -1.5790e+03
+#REACTION tStep 1 number 1 dof 4 value -9.8914e+04
+#REACTION tStep 1 number 1 dof 5 value -5.7370e+04
+#REACTION tStep 1 number 1 dof 6 value 6.7223e+03
+##
+#NODE tStep 1 number 6 dof 1 unknown d value 8.09806402e+04
+#NODE tStep 1 number 6 dof 2 unknown d value 1.89629226e+04
+#NODE tStep 1 number 6 dof 3 unknown d value 6.40936678e+05
+#NODE tStep 1 number 6 dof 4 unknown d value 5.83039659e+03
+#NODE tStep 1 number 6 dof 5 unknown d value 3.11020873e+03
+#NODE tStep 1 number 6 dof 6 unknown d value -8.90896094e+02
+##
+##strains
+#ELEMENT tStep 1 number 1 gp 1 keyword 4 component 1 value 3.8916e-02
+#ELEMENT tStep 1 number 1 gp 1 keyword 4 component 2 value -2.5224e-02
+#ELEMENT tStep 1 number 1 gp 1 keyword 4 component 3 value 3.0081e-01
+#ELEMENT tStep 1 number 1 gp 1 keyword 4 component 4 value 1.0589e+01
+#ELEMENT tStep 1 number 1 gp 1 keyword 4 component 5 value -1.1439e+02
+#ELEMENT tStep 1 number 1 gp 1 keyword 4 component 6 value -2.6439e+01
+#
+##stresses
+#ELEMENT tStep 1 number 1 gp 1 keyword 1 component 1 value 3.8916e+02
+#ELEMENT tStep 1 number 1 gp 1 keyword 1 component 2 value -1.2612e+02
+#ELEMENT tStep 1 number 1 gp 1 keyword 1 component 3 value 1.5041e+03
+#ELEMENT tStep 1 number 1 gp 1 keyword 1 component 4 value 5.2943e+04
+#ELEMENT tStep 1 number 1 gp 1 keyword 1 component 5 value -9.5326e+04
+#ELEMENT tStep 1 number 1 gp 1 keyword 1 component 6 value -2.2033e+04
+##
+#%END_CHECK%
