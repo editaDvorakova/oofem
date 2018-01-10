@@ -386,11 +386,11 @@ Beam2dElementEvaluator :: computeNormal (FloatArray &n, FloatArray c, int knotSp
       span = * gw->knotSpan;
     } else {
       for ( i = 0; i < fsd; i++ ) {
-	  span(i) = interp->findSpan(interp->giveNumberOfControlPoints(i), interp->giveDegree(), lcoords(i), interp->giveKnotVector()[i]);
+	  span(i) = interp->findSpan(interp->giveNumberOfControlPoints(i), interp->giveDegree(1), lcoords(i), interp->giveKnotVector()[i]);
       }
     }
     
-    int degree = interp->giveDegree();
+    int degree = interp->giveDegree(1);
     uind = span(0) - degree;
     ind = uind + 1;
     

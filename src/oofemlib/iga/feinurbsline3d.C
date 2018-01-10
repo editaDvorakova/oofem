@@ -185,7 +185,7 @@ void NURBSInterpolationLine3d :: lowerDegree()
     this->degree[0] = this->degree[0]-1;
 
     int kvSize = 0;
-    int n = this->knotMultiplicity->giveSize();
+    int n = this->knotMultiplicity[0].giveSize();
     for (int i = 0; i < n; i++) {
 	kvSize += this->knotMultiplicity[0](i);
     }
