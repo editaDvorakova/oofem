@@ -1,0 +1,43 @@
+degbeam_tension.out
+Test for degenerated linear beam - tension
+#only momentum influence to the displacements is taken into account
+#beamShearCoeff is artificially enlarged.
+LinearStatic nsteps 1 nmodules 1
+errorcheck
+domain 3dShell
+OutputManager tstep_all dofman_all element_all
+ndofman 3 nelem 2 ncrosssect 1 nmat 1 nbc 2 nic 0 nltf 1 nset 3
+node 1 coords 3 0. 0.  0. 
+node 2 coords 3 0. 1.5  0. 
+node 3 coords 3 0. 2.  0. 
+#
+DegeneratedBeamLin3d 1 nodes 2 1 2 zaxis 3 0 0 1
+DegeneratedBeamLin3d 2 nodes 2 2 3 zaxis 3 0 0 1
+#
+SimpleCS 1 area 0.001 Iy 8.3333e-9 Iz  8.3333e-7 Ik 1 thick 0.01 width 0.1 beamShearCoeff 1.e10 material 1 set 1
+IsoLE 1 d 1. E 1.e6 n 0.0 tAlpha 1.2e-5
+BoundaryCondition 1 loadTimeFunction 1 dofs 6 1 2 3 4 5 6 values 6 0. 0. 0. 0. 0. 0. set 2
+NodalLoad 2 loadTimeFunction 1 dofs 6 1 2 3 4 5 6 Components 6 0.0 1.0 0.0 0. 0. 0. set 3
+PeakFunction 1 t 1.0 f(t) 1.
+Set 1 elementranges {(1 2)}
+Set 2 nodes 1 1
+Set 3 nodes 1 3
+#%BEGIN_CHECK% tolerance 5.e-1
+##cantilever beam -tension
+##
+#NODE tStep 1 number 2 dof 1 unknown d value 0.0
+#NODE tStep 1 number 2 dof 2 unknown d value 1.5e-03
+#NODE tStep 1 number 2 dof 3 unknown d value 0.0
+#NODE tStep 1 number 2 dof 4 unknown d value 0.0
+#NODE tStep 1 number 2 dof 5 unknown d value 0.0
+#NODE tStep 1 number 2 dof 6 unknown d value 0.0
+##
+#NODE tStep 1 number 3 dof 1 unknown d value 0.0
+#NODE tStep 1 number 3 dof 2 unknown d value 2.0e-03
+#NODE tStep 1 number 3 dof 3 unknown d value 0.0
+#NODE tStep 1 number 3 dof 4 unknown d value 0.0
+#NODE tStep 1 number 3 dof 5 unknown d value 0.0
+#NODE tStep 1 number 3 dof 6 unknown d value 0.0
+##
+##
+#%END_CHECK%

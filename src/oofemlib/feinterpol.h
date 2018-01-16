@@ -194,6 +194,18 @@ public:
         OOFEM_ERROR("not implemented");
     }
     /**
+     * Evaluates the matrix of derivatives of interpolation functions (shape functions) at given point (given in parametric metric coordinates).
+     * These derivatives are wrt local (parent) coordinate system
+     * @param answer Contains resulting matrix of derivatives, the member at i,j position contains value of dNi/dxij.
+     * @param lcoords Array containing (local, metric) coordinates.
+     * @param cellgeo Underlying cell geometry.
+     * @returns jacobian  
+     */
+    virtual double evaldNds(FloatMatrix &answer, const FloatArray &lcoords, const FEICellGeometry &cellgeo) {
+        OOFEM_ERROR("not implemented");
+    }
+    
+    /**
      * Returns a matrix containing the local coordinates for each node corresponding to the interpolation
      */
     virtual void giveLocalNodeCoords(FloatMatrix &answer) {

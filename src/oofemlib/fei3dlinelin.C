@@ -60,6 +60,7 @@ FEI3dLineLin :: evaldNdx(FloatMatrix &answer, const FloatArray &lcoords, const F
 {
     ///@todo Not clear what this function should return. Just dNds would make sense if the caller defines a local coordinate system.
     FloatArray vec;
+    
     vec.beDifferenceOf( * cellgeo.giveVertexCoordinates(2), * cellgeo.giveVertexCoordinates(1) );
 
     double detJ = vec.computeSquaredNorm() * 0.5;
@@ -76,6 +77,30 @@ FEI3dLineLin :: evaldNdx(FloatMatrix &answer, const FloatArray &lcoords, const F
     return detJ;
 }
 
+double
+FEI3dLineLin :: evaldNds(FloatMatrix &answer, const FloatArray &lcoords, const FEICellGeometry &cellgeo)
+{
+    ///@todo Not clear what this function should return. Just dNds would make sense if the caller defines a local coordinate system.
+    double l = this->giveLength(cellgeo);
+    
+    answer.resize(2, 1);
+
+    answer.at(1, 1) = -1./l;
+    answer.at(2, 1) =  1./l;
+    return 0.5*l;
+}
+ 
+void
+FEI3dLineLin :: evaldNdxi(FloatMatrix &answer, const FloatArray &lcoords, const FEICellGeometry &cellgeo)
+{
+    ///@todo Not clear what this function should return. Just dNds would make sense if the caller defines a local coordinate system.
+    answer.resize(2, 1);
+
+    answer.at(1, 1) = -0.5;
+    answer.at(2, 1) =  0.5;
+    return;
+}
+   
 void
 FEI3dLineLin :: evald2Ndx2(FloatMatrix &answer, const FloatArray &lcoords, const FEICellGeometry &cellgeo)
 {

@@ -37,7 +37,7 @@
 #include "../sm/Materials/structuralms.h"
 #include "../sm/Materials/structuralmaterial.h"
 #include "../sm/CrossSections/structuralcrosssection.h"
-#include "fei1dlin.h"
+#include "fei3dlinelin.h"
 #include "node.h"
 #include "material.h"
 #include "crosssection.h"
@@ -55,7 +55,7 @@
 namespace oofem {
 REGISTER_Element(DegeneratedBeamLin3d);
 
-FEI1dLin DegeneratedBeamLin3d :: interpolation(1);
+FEI3dLineLin DegeneratedBeamLin3d :: interpolation;
 
 DegeneratedBeamLin3d :: DegeneratedBeamLin3d(int n, Domain *aDomain) :
     DegeneratedBeam3d(n, aDomain)

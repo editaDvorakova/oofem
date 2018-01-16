@@ -52,7 +52,7 @@
 #define _IFT_DegeneratedBeam3d_directorType "directortype"
 
 namespace oofem {
-    class FEI1dLin;
+    class FEI3dLineLin;
 
 #ifndef __CHARTENSOR
  #define __CHARTENSOR
@@ -69,9 +69,7 @@ enum CharTensor {
 // #define DegeneratedBeam3d_reducedShearIntegration
 
 /**
- * This class implements an quad element based on Mixed Interpolation of Tensorial Components (MITC).
- * This element is a shell element suitable for both thin and thick shells.
- * The element has 24 DOFs (u,v,w-displacements and three rotations) in each node
+ * This class implements ...
  *
  * Tasks:
  * - calculating its B,D matrices and dV.
@@ -81,7 +79,7 @@ class DegeneratedBeam3d : public NLStructuralElement
 {
 protected:
     /// Element geometry approximation
-    static FEI1dLin interp_lin;
+  //   static FEI3dLineLin interp;
 
     int nPointsX, nPointsY, nPointsZ;
     int directorType, nDofMans, nGaussPoints;
@@ -94,8 +92,8 @@ public:
     DegeneratedBeam3d(int n, Domain *d);
     virtual ~DegeneratedBeam3d() { }
 
-    virtual FEInterpolation *giveInterpolation() const;
-    virtual FEInterpolation *giveInterpolation(DofIDItem id) const;
+    virtual FEInterpolation *giveInterpolation() const = 0;
+    virtual FEInterpolation *giveInterpolation(DofIDItem id) const = 0;
 
     //    virtual void giveInternalForcesVector(FloatArray &answer, TimeStep *tStep, int useUpdatedGpRecord);
 
@@ -115,7 +113,7 @@ private:
     virtual integrationDomain giveIntegrationDomain() const { return _Cube; }
     virtual MaterialMode giveMaterialMode() { return _3dMat; }
 
-
+    void giveLocalNodesCoordinates(FloatArray &coords);
     void giveLocalDirectorVectors(FloatMatrix &Vs, FloatMatrix &Vt);
     virtual void giveDirectorVectors(FloatMatrix &Vs, FloatMatrix &Vt);
     void giveJacobian(FloatArray lcoords, FloatMatrix &jacobianMatrix);
@@ -142,6 +140,7 @@ private:
     int giveIPValue(FloatArray &answer, GaussPoint *gp, InternalStateType type, TimeStep *tStep);
     virtual int computeGlobalCoordinates(FloatArray &answer, const FloatArray &lcoords);
 
+    bool computeGtoLRotationMatrix(FloatMatrix &answer);
 /*    void giveNodeCoordinates(double &x1, double &x2, double &x3, double &x4,
                              double &y1, double &y2, double &y3, double &y4,
                              double &z1, double &z2, double &z3, double &z4);

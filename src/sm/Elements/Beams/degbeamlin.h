@@ -39,22 +39,21 @@
 #include "spatiallocalizer.h"
 #include "load.h"
 #include "degbeam.h"
+#include "fei3dlinelin.h"
 
 
 
 #define _IFT_DegeneratedBeamLin3d_Name "degeneratedbeamlin3d"
 
 namespace oofem {
-    class FEI1dLin;
-
+    class FEI3dLineLin;
+          
 /// Comment or uncomment the following line to force full or reduced integration
 // #define DegeneratedBeam3d_reducedShearIntegration
 
 /**
- * This class implements an quad element based on Mixed Interpolation of Tensorial Components (MITC).
- * This element is a shell element suitable for both thin and thick shells.
- * The element has 24 DOFs (u,v,w-displacements and three rotations) in each node
- *
+ * This class implements ...
+ * 
  * Tasks:
  * - calculating its B,D matrices and dV.
  */
@@ -63,8 +62,8 @@ class DegeneratedBeamLin3d : public DegeneratedBeam3d
 {
 protected:
     /// Element geometry approximation
-    static FEI1dLin interpolation;
-
+    static FEI3dLineLin interpolation;
+           
 
 public:
 

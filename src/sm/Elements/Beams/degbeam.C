@@ -36,7 +36,7 @@
 #include "../sm/Materials/structuralms.h"
 #include "../sm/Materials/structuralmaterial.h"
 #include "../sm/CrossSections/structuralcrosssection.h"
-#include "fei1dlin.h"
+#include "fei3dlinelin.h"
 #include "node.h"
 #include "material.h"
 #include "crosssection.h"
@@ -52,9 +52,9 @@
 #include "classfactory.h"
 
 namespace oofem {
-REGISTER_Element(DegeneratedBeam3d);
+  //REGISTER_Element(DegeneratedBeam3d);
 
-FEI1dLin DegeneratedBeam3d :: interp_lin(1);
+  //FEI3dLineLin DegeneratedBeam3d :: interp();
 
 
 DegeneratedBeam3d :: DegeneratedBeam3d(int n, Domain *aDomain) :
@@ -70,17 +70,17 @@ DegeneratedBeam3d :: DegeneratedBeam3d(int n, Domain *aDomain) :
 
     //    nGaussPoints = nPointsX * nPointsY * nPointsZ;
 }
-
+  /*
 FEInterpolation *
-DegeneratedBeam3d :: giveInterpolation() const { return & interp_lin; }
+DegeneratedBeam3d :: giveInterpolation() const { return & interp; }
 
 
 FEInterpolation *
 DegeneratedBeam3d :: giveInterpolation(DofIDItem id) const
 {
-    return & interp_lin;
+    return & interp;
 }
-
+  */
 
 IRResultType
 DegeneratedBeam3d :: initializeFrom(InputRecord *ir)
@@ -247,6 +247,24 @@ DegeneratedBeam3d :: computeVolumeAround(GaussPoint *gp)
 }
 
 
+  void DegeneratedBeam3d :: giveLocalNodesCoordinates(FloatArray &coords)
+  {
+    for (int i = 1; i<=numberOfDofMans; i++){
+      
+      double dx, dy, dz;
+      Node *nodeA, *nodeB;
+
+      nodeA   = this->giveNode(1);
+      nodeB   = this->giveNode(i);
+      dx      = nodeB->giveCoordinate(1) - nodeA->giveCoordinate(1);
+      dy      = nodeB->giveCoordinate(2) - nodeA->giveCoordinate(2);
+      dz      = nodeB->giveCoordinate(3) - nodeA->giveCoordinate(3);
+      coords.at(i)  = sqrt(dx * dx + dy * dy + dz * dz);
+    }
+
+  }
+
+  
 void
 DegeneratedBeam3d :: giveJacobian(FloatArray lcoords, FloatMatrix &jacobianMatrix)
 // Returns the jacobianMatrix
@@ -267,7 +285,7 @@ DegeneratedBeam3d :: giveJacobian(FloatArray lcoords, FloatMatrix &jacobianMatri
     this->giveThickness(b);
 
     this->giveInterpolation()->evalN( h, lcoords,  FEIElementGeometryWrapper(this) );
-    this->giveInterpolation()->evaldNdx( dh, lcoords,  FEIElementGeometryWrapper(this) );
+    this->giveInterpolation()->evaldNdxi( dh, lcoords,  FEIElementGeometryWrapper(this) );
     // interpolation.giveDerivatives(dh, lcoords);
 
     double t = lcoords.at(2);
@@ -277,8 +295,8 @@ DegeneratedBeam3d :: giveJacobian(FloatArray lcoords, FloatMatrix &jacobianMatri
 
     // FloatArray x - x-coordinates, z_i = 0, y_i = 0
     FloatArray x(numberOfDofMans);
+    this->giveLocalNodesCoordinates(x);
     for (int j=0; j<numberOfDofMans; j++){
-	x(j) = ((double)j) / (numberOfDofMans-1); // change this to arbitrary location of points
 	jacobianMatrix.at(1, 1) += dh.at(j+1,1) * x.at(j+1);
 	for (int i=0; i<3; i++){
 	    jacobianMatrix.at(1, i+1) += t/2 * a.at(j+1) * dh.at(j+1,1) * Vt.at(i+1,j+1) + s/2 * b.at(j+1) * dh.at(j+1,1) * Vs.at(i+1,j+1); // dx_i/dr
@@ -315,7 +333,7 @@ DegeneratedBeam3d :: computeBmatrixAt(GaussPoint *gp, FloatMatrix &answer, int l
     FloatArray lcoords = gp -> giveNaturalCoordinates();
 
     this->giveInterpolation()->evalN( h, lcoords,  FEIElementGeometryWrapper(this) );
-    this->giveInterpolation()->evaldNdx( dh, lcoords,  FEIElementGeometryWrapper(this) );
+    this->giveInterpolation()->evaldNdxi( dh, lcoords,  FEIElementGeometryWrapper(this) );
     // interpolation.giveDerivatives(dh, lcoords);
 
     // get gp coordinates
@@ -332,7 +350,7 @@ DegeneratedBeam3d :: computeBmatrixAt(GaussPoint *gp, FloatMatrix &answer, int l
     invJ.beInverseOf(jacobianMatrix);
 
     dhdx = dh;
-    dhdx.times(invJ(1,1));
+    dhdx.times(invJ.at(1,1));
 
 
     for (int j=0; j<numberOfDofMans; j++) {
@@ -413,10 +431,10 @@ DegeneratedBeam3d :: computeBmatrixAt(GaussPoint *gp, FloatMatrix &answer, int l
     invJ.beInverseOf(jacobianMatrix);
 
     interpolation.evalN( h, redCoords,  FEIElementGeometryWrapper(this) );
-    interpolation.evaldNdx( dh, redCoords,  FEIElementGeometryWrapper(this) );
+    interpolation.evaldNdxi( dh, redCoords,  FEIElementGeometryWrapper(this) );
 
     dhdx = dh;
-    dhdx.times(invJ(1,1));
+    // dhdx.times(invJ(1,1));
 #endif
 
     for (int j=0; j<numberOfDofMans; j++) {
@@ -531,7 +549,6 @@ DegeneratedBeam3d :: computeLocalBaseVectors(FloatArray &e1, FloatArray &e2, Flo
 
 
 
-    /*
 bool
 DegeneratedBeam3d :: computeGtoLRotationMatrix(FloatMatrix &answer)
 // Returns the rotation matrix of the receiver of the size [24,24]
@@ -541,16 +558,18 @@ DegeneratedBeam3d :: computeGtoLRotationMatrix(FloatMatrix &answer)
 {
     this->computeGtoLRotationMatrix();
 
-    answer.resize(24, 24);
+    answer.resize(numberOfDofMans*6, numberOfDofMans*6);
     answer.zero();
 
-    FloatMatrix LtoDir1, LtoDir2, LtoDir3, LtoDir4;
-    this->computeLToDirectorRotationMatrix(LtoDir1, LtoDir2, LtoDir3, LtoDir4);
+    // FloatMatrix LtoDir1, LtoDir2, LtoDir3, LtoDir4;
+    // this->computeLToDirectorRotationMatrix(LtoDir1, LtoDir2, LtoDir3, LtoDir4);
 
-    for ( int i = 0; i <= 3; i++ ) {
+    for ( int i = 0; i < numberOfDofMans; i++ ) {
         answer.setSubMatrix(GtoLRotationMatrix, i * 6 + 1, i * 6 + 1);
+        answer.setSubMatrix(GtoLRotationMatrix, i * 6 + 4, i * 6 + 4);
     }
-    ////
+
+    /*
     FloatMatrix help;
 
     help.beProductOf(LtoDir1, GtoLRotationMatrix);
@@ -564,10 +583,10 @@ DegeneratedBeam3d :: computeGtoLRotationMatrix(FloatMatrix &answer)
 
     help.beProductOf(LtoDir4, GtoLRotationMatrix);
     answer.setSubMatrix(help, 22, 22);
-
+    */
     return 1;
 }
-    */
+    
 
 void
 DegeneratedBeam3d :: computeStressVector(FloatArray &answer, const FloatArray &strain, GaussPoint *gp, TimeStep *tStep)
