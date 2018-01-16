@@ -393,7 +393,7 @@ DegeneratedBeam3d :: computeBmatrixAt(GaussPoint *gp, FloatMatrix &answer, int l
 
 	// dv/dz v: V2 = fi3*V1 - fi1*V3
 	// dv/dr dr/dz -> inv(3,1) 
-	answer.at(4, j*6+2) = dh.at(j+1,1) *invJ.at(1,1);
+	answer.at(4, j*6+2) = dh.at(j+1,1) *invJ.at(3,1);
 	answer.at(4, j*6+6) = t/2 * a.at(j+1) * dh.at(j+1,1) *invJ.at(3,1) * Vt.at(1,j+1) + s/2 * b.at(j+1) * dh.at(j+1,1) *invJ.at(3,1) * Vs.at(1,j+1);
 	answer.at(4, j*6+4) =-t/2 * a.at(j+1) * dh.at(j+1,1) *invJ.at(3,1) * Vt.at(3,j+1) - s/2 * b.at(j+1) * dh.at(j+1,1) *invJ.at(3,1) * Vs.at(3,j+1);
 	// dv/dt dt/dz -> inv(3,2)
@@ -430,8 +430,8 @@ DegeneratedBeam3d :: computeBmatrixAt(GaussPoint *gp, FloatMatrix &answer, int l
     this->giveJacobian(redCoords, jacobianMatrix);
     invJ.beInverseOf(jacobianMatrix);
 
-    interpolation.evalN( h, redCoords,  FEIElementGeometryWrapper(this) );
-    interpolation.evaldNdxi( dh, redCoords,  FEIElementGeometryWrapper(this) );
+    this->giveInterpolation()->evalN( h, redCoords,  FEIElementGeometryWrapper(this) );
+    this->giveInterpolation()->evaldNdxi( dh, redCoords,  FEIElementGeometryWrapper(this) );
 
     dhdx = dh;
     // dhdx.times(invJ(1,1));

@@ -66,7 +66,7 @@ enum CharTensor {
 
 
 /// Comment or uncomment the following line to force full or reduced integration
-// #define DegeneratedBeam3d_reducedShearIntegration
+#define DegeneratedBeam3d_reducedShearIntegration
 
 /**
  * This class implements ...
