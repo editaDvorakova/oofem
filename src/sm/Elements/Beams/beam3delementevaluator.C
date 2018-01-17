@@ -287,7 +287,7 @@ void Beam3dElementEvaluator :: computeBoundaryEdgeLoadVector(FloatArray &answer,
     answer.clear();
     
     if ( edge != 1 ) {
-        OOFEM_ERROR("Beam2DElementEvaluator only has 1 edge (the midline) that supports loads. Attempted to apply load to edge %d", edge);
+        OOFEM_ERROR("Beam3DElementEvaluator only has 1 edge (the midline) that supports loads. Attempted to apply load to edge %d", edge);
     }
     
     if ( type != ExternalForcesVector ) {
