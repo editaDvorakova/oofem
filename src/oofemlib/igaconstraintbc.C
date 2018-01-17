@@ -112,7 +112,7 @@ void IGAConstraintBC :: giveLocArray(const UnknownNumberingScheme &r_s,  IntArra
     // assemble location array
     for ( int i = 1; i <= size; i++ ) { // elements
 	IGAElement *elem = dynamic_cast<IGAElement*> (this->domain->giveElement(elements.at(i)));
-	int nnodes = elem->giveNumberOfDofManagers();
+	//int nnodes = elem->giveNumberOfDofManagers();
 	
 
 	BSplineInterpolation *interp = dynamic_cast<BSplineInterpolation*> (elem->giveInterpolation());
@@ -181,7 +181,7 @@ void IGAConstraintBC :: assemble(SparseMtrx &answer, TimeStep *tStep,
 	    gp->setNaturalCoordinates(coords);
 	   
 	    FloatArray localN;
-	    FEInterpolation *interp = elem->giveInterpolation();
+	    //FEInterpolation *interp = elem->giveInterpolation();
 	    bspInterp->evalN( localN, coords, FEIIGAElementGeometryWrapper( elem, elem->giveIntegrationRule(ir)->giveKnotSpan() ) );
 	    bspInterp->evalN( localN, coords, FEIIGAElementGeometryWrapper( elem, &knotSpan ) );
 
