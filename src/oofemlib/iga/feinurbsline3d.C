@@ -94,18 +94,19 @@ void NURBSInterpolationLine3d :: evalN(FloatArray &answer, const FloatArray &lco
 
 
      
-
-double NURBSInterpolationLine3d :: giveTransformationJacobian(const FloatArray &lcoords, const FEICellGeometry &cellgeo)
+ void NURBSInterpolationLine3d :: giveJacobianMatrixAt(FloatMatrix &jacobianMatrix, const FloatArray &lcoords, const FEICellGeometry &cellgeo)
 {
     //
     // Based on Algorithm A4.4 (p. 137) for d=1
     //
     FEIIGAElementGeometryWrapper *gw = ( FEIIGAElementGeometryWrapper * ) & cellgeo;
     const FloatArray *vertexCoordsPtr;
-    FloatMatrix jacobian(3, 3);
     IntArray span(fsd);
-    double Jacob, w, weight;
+    double w, weight;
     int i, k, ind, uind;
+    
+    jacobianMatrix.resize(3, 3);
+    
 #ifdef HAVE_VARIABLE_ARRAY_SIZE
     FloatMatrix ders [ fsd ];
 #else
@@ -158,9 +159,9 @@ double NURBSInterpolationLine3d :: giveTransformationJacobian(const FloatArray &
         weight = wders(0);
 
         // calculation of jacobian matrix according to Eq 4.7
-        jacobian(0, 0) = ( Aders [ 0 ](1) - wders(1) * Aders [ 0 ](0) / weight ) / weight; // dx/du
-        jacobian(1, 1) = ( Aders [ 1 ](1) - wders(1) * Aders [ 1 ](0) / weight ) / weight; // dy/du
-        jacobian(2, 2) = ( Aders [ 2 ](1) - wders(1) * Aders [ 2 ](0) / weight ) / weight; // dz/du
+        jacobianMatrix(0, 0) = ( Aders [ 0 ](1) - wders(1) * Aders [ 0 ](0) / weight ) / weight; // dx/du
+        jacobianMatrix(1, 1) = ( Aders [ 1 ](1) - wders(1) * Aders [ 1 ](0) / weight ) / weight; // dy/du
+        jacobianMatrix(2, 2) = ( Aders [ 2 ](1) - wders(1) * Aders [ 2 ](0) / weight ) / weight; // dz/du
     }  else {
       OOFEM_ERROR("giveTransformationJacobianMatrix not implemented for fsd = %d", fsd);
     }
@@ -169,15 +170,25 @@ double NURBSInterpolationLine3d :: giveTransformationJacobian(const FloatArray &
     delete [] Aders;
 
 
-    Jacob = sqrt(jacobian(0,0)*jacobian(0,0) + jacobian(1,1)*jacobian(1,1)  + jacobian(2,2)*jacobian(2,2));
-
-    if ( fabs(Jacob) < 1.0e-10 ) {
-        OOFEM_ERROR("giveTransformationJacobianMatrix - zero Jacobian");
-    }
-
-
-    return Jacob;
 }
+
+
+double
+NURBSInterpolationLine3d :: giveTransformationJacobian(const FloatArray &lcoords, const FEICellGeometry &cellgeo){
+
+  FloatMatrix jacobian;
+  this->giveJacobianMatrixAt(jacobian, lcoords, cellgeo);
+    
+  double Jacob = sqrt(jacobian(0,0)*jacobian(0,0) + jacobian(1,1)*jacobian(1,1)  + jacobian(2,2)*jacobian(2,2));
+  
+  if ( fabs(Jacob) < 1.0e-10 ) {
+    OOFEM_ERROR("giveTransformationJacobianMatrix - zero Jacobian");
+  }
+  
+  
+  return Jacob;
+}
+  
 
 void NURBSInterpolationLine3d :: lowerDegree()
 {
@@ -197,7 +208,7 @@ void NURBSInterpolationLine3d :: lowerDegree()
 
     // change multiplicity
     knotMultiplicity[0](0) = knotMultiplicity[0](0) -1;
-    knotMultiplicity[0](n) = knotMultiplicity[0](n) -1;
+    knotMultiplicity[0](n-1) = knotMultiplicity[0](n-1) -1;
 
     
 }
