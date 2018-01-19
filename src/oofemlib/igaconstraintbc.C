@@ -118,9 +118,14 @@ void IGAConstraintBC :: giveLocArray(const UnknownNumberingScheme &r_s,  IntArra
 	BSplineInterpolation *interp = dynamic_cast<BSplineInterpolation*> (elem->giveInterpolation());
 	IntArray knotSpan(1);
 	int nCP = interp->giveNumberOfControlPoints(1);
-	const FloatArray * knotVector = interp->giveKnotVector();
-	int p = interp->giveDegree(1);
-	knotSpan.at(1) = interp->findSpan(nCP, p, locArray.at(i), *knotVector); 
+	FloatArray * knotVector = interp->giveKnotVector();
+	int p = interp->giveDegree();
+	knotSpan.at(1) = interp->findSpan(nCP, p, locArray.at(i), *knotVector);
+	// todo: use more clever way how to solve the case locArray(?) = 1
+	//	if (locArray.at(i) == 1)
+	//knotSpan.at(1)--;
+	// end todo
+	
 	IntArray mask;
 	interp->giveKnotSpanBasisFuncMask(knotSpan, mask);
 	int maskSize = mask.giveSize();
