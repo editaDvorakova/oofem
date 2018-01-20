@@ -122,8 +122,8 @@ void IGAConstraintBC :: giveLocArray(const UnknownNumberingScheme &r_s,  IntArra
 	int p = interp->giveDegree();
 	knotSpan.at(1) = interp->findSpan(nCP, p, locArray.at(i), *knotVector);
 	// todo: use more clever way how to solve the case locArray(?) = 1
-	//	if (locArray.at(i) == 1)
-	//knotSpan.at(1)--;
+	if (locArray.at(i) == 1)
+	  knotSpan.at(1)--;
 	// end todo
 	
 	IntArray mask;
@@ -145,7 +145,7 @@ void IGAConstraintBC :: giveLocArray(const UnknownNumberingScheme &r_s,  IntArra
     
 void IGAConstraintBC :: assemble(SparseMtrx &answer, TimeStep *tStep,
                                     CharType type, const UnknownNumberingScheme &r_s,
-                                    const UnknownNumberingScheme &c_s)
+                                    const UnknownNumberingScheme &c_s, double scale)
 {
     if ( !this->lhsType.contains( ( int ) type ) ) {
         return;
@@ -175,7 +175,11 @@ void IGAConstraintBC :: assemble(SparseMtrx &answer, TimeStep *tStep,
 	    int nCP = bspInterp->giveNumberOfControlPoints(1);
 	    const double * const* knotVector = bspInterp->giveKnotVector();
 	    int p = bspInterp->giveDegree();
-	    knotSpan.at(1) = bspInterp->findSpan(nCP, p, locArray.at(i), *knotVector); 
+	    knotSpan.at(1) = bspInterp->findSpan(nCP, p, locArray.at(i), *knotVector);
+	    // todo: use more clever way how to solve the case locArray(?) = 1
+	    if (locArray.at(i) == 1)
+	      knotSpan.at(1)--;
+	    // end todo 
 
 	    IntArray mask;
 	    bspInterp->giveKnotSpanBasisFuncMask(knotSpan, mask);
