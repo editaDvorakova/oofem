@@ -1,0 +1,64 @@
+cantilever8p7bbar_lmult.out
+comment
+linearstatic nsteps 1 nmodules 1
+errorcheck
+domain 3dshell
+OutputManager tstep_all dofman_all element_all
+ndofman 16 nelem 2 ncrosssect 1 nmat 1  nbc 10 nic 0 nltf 1 nset 4
+node 1 coords 4 0 0 0 1
+node 2 coords 4 0.142857142857144 0 0 1
+node 3 coords 4 0.285714285714281 0 0 1
+node 4 coords 4 0.428571428571436 0 0 1
+node 5 coords 4 0.571428571428565 0 0 1
+node 6 coords 4 0.714285714285718 0 0 1
+node 7 coords 4 0.857142857142856 0 0 1
+node 8 coords 4 1 0 0 1
+node 11 coords 4 0 0 1 1
+node 12 coords 4 0.142857142857144 0 1 1
+node 13 coords 4 0.285714285714281 0 1 1
+node 14 coords 4 0.428571428571436 0 1 1
+node 15 coords 4 0.571428571428565 0 1 1
+node 16 coords 4 0.714285714285718 0 1 1
+node 17 coords 4 0.857142857142856 0 1 1
+node 18 coords 4 1 0 1 1
+NURBSBeam3dElementBbar 1 nodes 8 1 2 3 4 5 6 7 8 crosssect 1 mat 1 knotvectoru 2 0.0 1.0 knotmultiplicityu 2 8 8 degree 1 7 nip 8 zaxis 3 0 0 1
+NURBSBeam3dElementBbar 2 nodes 8 11 12 13 14 15 16 17 18 crosssect 1 mat 1 knotvectoru 2 0.0 1.0 knotmultiplicityu 2 8 8 degree 1 7 nip 8 zaxis 3 0 0 1
+SimpleCS 1 area 0.0942477796 Iy 1.178097e-3  Iz 1.178097e-3  Ik 2.35619e-03 shearareay 0.620229 shearareaz  0.620229
+IsoLE 1 d 1. E 200.000000e+09 n 0.30 talpha 0.000012
+BoundaryCondition  1 loadTimeFunction 1 dofs 6 1 2 3 4 5 6 values 6 0 0 0 0 0 0 set 3
+NodalLoad 2 loadTimeFunction 1 dofs 6 1 2 3 4 5 6 Components 6 2 0 2 0 0 0 set 4
+ConstantEdgeLoad 3 loadTimeFunction 1 dofs 6 1 2 3 4 5 6 Components 6 0 0 0 0 0 0 loadType 3 set 1
+DeadWeight 4 loadTimeFunction 1 dofs 6 1 2 3 4 5 6 Components 6 0 0 0 0 0 0 set 2
+#
+IGAConstraintBC 5 loadTimeFunction 1 elements 2 1 2 dofs 1 1 locarray 2 1 1 weights 2 1 -1 weightsLtf 2 1 1 rhs 0.0 rhsLtf 1 lhstype 4 1 2 3 4 rhsType 2 150 151
+IGAConstraintBC 6 loadTimeFunction 1 elements 2 1 2 dofs 1 2 locarray 2 1 1 weights 2 1 -1 weightsLtf 2 1 1 rhs 0.0 rhsLtf 1 lhstype 4 1 2 3 4 rhsType 2 150 151
+IGAConstraintBC 7 loadTimeFunction 1 elements 2 1 2 dofs 1 3 locarray 2 1 1 weights 2 1 -1 weightsLtf 2 1 1 rhs 0.0 rhsLtf 1 lhstype 4 1 2 3 4 rhsType 2 150 151
+IGAConstraintBC 8 loadTimeFunction 1 elements 2 1 2 dofs 1 4 locarray 2 1 1 weights 2 1 -1 weightsLtf 2 1 1 rhs 0.0 rhsLtf 1 lhstype 4 1 2 3 4 rhsType 2 150 151
+IGAConstraintBC 9 loadTimeFunction 1 elements 2 1 2 dofs 1 5 locarray 2 1 1 weights 2 1 -1 weightsLtf 2 1 1 rhs 0.0 rhsLtf 1 lhstype 4 1 2 3 4 rhsType 2 150 151
+IGAConstraintBC 10 loadTimeFunction 1 elements 2 1 2 dofs 1 6 locarray 2 1 1 weights 2 1 -1 weightsLtf 2 1 1 rhs 0.0 rhsLtf 1 lhstype 4 1 2 3 4 rhsType 2 150 151
+#
+ConstantFunction 1 f(t) 1.0
+set 1 elementedges 2 1 1
+set 2 elementranges {(1 2)} 
+set 3 nodes 2 1 11
+set 4 nodes 1 8
+#
+#
+#%BEGIN_CHECK% tolerance 1.e-8
+##isogeometric cantilever beam
+##
+#NODE tStep 1 number 8 dof 1 unknown d value 5.30516477e-11
+#NODE tStep 1 number 8 dof 2 unknown d value 0.00000000e+00
+#NODE tStep 1 number 8 dof 3 unknown d value 1.43567090e-09
+#NODE tStep 1 number 8 dof 4 unknown d value 0.00000000e+00
+#NODE tStep 1 number 8 dof 5 unknown d value -2.12206635e-09
+#NODE tStep 1 number 8 dof 6 unknown d value 0.00000000e+00
+##
+#ELEMENT tStep 1 number 1 gp 1 keyword 4 component 1  value  5.3052e-11
+#ELEMENT tStep 1 number 1 gp 1 keyword 4 component 2  value  0.0000e+00
+#ELEMENT tStep 1 number 1 gp 1 keyword 4 component 3  value  2.0960e-11
+#ELEMENT tStep 1 number 1 gp 1 keyword 1 component 1  value 1.0000e+00
+#ELEMENT tStep 1 number 1 gp 1 keyword 1 component 2  value 0.0000e+00
+#ELEMENT tStep 1 number 1 gp 1 keyword 1 component 3  value 1.0000e+00
+##
+#%END_CHECK%
