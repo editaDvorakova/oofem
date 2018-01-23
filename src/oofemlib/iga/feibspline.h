@@ -65,24 +65,24 @@ protected:
     /// Number of formulation directions.
     int fsd;
     /// Degree in each direction.
-    std::array<int, 3> degree;                                   // eg. 2
+    std :: array< int, 3 >degree;                                   // eg. 2
     /// Knot values [nsd]
-    std::array<FloatArray, 3> knotValues;                        // eg. 0 1 2 3 4 5
+    std :: array< FloatArray, 3 >knotValues;                        // eg. 0 1 2 3 4 5
     /// Knot multiplicity [nsd]
-    std::array<IntArray, 3> knotMultiplicity;                    // eg. 3 1 1 1 2 3
+    std :: array< IntArray, 3 >knotMultiplicity;                    // eg. 3 1 1 1 2 3
     /// numberOfControlPoints[nsd]
     /**
      * For TSpline this is filled by values corresponding to case when there are no T-junctions
      * (i.e. TSpline = BSpline)
      */
-    std::array<int, 3> numberOfControlPoints;
+    std :: array< int, 3 >numberOfControlPoints;
     /// Knot vectors [nsd][knot_vector_size]
-    std::array<FloatArray, 3> knotVector;                           // eg. 0 0 0 1 2 3 4 4 5 5 5
+    std :: array< FloatArray, 3 >knotVector;                           // eg. 0 0 0 1 2 3 4 4 5 5 5
     /// Nonzero spans in each directions [nsd]
-    std::array<int, 3> numberOfKnotSpans;                        // eg. 5 (0-1,1-2,2-3,3-4,4-5)
+    std :: array< int, 3 >numberOfKnotSpans;                        // eg. 5 (0-1,1-2,2-3,3-4,4-5)
 public:
-      BSplineInterpolation(int nsd, int fsd) : FEInterpolation(0),
-      nsd(nsd), fsd(fsd)
+    BSplineInterpolation(int nsd, int fsd) : FEInterpolation(0),
+        nsd(nsd), fsd(fsd)
     {}
     virtual ~BSplineInterpolation() {}
 
@@ -187,7 +187,7 @@ public:
     int giveNumberOfKnotSpans(int dim) override { return numberOfKnotSpans [ dim - 1 ]; }
     virtual int giveNumberOfControlPoints(int dim) { return numberOfControlPoints [ dim - 1 ]; }
     virtual int giveDegree(int dim) { return degree [ dim - 1 ]; }
-    
+
     const FloatArray *giveKnotVector() override {
         return this->knotVector.data();
     }
@@ -230,7 +230,7 @@ public:
      * @warning Parameter u must be in a valid range.
      */
     int findSpan(int n, int p, double u, const FloatArray &U) const;
-    
+
 protected:
     /**
      * Evaluates the nonvanishing basis functions of 1d BSpline (algorithm A2.2 from NURBS book)

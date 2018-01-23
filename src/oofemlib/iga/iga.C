@@ -83,28 +83,26 @@ IRResultType IGAElement :: initializeFrom(InputRecord *ir)
         knotSpan.resize(1);
 
         int numberOfIntegrationRules = numberOfKnotSpansU;
-        integrationRulesArray.resize( numberOfIntegrationRules );
-	
-	knotSpan.at(1) = -1;
-	for ( int ui = 1; ui <= numberOfKnotSpansU; ui++ ) {
-	  du = knotValuesU->at(ui + 1) - knotValuesU->at(ui);
-	  knotSpan.at(1) += knotMultiplicityU->at(ui);
-	  
-	  integrationRulesArray [ indx ].reset( new IGAIntegrationElement(indx, this, knotSpan) );
-	  integrationRulesArray [ indx ]->SetUpPointsOnLine(numberOfGaussPoints, _2dBeam); // HUHU 
+        integrationRulesArray.resize(numberOfIntegrationRules);
 
-	  // remap local subelement gp coordinates into knot span coordinates and update integration weight
-	  for ( GaussPoint *gp: *integrationRulesArray [ indx ] ) {
-	    const FloatArray &gpcoords = gp->giveNaturalCoordinates();
-	    
-	    newgpcoords.at(1) = knotValuesU->at(ui) + du * ( gpcoords.at(1) / 2.0 + 0.5 );
-	    gp->setNaturalCoordinates(newgpcoords);
-	    gp->setWeight(gp->giveWeight() / 2.0 * du );
-	  }
-	  indx++;
+        knotSpan.at(1) = -1;
+        for ( int ui = 1; ui <= numberOfKnotSpansU; ui++ ) {
+            du = knotValuesU->at(ui + 1) - knotValuesU->at(ui);
+            knotSpan.at(1) += knotMultiplicityU->at(ui);
+
+            integrationRulesArray [ indx ].reset( new IGAIntegrationElement(indx, this, knotSpan) );
+            integrationRulesArray [ indx ]->SetUpPointsOnLine(numberOfGaussPoints, _2dBeam); // HUHU
+
+            // remap local subelement gp coordinates into knot span coordinates and update integration weight
+            for ( GaussPoint *gp : *integrationRulesArray [ indx ] ) {
+                const FloatArray &gpcoords = gp->giveNaturalCoordinates();
+
+                newgpcoords.at(1) = knotValuesU->at(ui) + du * ( gpcoords.at(1) / 2.0 + 0.5 );
+                gp->setNaturalCoordinates(newgpcoords);
+                gp->setWeight(gp->giveWeight() / 2.0 * du);
+            }
+            indx++;
         }
-	
-	
     } else if ( fsd == 2 ) {
         int numberOfKnotSpansU = this->giveInterpolation()->giveNumberOfKnotSpans(1);
         int numberOfKnotSpansV = this->giveInterpolation()->giveNumberOfKnotSpans(2);
@@ -120,7 +118,7 @@ IRResultType IGAElement :: initializeFrom(InputRecord *ir)
         knotSpan.resize(2);
 
         int numberOfIntegrationRules = numberOfKnotSpansU * numberOfKnotSpansV;
-        integrationRulesArray.resize( numberOfIntegrationRules );
+        integrationRulesArray.resize(numberOfIntegrationRules);
 
         knotSpan.at(2) = -1;
         for ( int vi = 1; vi <= numberOfKnotSpansV; vi++ ) {
@@ -132,11 +130,11 @@ IRResultType IGAElement :: initializeFrom(InputRecord *ir)
                 du = knotValuesU->at(ui + 1) - knotValuesU->at(ui);
                 knotSpan.at(1) += knotMultiplicityU->at(ui);
 
-                integrationRulesArray [ indx ] = std::make_unique<IGAIntegrationElement>(indx, this, knotSpan);
+                integrationRulesArray [ indx ] = std :: make_unique< IGAIntegrationElement >(indx, this, knotSpan);
                 integrationRulesArray [ indx ]->SetUpPointsOnSquare(numberOfGaussPoints, _PlaneStress); // HUHU _PlaneStress, rectangle
 
                 // remap local subelement gp coordinates into knot span coordinates and update integration weight
-                for ( GaussPoint *gp: *integrationRulesArray [ indx ] ) {
+                for ( GaussPoint *gp : *integrationRulesArray [ indx ] ) {
                     const FloatArray &gpcoords = gp->giveNaturalCoordinates();
 
                     newgpcoords.at(1) = knotValuesU->at(ui) + du * ( gpcoords.at(1) / 2.0 + 0.5 );
@@ -166,7 +164,7 @@ IRResultType IGAElement :: initializeFrom(InputRecord *ir)
         knotSpan.resize(3);
 
         int numberOfIntegrationRules = numberOfKnotSpansU * numberOfKnotSpansV * numberOfKnotSpansW;
-        integrationRulesArray.resize( numberOfIntegrationRules );
+        integrationRulesArray.resize(numberOfIntegrationRules);
 
         knotSpan.at(3) = -1;
         for ( int wi = 1; wi <= numberOfKnotSpansW; wi++ ) {
@@ -183,11 +181,11 @@ IRResultType IGAElement :: initializeFrom(InputRecord *ir)
                     du = knotValuesU->at(ui + 1) - knotValuesU->at(ui);
                     knotSpan.at(1) += knotMultiplicityU->at(ui);
 
-                    integrationRulesArray [ indx ] = std::make_unique<IGAIntegrationElement>(indx, this, knotSpan);
+                    integrationRulesArray [ indx ] = std :: make_unique< IGAIntegrationElement >(indx, this, knotSpan);
                     integrationRulesArray [ indx ]->SetUpPointsOnCube(numberOfGaussPoints, _3dMat);
 
                     // remap local subelement gp coordinates into knot span coordinates and update integration weight
-                    for ( GaussPoint *gp: *integrationRulesArray [ indx ] ) {
+                    for ( GaussPoint *gp : *integrationRulesArray [ indx ] ) {
                         const FloatArray &gpcoords = gp->giveNaturalCoordinates();
 
                         newgpcoords.at(1) = knotValuesU->at(ui) + du * ( gpcoords.at(1) / 2.0 + 0.5 );
@@ -279,7 +277,7 @@ IRResultType IGATSplineElement :: initializeFrom(InputRecord *ir)
         knotSpan.resize(2);
 
         int numberOfIntegrationRules = numberOfKnotSpansU * numberOfKnotSpansV;
-        integrationRulesArray.resize( numberOfIntegrationRules );
+        integrationRulesArray.resize(numberOfIntegrationRules);
 
         knotSpan.at(2) = -1;
         for ( vi = 1; vi <= numberOfKnotSpansV; vi++ ) {
@@ -291,11 +289,11 @@ IRResultType IGATSplineElement :: initializeFrom(InputRecord *ir)
                 du = knotValuesU->at(ui + 1) - knotValuesU->at(ui);
                 knotSpan.at(1) += knotMultiplicityU->at(ui);
 
-                integrationRulesArray [ indx ] = std::make_unique<IGAIntegrationElement>(indx, this, knotSpan);
+                integrationRulesArray [ indx ] = std :: make_unique< IGAIntegrationElement >(indx, this, knotSpan);
                 integrationRulesArray [ indx ]->SetUpPointsOnSquare(numberOfGaussPoints, _PlaneStress); // HUHU _PlaneStress, rectangle
 
                 // remap local subelement gp coordinates into knot span coordinates and update integration weight
-                for ( GaussPoint *gp: *integrationRulesArray [ indx ] ) {
+                for ( GaussPoint *gp : *integrationRulesArray [ indx ] ) {
                     const FloatArray &gpcoords = gp->giveNaturalCoordinates();
 
                     newgpcoords.at(1) = knotValuesU->at(ui) + du * ( gpcoords.at(1) / 2.0 + 0.5 );
@@ -372,7 +370,7 @@ void IGAElement :: drawRawGeometry(oofegGraphicContext &gc, TimeStep *tStep)
         }
 
         // loop over individual integration rules (i.e., knot spans)
-        for ( auto &iRule: integrationRulesArray ) {
+        for ( auto &iRule : integrationRulesArray ) {
             span = iRule->giveKnotSpan();
             // divide span locally to get finer geometry rep.
             du = ( knotVector [ 0 ] [ span->at(1) + 1 ] - knotVector [ 0 ] [ span->at(1) ] ) / nseg;
@@ -403,7 +401,7 @@ void IGAElement :: drawRawGeometry(oofegGraphicContext &gc, TimeStep *tStep)
         }
 
         // loop over individual integration rules (i.e., knot spans)
-        for ( auto &iRule: integrationRulesArray ) {
+        for ( auto &iRule : integrationRulesArray ) {
             span = iRule->giveKnotSpan();
             // divide span locally to get finer geometry rep.
             du = ( knotVector [ 0 ] [ span->at(1) + 1 ] - knotVector [ 0 ] [ span->at(1) ] ) / nseg;
@@ -506,7 +504,7 @@ void IGAElement :: drawRawGeometry(oofegGraphicContext &gc, TimeStep *tStep)
         }
 
         // loop over individual integration rules (i.e., knot spans)
-        for ( auto &iRule: integrationRulesArray ) {
+        for ( auto &iRule : integrationRulesArray ) {
             span = iRule->giveKnotSpan();
             // divide span locally to get finer geometry rep.
             du = ( knotVector [ 0 ] [ span->at(1) + 1 ] - knotVector [ 0 ] [ span->at(1) ] ) / nseg;
@@ -1101,7 +1099,7 @@ void drawIGAPatchDeformedGeometry(Element *elem, StructuralElementEvaluator *se,
                     se->computeNMatrixAt(N, & gp);
 
                     // get local code numbers corresponding to ir
-                    se->giveIntegrationElementLocalCodeNumbers(lc, elem, gp.giveIntegrationRule());
+                    se->giveIntegrationElementLocalCodeNumbers( lc, elem, gp.giveIntegrationRule() );
                     ur.resize( N.giveNumberOfColumns() );
                     for ( n = 1; n <= lc.giveSize(); n++ ) {
                         ur.at(n) = u.at( lc.at(n) );
@@ -1157,7 +1155,7 @@ void drawIGAPatchDeformedGeometry(Element *elem, StructuralElementEvaluator *se,
                         se->computeNMatrixAt(N, & gp);
 
                         // get local code numbers corresponding to ir
-                        se->giveIntegrationElementLocalCodeNumbers(lc, elem, gp.giveIntegrationRule());
+                        se->giveIntegrationElementLocalCodeNumbers( lc, elem, gp.giveIntegrationRule() );
                         ur.resize( N.giveNumberOfColumns() );
                         for ( n = 1; n <= lc.giveSize(); n++ ) {
                             ur.at(n) = u.at( lc.at(n) );
@@ -1232,7 +1230,7 @@ void drawIGAPatchDeformedGeometry(Element *elem, StructuralElementEvaluator *se,
                             se->computeNMatrixAt(N, & gp);
 
                             // get local code numbers corresponding to ir
-                            se->giveIntegrationElementLocalCodeNumbers(lc, elem, gp.giveIntegrationRule());
+                            se->giveIntegrationElementLocalCodeNumbers( lc, elem, gp.giveIntegrationRule() );
                             ur.resize( N.giveNumberOfColumns() );
                             for ( n = 1; n <= lc.giveSize(); n++ ) {
                                 ur.at(n) = u.at( lc.at(n) );

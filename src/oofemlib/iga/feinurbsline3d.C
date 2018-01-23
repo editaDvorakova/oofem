@@ -76,7 +76,7 @@ void NURBSInterpolationLine3d :: evalN(FloatArray &answer, const FloatArray &lco
         uind = span(0) - degree [ 0 ];
         ind = uind + 1;
         for ( k = 0; k <= degree [ 0 ]; k++ ) {
-            answer.at(c++) = val = N [ 0 ](k) * cellgeo.giveVertexCoordinates(ind + k)->at(nsd+1);       // Nu*w
+            answer.at(c++) = val = N [ 0 ](k) * cellgeo.giveVertexCoordinates(ind + k)->at(nsd + 1);       // Nu*w
             sum += val;
         }
     } else {
@@ -93,8 +93,8 @@ void NURBSInterpolationLine3d :: evalN(FloatArray &answer, const FloatArray &lco
 }
 
 
-     
- void NURBSInterpolationLine3d :: giveJacobianMatrixAt(FloatMatrix &jacobianMatrix, const FloatArray &lcoords, const FEICellGeometry &cellgeo)
+
+void NURBSInterpolationLine3d :: giveJacobianMatrixAt(FloatMatrix &jacobianMatrix, const FloatArray &lcoords, const FEICellGeometry &cellgeo)
 {
     //
     // Based on Algorithm A4.4 (p. 137) for d=1
@@ -104,9 +104,9 @@ void NURBSInterpolationLine3d :: evalN(FloatArray &answer, const FloatArray &lco
     IntArray span(fsd);
     double w, weight;
     int i, k, ind, uind;
-    
+
     jacobianMatrix.resize(3, 3);
-    
+
 #ifdef HAVE_VARIABLE_ARRAY_SIZE
     FloatMatrix ders [ fsd ];
 #else
@@ -144,10 +144,10 @@ void NURBSInterpolationLine3d :: evalN(FloatArray &answer, const FloatArray &lco
         ind = uind + 1;
         for ( k = 0; k <= degree [ 0 ]; k++ ) {
             vertexCoordsPtr = cellgeo.giveVertexCoordinates(ind + k);
-            w = vertexCoordsPtr->at(nsd+1);
+            w = vertexCoordsPtr->at(nsd + 1);
             Aders [ 0 ](0) += ders [ 0 ](0, k) * vertexCoordsPtr->at(1) * w;   // xw=sum(Nu*x*w)
-	    Aders [ 1 ](0) += ders [ 0 ](0, k) * vertexCoordsPtr->at(2) * w;   // yw=sum(Nu*y*w)
-	    Aders [ 2 ](0) += ders [ 0 ](0, k) * vertexCoordsPtr->at(3) * w;   // yw=sum(Nu*z*w)
+            Aders [ 1 ](0) += ders [ 0 ](0, k) * vertexCoordsPtr->at(2) * w;   // yw=sum(Nu*y*w)
+            Aders [ 2 ](0) += ders [ 0 ](0, k) * vertexCoordsPtr->at(3) * w;   // yw=sum(Nu*z*w)
             wders(0)    += ders [ 0 ](0, k) * w;                               // w=sum(Nu*w)
 
             Aders [ 0 ](1) += ders [ 0 ](1, k) * vertexCoordsPtr->at(1) * w;   // dxw/du=sum(dNu/du*x*w)
@@ -163,54 +163,49 @@ void NURBSInterpolationLine3d :: evalN(FloatArray &answer, const FloatArray &lco
         jacobianMatrix(1, 1) = ( Aders [ 1 ](1) - wders(1) * Aders [ 1 ](0) / weight ) / weight; // dy/du
         jacobianMatrix(2, 2) = ( Aders [ 2 ](1) - wders(1) * Aders [ 2 ](0) / weight ) / weight; // dz/du
     }  else {
-      OOFEM_ERROR("giveTransformationJacobianMatrix not implemented for fsd = %d", fsd);
+        OOFEM_ERROR("giveTransformationJacobianMatrix not implemented for fsd = %d", fsd);
     }
 
     delete [] ders;
     delete [] Aders;
-
-
 }
 
 
 double
-NURBSInterpolationLine3d :: giveTransformationJacobian(const FloatArray &lcoords, const FEICellGeometry &cellgeo){
+NURBSInterpolationLine3d :: giveTransformationJacobian(const FloatArray &lcoords, const FEICellGeometry &cellgeo) {
+    FloatMatrix jacobian;
+    this->giveJacobianMatrixAt(jacobian, lcoords, cellgeo);
 
-  FloatMatrix jacobian;
-  this->giveJacobianMatrixAt(jacobian, lcoords, cellgeo);
-    
-  double Jacob = sqrt(jacobian(0,0)*jacobian(0,0) + jacobian(1,1)*jacobian(1,1)  + jacobian(2,2)*jacobian(2,2));
-  
-  if ( fabs(Jacob) < 1.0e-10 ) {
-    OOFEM_ERROR("giveTransformationJacobianMatrix - zero Jacobian");
-  }
-  
-  
-  return Jacob;
+    double Jacob = sqrt( jacobian(0, 0) * jacobian(0, 0) + jacobian(1, 1) * jacobian(1, 1)  + jacobian(2, 2) * jacobian(2, 2) );
+
+    if ( fabs(Jacob) < 1.0e-10 ) {
+        OOFEM_ERROR("giveTransformationJacobianMatrix - zero Jacobian");
+    }
+
+
+    return Jacob;
 }
-  
+
 
 void NURBSInterpolationLine3d :: lowerDegree()
 {
     // change degree
-    this->degree[0] = this->degree[0]-1;
+    this->degree [ 0 ] = this->degree [ 0 ] - 1;
 
     int kvSize = 0;
-    int n = this->knotMultiplicity[0].giveSize();
-    for (int i = 0; i < n; i++) {
-	kvSize += this->knotMultiplicity[0](i);
+    int n = this->knotMultiplicity [ 0 ].giveSize();
+    for ( int i = 0; i < n; i++ ) {
+        kvSize += this->knotMultiplicity [ 0 ](i);
     }
 
     // change knotVector
-    for (int i = 0; i < kvSize-2; i++) {
-	knotVector[0][i] = knotVector[0][i+1]; 
+    for ( int i = 0; i < kvSize - 2; i++ ) {
+        knotVector [ 0 ] [ i ] = knotVector [ 0 ] [ i + 1 ];
     }
 
     // change multiplicity
-    knotMultiplicity[0](0) = knotMultiplicity[0](0) -1;
-    knotMultiplicity[0](n-1) = knotMultiplicity[0](n-1) -1;
-
-    
+    knotMultiplicity [ 0 ](0) = knotMultiplicity [ 0 ](0) - 1;
+    knotMultiplicity [ 0 ](n - 1) = knotMultiplicity [ 0 ](n - 1) - 1;
 }
 
 void NURBSInterpolationLine3d :: local2global(FloatArray &answer, const FloatArray &lcoords, const FEICellGeometry &cellgeo)
@@ -247,7 +242,7 @@ void NURBSInterpolationLine3d :: local2global(FloatArray &answer, const FloatArr
         ind = uind + 1;
         for ( k = 0; k <= degree [ 0 ]; k++ ) {
             vertexCoordsPtr = cellgeo.giveVertexCoordinates(ind + k);
-            w = vertexCoordsPtr->at(nsd+1);
+            w = vertexCoordsPtr->at(nsd + 1);
             answer(0) += N [ 0 ](k) * vertexCoordsPtr->at(1) * w;       // xw=sum(Nu*x*w)
             answer(1) += N [ 0 ](k) * vertexCoordsPtr->at(2) * w;       // yw=sum(Nu*y*w)
             answer(2) += N [ 0 ](k) * vertexCoordsPtr->at(3) * w;       // zw=sum(Nu*z*w)
@@ -312,7 +307,7 @@ double NURBSInterpolationLine3d :: evaldNdx(FloatMatrix &answer, const FloatArra
         ind = uind + 1;
         for ( k = 0; k <= degree [ 0 ]; k++ ) {
             vertexCoordsPtr = cellgeo.giveVertexCoordinates(ind + k);
-            w = vertexCoordsPtr->at(nsd+1);
+            w = vertexCoordsPtr->at(nsd + 1);
 
             Aders [ 0 ](0) += ders [ 0 ](0, k) * vertexCoordsPtr->at(1) * w;   // xw=sum(Nu*x*w)
             Aders [ 1 ](0) += ders [ 0 ](0, k) * vertexCoordsPtr->at(2) * w;   // yw=sum(Nu*y*w)
@@ -339,10 +334,10 @@ double NURBSInterpolationLine3d :: evaldNdx(FloatMatrix &answer, const FloatArra
 
         // calculation of jacobian matrix according to Eq 4.7
         jacobian(0, 0) = ( Aders [ 0 ](1) - wders(1) * Aders [ 0 ](0) / weight ) / weight; // dx/du
-	jacobian(1,1) =  ( Aders [ 1 ](1) - wders(1) * Aders [ 1 ](0) / weight ) / weight; // dy/du
-	jacobian(2,2) =  ( Aders [ 2 ](1) - wders(1) * Aders [ 2 ](0) / weight ) / weight; // dz/du
+        jacobian(1, 1) =  ( Aders [ 1 ](1) - wders(1) * Aders [ 1 ](0) / weight ) / weight; // dy/du
+        jacobian(2, 2) =  ( Aders [ 2 ](1) - wders(1) * Aders [ 2 ](0) / weight ) / weight; // dz/du
 
-	Jacob = sqrt(jacobian(0,0)*jacobian(0,0) + jacobian(1,1)*jacobian(1,1) + jacobian(2,2)*jacobian(2,2));
+        Jacob = sqrt( jacobian(0, 0) * jacobian(0, 0) + jacobian(1, 1) * jacobian(1, 1) + jacobian(2, 2) * jacobian(2, 2) );
         //Jacob = jacobian.giveDeterminant();
 
         //calculation of derivatives of NURBS basis functions with respect to local parameters is not covered by NURBS book
@@ -350,11 +345,11 @@ double NURBSInterpolationLine3d :: evaldNdx(FloatMatrix &answer, const FloatArra
         cnt = 0;
         ind = uind + 1;
         for ( k = 0; k <= degree [ 0 ]; k++ ) {
-            w = cellgeo.giveVertexCoordinates(ind + k)->at(nsd+1);
+            w = cellgeo.giveVertexCoordinates(ind + k)->at(nsd + 1);
             // [dNu/du*w*sum(Nu*w) - Nu*w*sum(dNu/du*w)] / [J*sum(Nu*w)^2]
-            answer(cnt, 0) = (ders [ 0 ](1, k) * w * weight - ders [ 0 ](0, k) * w * wders(1)) / product; 
-            answer(cnt, 1) = (ders [ 0 ](2, k) * w * weight - ( 2 * answer(cnt, 0) * weight * wders(1) + ders [ 0 ](0, k) * w * wders(2) )) / product;
-            answer(cnt, 2) = (ders [ 0 ](3, k) * w * weight - ( 3 * answer(cnt, 1) * weight * wders(1) + 3 * answer(cnt, 0) * weight * wders(2) + ders [ 0 ](0, k) * w * wders(3) )) / product;
+            answer(cnt, 0) = ( ders [ 0 ](1, k) * w * weight - ders [ 0 ](0, k) * w * wders(1) ) / product;
+            answer(cnt, 1) = ( ders [ 0 ](2, k) * w * weight - ( 2 * answer(cnt, 0) * weight * wders(1) + ders [ 0 ](0, k) * w * wders(2) ) ) / product;
+            answer(cnt, 2) = ( ders [ 0 ](3, k) * w * weight - ( 3 * answer(cnt, 1) * weight * wders(1) + 3 * answer(cnt, 0) * weight * wders(2) + ders [ 0 ](0, k) * w * wders(3) ) ) / product;
 
             cnt++;
         }
@@ -362,15 +357,13 @@ double NURBSInterpolationLine3d :: evaldNdx(FloatMatrix &answer, const FloatArra
         OOFEM_ERROR("evaldNdx not implemented for fsd = %d", fsd);
     }
 
- #ifndef HAVE_VARIABLE_ARRAY_SIZE
+#ifndef HAVE_VARIABLE_ARRAY_SIZE
     delete [] Aders;
- #endif
+#endif
 
 #ifndef HAVE_VARIABLE_ARRAY_SIZE
     delete [] ders;
 #endif
     return Jacob;
 }
-
-
 } // end namespace oofem
