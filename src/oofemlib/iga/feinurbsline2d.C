@@ -95,7 +95,7 @@ void NURBSInterpolationLine2d :: evalN(FloatArray &answer, const FloatArray &lco
 
 
 
-double NURBSInterpolationLine2d :: giveTransformationJacobian(const FloatArray &lcoords, const FEICellGeometry &cellgeo)
+void NURBSInterpolationLine2d :: giveJacobianMatrixAt(FloatMatrix &jacobianMatrix, const FloatArray &lcoords, const FEICellGeometry &cellgeo)
 {
     //
     // Based on Algorithm A4.4 (p. 137) for d=1
@@ -104,7 +104,7 @@ double NURBSInterpolationLine2d :: giveTransformationJacobian(const FloatArray &
     const FloatArray *vertexCoordsPtr;
     FloatMatrix jacobian(2, 2); //??
     IntArray span(fsd);
-    double Jacob, w, weight;
+    double  w, weight;
     int i, k, ind, uind;
 #ifdef HAVE_VARIABLE_ARRAY_SIZE
     FloatMatrix ders [ fsd ];
@@ -165,21 +165,22 @@ double NURBSInterpolationLine2d :: giveTransformationJacobian(const FloatArray &
     delete [] ders;
     delete [] Aders;
 
+}
 
-    Jacob = sqrt( jacobian(0, 0) * jacobian(0, 0) + jacobian(1, 1) * jacobian(1, 1) );
+
+double
+NURBSInterpolationLine2d :: giveTransformationJacobian(const FloatArray &lcoords, const FEICellGeometry &cellgeo) {
+    FloatMatrix jacobian;
+    this->giveJacobianMatrixAt(jacobian, lcoords, cellgeo);
+
+    double Jacob = sqrt( jacobian(0, 0) * jacobian(0, 0) + jacobian(1, 1) * jacobian(1, 1) );
 
     if ( fabs(Jacob) < 1.0e-10 ) {
         OOFEM_ERROR("giveTransformationJacobianMatrix - zero Jacobian");
     }
 
-
-
-
-
     return Jacob;
 }
-
-
 
 void NURBSInterpolationLine2d :: local2global(FloatArray &answer, const FloatArray &lcoords, const FEICellGeometry &cellgeo)
 {
