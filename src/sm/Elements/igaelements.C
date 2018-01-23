@@ -1338,7 +1338,7 @@ NURBSBeam2dElementDsg :: drawRawGeometry(oofegGraphicContext &gc, TimeStep *tSte
     EASValsSetLineWidth(OOFEG_RAW_GEOMETRY_WIDTH);
     EASValsSetColor( gc.getElementColor() );
 
-    const double *const *knotVector = interp->giveKnotVector();
+    const FloatArray *knotVector = interp->giveKnotVector();
     const IntArray *span;
     FloatArray c [ 2 ], cg [ 2 ], u;
 
@@ -1399,7 +1399,7 @@ NURBSBeam2dElementDsg :: drawDeformedGeometry(oofegGraphicContext &gc, TimeStep 
 
     nseg = 40;
 
-    const double *const *knotVector = interp->giveKnotVector();
+    const FloatArray *knotVector = interp->giveKnotVector();
     const IntArray *span;
 
     this->StructuralElementEvaluator :: computeVectorOf(VM_Total, tStep, u);
@@ -1493,7 +1493,7 @@ NURBSBeam2dElementDsg :: drawScalar(oofegGraphicContext &gc, TimeStep *tStep)
 
     nseg = 10;
 
-    const double *const *knotVector = interp->giveKnotVector();
+    const FloatArray *knotVector = interp->giveKnotVector();
     const IntArray *span;
     double scale = gc.getDefScale();
 
@@ -1591,7 +1591,7 @@ NURBSBeam3dElementDsg :: drawRawGeometry(oofegGraphicContext &gc, TimeStep *tSte
     EASValsSetLineWidth(OOFEG_RAW_GEOMETRY_WIDTH);
     EASValsSetColor( gc.getElementColor() );
 
-    const double *const *knotVector = interp->giveKnotVector();
+    const FloatArray *knotVector = interp->giveKnotVector();
     const IntArray *span;
     FloatArray c [ 2 ], cg [ 2 ], u;
 
@@ -1652,7 +1652,7 @@ NURBSBeam3dElementDsg :: drawDeformedGeometry(oofegGraphicContext &gc, TimeStep 
 
     nseg = 80;
 
-    const double *const *knotVector = interp->giveKnotVector();
+    const FloatArray *knotVector = interp->giveKnotVector();
     const IntArray *span;
 
     this->StructuralElementEvaluator :: computeVectorOf(VM_Total, tStep, u);
@@ -1748,7 +1748,7 @@ NURBSBeam3dElementDsg :: drawScalar(oofegGraphicContext &gc, TimeStep *tStep)
 
     nseg = 10;
 
-    const double *const *knotVector = interp->giveKnotVector();
+    const FloatArray *knotVector = interp->giveKnotVector();
     const IntArray *span;
     double scale = gc.getDefScale();
 
@@ -1849,7 +1849,7 @@ NURBSBeam3dElementBbar :: drawRawGeometry(oofegGraphicContext &gc, TimeStep *tSt
     EASValsSetLineWidth(OOFEG_RAW_GEOMETRY_WIDTH);
     EASValsSetColor( gc.getElementColor() );
 
-    const double *const *knotVector = interp->giveKnotVector();
+    const FloatArray *knotVector = interp->giveKnotVector();
     const IntArray *span;
     FloatArray c [ 2 ], cg [ 2 ], u;
 
@@ -1910,7 +1910,7 @@ NURBSBeam3dElementBbar :: drawDeformedGeometry(oofegGraphicContext &gc, TimeStep
 
     nseg = 80;
 
-    const double *const *knotVector = interp->giveKnotVector();
+    const FloatArray *knotVector = interp->giveKnotVector();
     const IntArray *span;
 
     this->StructuralElementEvaluator :: computeVectorOf(VM_Total, tStep, u);
@@ -2006,7 +2006,7 @@ NURBSBeam3dElementBbar :: drawScalar(oofegGraphicContext &gc, TimeStep *tStep)
 
     nseg = 10;
 
-    const double *const *knotVector = interp->giveKnotVector();
+    const FloatArray *knotVector = interp->giveKnotVector();
     const IntArray *span;
     double scale = gc.getDefScale();
 
