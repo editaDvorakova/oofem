@@ -35,6 +35,7 @@
 #ifndef feinurbsline2d_h
 #define feinurbsline2d_h
 
+#include "oofemcfg.h"
 #include "feibspline.h"
 #include "floatarray.h"
 #include "floatmatrix.h"
