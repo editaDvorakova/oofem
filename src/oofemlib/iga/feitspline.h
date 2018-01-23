@@ -62,14 +62,14 @@ class OOFEM_EXPORT TSplineInterpolation : public BSplineInterpolation
 {
 protected:
     /// Local index knot vector of the dimensions [totalNumberOfControlPoints][nsd][degree+2].
-    std::vector< std::array<IntArray, 3> > localIndexKnotVector;
+    std :: vector< std :: array< IntArray, 3 > >localIndexKnotVector;
     int totalNumberOfControlPoints;
     /**
      * Temporary open local knot vector to enable use of BSpline algorithms (common for all directions) [3*max_degree+2].
      */
     FloatArray openLocalKnotVector;
 public:
- TSplineInterpolation(int nsd, int fsd) : BSplineInterpolation(nsd, fsd) { }
+    TSplineInterpolation(int nsd, int fsd) : BSplineInterpolation(nsd, fsd) { }
     virtual ~TSplineInterpolation() {}
 
     IRResultType initializeFrom(InputRecord *ir) override;

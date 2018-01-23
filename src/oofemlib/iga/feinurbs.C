@@ -43,57 +43,57 @@ namespace oofem {
 
 void NURBSInterpolation :: evalN(FloatArray &answer, const FloatArray &lcoords, const FEICellGeometry &cellgeo)
 {
-    const FEIIGAElementGeometryWrapper &gw = static_cast< const FEIIGAElementGeometryWrapper& >(cellgeo);
+    const FEIIGAElementGeometryWrapper &gw = static_cast< const FEIIGAElementGeometryWrapper & >(cellgeo);
     IntArray span(fsd);
     double sum = 0.0, val;
     int count, c = 1;
     std :: vector< FloatArray >N;
-    N.resize(fsd); 
+    N.resize(fsd);
 
     if ( gw.knotSpan ) {
         span = * gw.knotSpan;
     } else {
         for ( int i = 0; i < fsd; i++ ) {
-            span[i] = this->findSpan(numberOfControlPoints [ i ], degree [ i ], lcoords[i], knotVector [ i ]);
+            span [ i ] = this->findSpan(numberOfControlPoints [ i ], degree [ i ], lcoords [ i ], knotVector [ i ]);
         }
     }
 
     for ( int i = 0; i < fsd; i++ ) {
-        this->basisFuns(N [ i ], span[i], lcoords[i], degree [ i ], knotVector [ i ]);
+        this->basisFuns(N [ i ], span [ i ], lcoords [ i ], degree [ i ], knotVector [ i ]);
     }
 
     count = giveNumberOfKnotSpanBasisFunctions(span);
     answer.resize(count);
 
     if ( fsd == 1 ) {
-        int uind = span[0] - degree [ 0 ];
+        int uind = span [ 0 ] - degree [ 0 ];
         int ind = uind + 1;
         for ( int k = 0; k <= degree [ 0 ]; k++ ) {
-            answer.at(c++) = val = N [ 0 ][k] * cellgeo.giveVertexCoordinates(ind + k)->at(nsd + 1);       // Nu*w
+            answer.at(c++) = val = N [ 0 ] [ k ] * cellgeo.giveVertexCoordinates(ind + k)->at(nsd + 1);       // Nu*w
             sum += val;
         }
     } else if ( fsd == 2 ) {
-        int uind = span[0] - degree [ 0 ];
-        int vind = span[1] - degree [ 1 ];
+        int uind = span [ 0 ] - degree [ 0 ];
+        int vind = span [ 1 ] - degree [ 1 ];
         int ind = vind * numberOfControlPoints [ 0 ] + uind + 1;
         for ( int l = 0; l <= degree [ 1 ]; l++ ) {
             for ( int k = 0; k <= degree [ 0 ]; k++ ) {
-                answer.at(c++) = val = N [ 0 ][k] * N [ 1 ][l] * cellgeo.giveVertexCoordinates(ind + k)->at(nsd + 1); // Nu*Nv*w
+                answer.at(c++) = val = N [ 0 ] [ k ] * N [ 1 ] [ l ] * cellgeo.giveVertexCoordinates(ind + k)->at(nsd + 1); // Nu*Nv*w
                 sum += val;
             }
 
             ind += numberOfControlPoints [ 0 ];
         }
     } else if ( fsd == 3 ) {
-        int uind = span[0] - degree [ 0 ];
-        int vind = span[1] - degree [ 1 ];
-        int tind = span[2] - degree [ 2 ];
+        int uind = span [ 0 ] - degree [ 0 ];
+        int vind = span [ 1 ] - degree [ 1 ];
+        int tind = span [ 2 ] - degree [ 2 ];
         int ind = tind * numberOfControlPoints [ 0 ] * numberOfControlPoints [ 1 ] + vind * numberOfControlPoints [ 0 ] + uind + 1;
         for ( int m = 0; m <= degree [ 2 ]; m++ ) {
             int indx = ind;
             for ( int l = 0; l <= degree [ 1 ]; l++ ) {
                 for ( int k = 0; k <= degree [ 0 ]; k++ ) {
-                    answer.at(c++) = val = N [ 0 ][k] * N [ 1 ][l] * N [ 2 ][m] * cellgeo.giveVertexCoordinates(ind + k)->at(nsd + 1);     // Nu*Nv*Nt*w
+                    answer.at(c++) = val = N [ 0 ] [ k ] * N [ 1 ] [ l ] * N [ 2 ] [ m ] * cellgeo.giveVertexCoordinates(ind + k)->at(nsd + 1);     // Nu*Nv*Nt*w
                     sum += val;
                 }
 
@@ -106,30 +106,30 @@ void NURBSInterpolation :: evalN(FloatArray &answer, const FloatArray &lcoords, 
         OOFEM_ERROR("not implemented for nsd = %d", nsd);
     }
 
-    answer.times(1./sum);
+    answer.times(1. / sum);
 }
 
 
 double NURBSInterpolation :: evaldNdx(FloatMatrix &answer, const FloatArray &lcoords, const FEICellGeometry &cellgeo)
 {
-    const FEIIGAElementGeometryWrapper &gw = static_cast< const FEIIGAElementGeometryWrapper& >(cellgeo);
+    const FEIIGAElementGeometryWrapper &gw = static_cast< const FEIIGAElementGeometryWrapper & >(cellgeo);
     FloatMatrix jacobian(fsd, fsd);
     IntArray span(fsd);
     double Jacob = 0.;
     int count;
-    std :: vector< FloatArray > N(fsd);
-    std :: vector< FloatMatrix > ders(fsd);
+    std :: vector< FloatArray >N(fsd);
+    std :: vector< FloatMatrix >ders(fsd);
 
     if ( gw.knotSpan ) {
         span = * gw.knotSpan;
     } else {
         for ( int i = 0; i < fsd; i++ ) {
-            span[i] = this->findSpan(numberOfControlPoints [ i ], degree [ i ], lcoords[i], knotVector [ i ]);
+            span [ i ] = this->findSpan(numberOfControlPoints [ i ], degree [ i ], lcoords [ i ], knotVector [ i ]);
         }
     }
 
     for ( int i = 0; i < fsd; i++ ) {
-        this->dersBasisFuns(1, lcoords[i], span[i], degree [ i ], knotVector [ i ], ders [ i ]);
+        this->dersBasisFuns(1, lcoords [ i ], span [ i ], degree [ i ], knotVector [ i ], ders [ i ]);
     }
 
     count = giveNumberOfKnotSpanBasisFunctions(span);
@@ -165,38 +165,38 @@ double NURBSInterpolation :: evaldNdx(FloatMatrix &answer, const FloatArray &lco
 
         // calculation of jacobian matrix according to A4.4
         // calculate values and derivatives of nonrational Bspline surface with weights at first (Aders, wders)
-        int uind = span[0] - degree [ 0 ];
-        int vind = span[1] - degree [ 1 ];
+        int uind = span [ 0 ] - degree [ 0 ];
+        int vind = span [ 1 ] - degree [ 1 ];
         int ind = vind * numberOfControlPoints [ 0 ] + uind + 1;
         for ( int l = 0; l <= degree [ 1 ]; l++ ) {
             tmp1.zero();
             tmp2.zero();
             for ( int k = 0; k <= degree [ 0 ]; k++ ) {
-                const FloatArray &vertexCoords = *cellgeo.giveVertexCoordinates(ind + k);
-                double w = vertexCoords[2];
+                const FloatArray &vertexCoords = * cellgeo.giveVertexCoordinates(ind + k);
+                double w = vertexCoords [ 2 ];
 
-                tmp1[0] += ders [ 0 ](0, k) * vertexCoords[0] * w; // sum(Nu*x*w)
-                tmp1[1] += ders [ 0 ](0, k) * vertexCoords[1] * w; // sum(Nu*y*w)
-                tmp1[2] += ders [ 0 ](0, k) * w;           // sum(Nu*w)
+                tmp1 [ 0 ] += ders [ 0 ](0, k) * vertexCoords [ 0 ] * w; // sum(Nu*x*w)
+                tmp1 [ 1 ] += ders [ 0 ](0, k) * vertexCoords [ 1 ] * w; // sum(Nu*y*w)
+                tmp1 [ 2 ] += ders [ 0 ](0, k) * w;           // sum(Nu*w)
 
-                tmp2[0] += ders [ 0 ](1, k) * vertexCoords[0] * w; // sum(dNu/du*x*w)
-                tmp2[1] += ders [ 0 ](1, k) * vertexCoords[1] * w; // sum(dNu/du*y*w)
-                tmp2[2] += ders [ 0 ](1, k) * w;           // sum(dNu/du*w)
+                tmp2 [ 0 ] += ders [ 0 ](1, k) * vertexCoords [ 0 ] * w; // sum(dNu/du*x*w)
+                tmp2 [ 1 ] += ders [ 0 ](1, k) * vertexCoords [ 1 ] * w; // sum(dNu/du*y*w)
+                tmp2 [ 2 ] += ders [ 0 ](1, k) * w;           // sum(dNu/du*w)
             }
 
             ind += numberOfControlPoints [ 0 ];
 
-            Aders [ 0 ](0, 0) += ders [ 1 ](0, l) * tmp1[0]; // xw=sum(Nv*sum(Nu*x*w))
-            Aders [ 1 ](0, 0) += ders [ 1 ](0, l) * tmp1[1]; // yw=sum(Nv*sum(Nu*y*w))
-            wders(0, 0)    += ders [ 1 ](0, l) * tmp1[2]; // w=sum(Nv*sum(Nu*w))
+            Aders [ 0 ](0, 0) += ders [ 1 ](0, l) * tmp1 [ 0 ]; // xw=sum(Nv*sum(Nu*x*w))
+            Aders [ 1 ](0, 0) += ders [ 1 ](0, l) * tmp1 [ 1 ]; // yw=sum(Nv*sum(Nu*y*w))
+            wders(0, 0)    += ders [ 1 ](0, l) * tmp1 [ 2 ]; // w=sum(Nv*sum(Nu*w))
 
-            Aders [ 0 ](0, 1) += ders [ 1 ](1, l) * tmp1[0]; // dxw/dv=sum(dNv/dv*sum(Nu*x*w))
-            Aders [ 1 ](0, 1) += ders [ 1 ](1, l) * tmp1[1]; // dyw/dv=sum(dNv/dv*sum(Nu*y*w))
-            wders(0, 1)    += ders [ 1 ](1, l) * tmp1[2]; // dw/dv=sum(dNv/dv*sum(Nu*w))
+            Aders [ 0 ](0, 1) += ders [ 1 ](1, l) * tmp1 [ 0 ]; // dxw/dv=sum(dNv/dv*sum(Nu*x*w))
+            Aders [ 1 ](0, 1) += ders [ 1 ](1, l) * tmp1 [ 1 ]; // dyw/dv=sum(dNv/dv*sum(Nu*y*w))
+            wders(0, 1)    += ders [ 1 ](1, l) * tmp1 [ 2 ]; // dw/dv=sum(dNv/dv*sum(Nu*w))
 
-            Aders [ 0 ](1, 0) += ders [ 1 ](0, l) * tmp2[0]; // dxw/du=sum(Nv*sum(dNu/du*x*w))
-            Aders [ 1 ](1, 0) += ders [ 1 ](0, l) * tmp2[1]; // dyw/du=sum(Nv*sum(dNu/du*y*w))
-            wders(1, 0)    += ders [ 1 ](0, l) * tmp2[2];       // dw/du=sum(Nv*sum(dNu/du*w))
+            Aders [ 0 ](1, 0) += ders [ 1 ](0, l) * tmp2 [ 0 ]; // dxw/du=sum(Nv*sum(dNu/du*x*w))
+            Aders [ 1 ](1, 0) += ders [ 1 ](0, l) * tmp2 [ 1 ]; // dyw/du=sum(Nv*sum(dNu/du*y*w))
+            wders(1, 0)    += ders [ 1 ](0, l) * tmp2 [ 2 ];       // dw/du=sum(Nv*sum(dNu/du*w))
         }
 
         double weight = wders(0, 0);
@@ -207,28 +207,28 @@ double NURBSInterpolation :: evaldNdx(FloatMatrix &answer, const FloatArray &lco
         // since all entries in Pascal triangle up to d=1 are 1, binomial coefficients are ignored
         for ( int k = 0; k <= d; k++ ) {
             for ( int l = 0; l <= d - k; l++ ) {
-                tmp1[0] = Aders [ 0 ](k, l);
-                tmp1[1] = Aders [ 1 ](k, l);
+                tmp1 [ 0 ] = Aders [ 0 ](k, l);
+                tmp1 [ 1 ] = Aders [ 1 ](k, l);
                 for ( j = 1; j <= l; j++ ) {
-                    tmp1[0] -= wders(0, j) * Sders [ 0 ](k, l - j);            // *Bin(l,j)
-                    tmp1[1] -= wders(0, j) * Sders [ 1 ](k, l - j);            // *Bin(l,j)
+                    tmp1 [ 0 ] -= wders(0, j) * Sders [ 0 ](k, l - j);            // *Bin(l,j)
+                    tmp1 [ 1 ] -= wders(0, j) * Sders [ 1 ](k, l - j);            // *Bin(l,j)
                 }
 
                 for ( int i = 1; i <= k; i++ ) {
-                    tmp1[0] -= wders(i, 0) * Sders [ 0 ](k - i, l);            // *Bin(k,i)
-                    tmp1[1] -= wders(i, 0) * Sders [ 1 ](k - i, l);            // *Bin(k,i)
+                    tmp1 [ 0 ] -= wders(i, 0) * Sders [ 0 ](k - i, l);            // *Bin(k,i)
+                    tmp1 [ 1 ] -= wders(i, 0) * Sders [ 1 ](k - i, l);            // *Bin(k,i)
                     tmp2.zero();
                     for ( int j = 1; j <= l; j++ ) {
-                        tmp2[0] += wders(i, j) * Sders [ 0 ](k - i, l - j);              // *Bin(l,j)
-                        tmp2[1] += wders(i, j) * Sders [ 1 ](k - i, l - j);              // *Bin(l,j)
+                        tmp2 [ 0 ] += wders(i, j) * Sders [ 0 ](k - i, l - j);              // *Bin(l,j)
+                        tmp2 [ 1 ] += wders(i, j) * Sders [ 1 ](k - i, l - j);              // *Bin(l,j)
                     }
 
-                    tmp1[0] -= tmp2[0];                     // *Bin(k,i)
-                    tmp1[1] -= tmp2[1];                     // *Bin(k,i)
+                    tmp1 [ 0 ] -= tmp2 [ 0 ];                     // *Bin(k,i)
+                    tmp1 [ 1 ] -= tmp2 [ 1 ];                     // *Bin(k,i)
                 }
 
-                Sders [ 0 ](k, l) = tmp1[0] / weight;
-                Sders [ 1 ](k, l) = tmp1[1] / weight;
+                Sders [ 0 ](k, l) = tmp1 [ 0 ] / weight;
+                Sders [ 1 ](k, l) = tmp1 [ 1 ] / weight;
             }
         }
 
@@ -257,14 +257,14 @@ double NURBSInterpolation :: evaldNdx(FloatMatrix &answer, const FloatArray &lco
          */
 
         // k=0 l=0 loop
-        tmp1[0] = Aders [ 0 ](0, 0) / weight;
-        tmp1[1] = Aders [ 1 ](0, 0) / weight;
+        tmp1 [ 0 ] = Aders [ 0 ](0, 0) / weight;
+        tmp1 [ 1 ] = Aders [ 1 ](0, 0) / weight;
         // k=1 l=0 loop
-        jacobian(0, 0) = ( Aders [ 0 ](1, 0) - wders(1, 0) * tmp1[0] ) / weight; // dx/du
-        jacobian(0, 1) = ( Aders [ 1 ](1, 0) - wders(1, 0) * tmp1[1] ) / weight; // dy/du
+        jacobian(0, 0) = ( Aders [ 0 ](1, 0) - wders(1, 0) * tmp1 [ 0 ] ) / weight; // dx/du
+        jacobian(0, 1) = ( Aders [ 1 ](1, 0) - wders(1, 0) * tmp1 [ 1 ] ) / weight; // dy/du
         // k=0 l=1 loop
-        jacobian(1, 0) = ( Aders [ 0 ](0, 1) - wders(0, 1) * tmp1[0] ) / weight; // dx/dv
-        jacobian(1, 1) = ( Aders [ 1 ](0, 1) - wders(0, 1) * tmp1[1] ) / weight; // dy/dv
+        jacobian(1, 0) = ( Aders [ 0 ](0, 1) - wders(0, 1) * tmp1 [ 0 ] ) / weight; // dx/dv
+        jacobian(1, 1) = ( Aders [ 1 ](0, 1) - wders(0, 1) * tmp1 [ 1 ] ) / weight; // dy/dv
  #endif
 
         Jacob = jacobian.giveDeterminant();
@@ -277,12 +277,12 @@ double NURBSInterpolation :: evaldNdx(FloatMatrix &answer, const FloatArray &lco
             for ( int k = 0; k <= degree [ 0 ]; k++ ) {
                 double w = cellgeo.giveVertexCoordinates(ind + k)->at(3);
                 // dNu/du*Nv*w*sum(Nv*Nu*w) - Nu*Nv*w*sum(dNu/du*Nv*w)
-                tmp1[0] = ders [ 0 ](1, k) * ders [ 1 ](0, l) * w * weight - ders [ 0 ](0, k) * ders [ 1 ](0, l) * w * wders(1, 0);
+                tmp1 [ 0 ] = ders [ 0 ](1, k) * ders [ 1 ](0, l) * w * weight - ders [ 0 ](0, k) * ders [ 1 ](0, l) * w * wders(1, 0);
                 // Nu*dNv/dv*w*sum(Nv*Nu*w) - Nu*Nv*w*sum(Nu*dNv/dv*w)
-                tmp1[1] = ders [ 0 ](0, k) * ders [ 1 ](1, l) * w * weight - ders [ 0 ](0, k) * ders [ 1 ](0, l) * w * wders(0, 1);
+                tmp1 [ 1 ] = ders [ 0 ](0, k) * ders [ 1 ](1, l) * w * weight - ders [ 0 ](0, k) * ders [ 1 ](0, l) * w * wders(0, 1);
 
-                answer(cnt, 0) = ( +jacobian(1, 1) * tmp1[0] - jacobian(0, 1) * tmp1[1] ) / product;
-                answer(cnt, 1) = ( -jacobian(1, 0) * tmp1[0] + jacobian(0, 0) * tmp1[1] ) / product;
+                answer(cnt, 0) = ( +jacobian(1, 1) * tmp1 [ 0 ] - jacobian(0, 1) * tmp1 [ 1 ] ) / product;
+                answer(cnt, 1) = ( -jacobian(1, 0) * tmp1 [ 0 ] + jacobian(0, 0) * tmp1 [ 1 ] ) / product;
                 cnt++;
             }
 
@@ -293,7 +293,7 @@ double NURBSInterpolation :: evaldNdx(FloatMatrix &answer, const FloatArray &lco
     }
 
 #else
-    std :: vector< FloatArray > Aders(fsd);
+    std :: vector< FloatArray >Aders(fsd);
     FloatArray wders;          // 0th and 1st derivatives in w direction on BSpline
 
     for ( int i = 0; i < fsd; i++ ) {
@@ -306,23 +306,23 @@ double NURBSInterpolation :: evaldNdx(FloatMatrix &answer, const FloatArray &lco
 
     if ( nsd == 1 ) {
         // calculate values and derivatives of nonrational Bspline curve with weights at first (Aders, wders)
-        int uind = span[0] - degree [ 0 ];
+        int uind = span [ 0 ] - degree [ 0 ];
         int ind = uind + 1;
         for ( int k = 0; k <= degree [ 0 ]; k++ ) {
-            const FloatArray &vertexCoords = *cellgeo.giveVertexCoordinates(ind + k);
-            double w = vertexCoords[nsd];
+            const FloatArray &vertexCoords = * cellgeo.giveVertexCoordinates(ind + k);
+            double w = vertexCoords [ nsd ];
 
-            Aders [ 0 ][0] += ders [ 0 ](0, k) * vertexCoords[0] * w;   // xw=sum(Nu*x*w)
-            wders[0]    += ders [ 0 ](0, k) * w;                               // w=sum(Nu*w)
+            Aders [ 0 ] [ 0 ] += ders [ 0 ](0, k) * vertexCoords [ 0 ] * w;   // xw=sum(Nu*x*w)
+            wders [ 0 ]    += ders [ 0 ](0, k) * w;                               // w=sum(Nu*w)
 
-            Aders [ 0 ][1] += ders [ 0 ](1, k) * vertexCoords[0] * w;   // dxw/du=sum(dNu/du*x*w)
-            wders[1]    += ders [ 0 ](1, k) * w;                               // dw/du=sum(dNu/du*w)
+            Aders [ 0 ] [ 1 ] += ders [ 0 ](1, k) * vertexCoords [ 0 ] * w;   // dxw/du=sum(dNu/du*x*w)
+            wders [ 1 ]    += ders [ 0 ](1, k) * w;                               // dw/du=sum(dNu/du*w)
         }
 
-        double weight = wders[0];
+        double weight = wders [ 0 ];
 
         // calculation of jacobian matrix according to Eq 4.7
-        jacobian(0, 0) = ( Aders [ 0 ][1] - wders[1] * Aders [ 0 ][0] / weight ) / weight; // dx/du
+        jacobian(0, 0) = ( Aders [ 0 ] [ 1 ] - wders [ 1 ] * Aders [ 0 ] [ 0 ] / weight ) / weight; // dx/du
 
         Jacob = jacobian.giveDeterminant();
 
@@ -331,33 +331,35 @@ double NURBSInterpolation :: evaldNdx(FloatMatrix &answer, const FloatArray &lco
         int cnt = 0;
         ind = uind + 1;
         for ( int k = 0; k <= degree [ 0 ]; k++ ) {
-            double w = cellgeo.giveVertexCoordinates(ind + k)->at(nsd+1);
+            double w = cellgeo.giveVertexCoordinates(ind + k)->at(nsd + 1);
             // [dNu/du*w*sum(Nu*w) - Nu*w*sum(dNu/du*w)] / [J*sum(Nu*w)^2]
-            answer(cnt, 0) = ders [ 0 ](1, k) * w * weight - ders [ 0 ](0, k) * w * wders[1] / product;
+            answer(cnt, 0) = ders [ 0 ](1, k) * w * weight - ders [ 0 ](0, k) * w * wders [ 1 ] / product;
             cnt++;
         }
-    } else if( fsd == 1 ) {
+    } else if ( fsd == 1 ) {
         // calculate values and derivatives of nonrational Bspline curve with weights at first (Aders, wders)
 
-      FloatArray  locCoords = {0.0, 1.0/3., 1.0}; // control points local coordinate s 
+        FloatArray locCoords = {
+            0.0, 1.0 / 3., 1.0
+        };                                        // control points local coordinate s
 
         int uind = span(0) - degree [ 0 ];
         int ind = uind + 1;
         for ( int k = 0; k <= degree [ 0 ]; k++ ) {
-            const FloatArray &vertexCoords = *cellgeo.giveVertexCoordinates(ind + k);
-            double w = vertexCoords[nsd];
+            const FloatArray &vertexCoords = * cellgeo.giveVertexCoordinates(ind + k);
+            double w = vertexCoords [ nsd ];
 
-            Aders [ 0 ][0] += ders [ 0 ](0, k) * w * locCoords(k);// vertexCoordsPtr->at(1) * w;   // xw=sum(Nu*x*w)
-            wders[0]    += ders [ 0 ](0, k) * w;                               // w=sum(Nu*w)
+            Aders [ 0 ] [ 0 ] += ders [ 0 ](0, k) * w * locCoords(k); // vertexCoordsPtr->at(1) * w;   // xw=sum(Nu*x*w)
+            wders [ 0 ]    += ders [ 0 ](0, k) * w;                               // w=sum(Nu*w)
 
-            Aders [ 0 ](1) += ders [ 0 ](1, k) * w * locCoords(k);// vertexCoordsPtr->at(1) * w;   // dxw/du=sum(dNu/du*x*w)
-            wders[1]    += ders [ 0 ](1, k) * w;                               // dw/du=sum(dNu/du*w)
+            Aders [ 0 ](1) += ders [ 0 ](1, k) * w * locCoords(k); // vertexCoordsPtr->at(1) * w;   // dxw/du=sum(dNu/du*x*w)
+            wders [ 1 ]    += ders [ 0 ](1, k) * w;                               // dw/du=sum(dNu/du*w)
         }
 
-        double weight = wders[0];
+        double weight = wders [ 0 ];
 
         // calculation of jacobian matrix according to Eq 4.7
-        jacobian(0, 0) = ( Aders [ 0 ][1] - wders[1] * Aders [ 0 ][0] / weight ) / weight; // dx/du
+        jacobian(0, 0) = ( Aders [ 0 ] [ 1 ] - wders [ 1 ] * Aders [ 0 ] [ 0 ] / weight ) / weight; // dx/du
 
         Jacob = jacobian.giveDeterminant();
 
@@ -366,7 +368,7 @@ double NURBSInterpolation :: evaldNdx(FloatMatrix &answer, const FloatArray &lco
         int cnt = 0;
         ind = uind + 1;
         for ( int k = 0; k <= degree [ 0 ]; k++ ) {
-            double w = cellgeo.giveVertexCoordinates(ind + k)->at(nsd+1);
+            double w = cellgeo.giveVertexCoordinates(ind + k)->at(nsd + 1);
             // [dNu/du*w*sum(Nu*w) - Nu*w*sum(dNu/du*w)] / [J*sum(Nu*w)^2]
             answer(cnt, 0) = ders [ 0 ](1, k) * w * weight - ders [ 0 ](0, k) * w * wders(1) / product;
             cnt++;
@@ -375,49 +377,49 @@ double NURBSInterpolation :: evaldNdx(FloatMatrix &answer, const FloatArray &lco
         FloatArray tmp1(fsd + 1), tmp2(fsd + 1);    // allow for weight
 
         // calculate values and derivatives of nonrational Bspline surface with weights at first (Aders, wders)
-        int uind = span[0] - degree [ 0 ];
-        int vind = span[1] - degree [ 1 ];
+        int uind = span [ 0 ] - degree [ 0 ];
+        int vind = span [ 1 ] - degree [ 1 ];
         int ind = vind * numberOfControlPoints [ 0 ] + uind + 1;
         for ( int l = 0; l <= degree [ 1 ]; l++ ) {
             tmp1.zero();
             tmp2.zero();
             for ( int k = 0; k <= degree [ 0 ]; k++ ) {
-                const FloatArray &vertexCoords = *cellgeo.giveVertexCoordinates(ind + k);
-                double w = vertexCoords[2];
+                const FloatArray &vertexCoords = * cellgeo.giveVertexCoordinates(ind + k);
+                double w = vertexCoords [ 2 ];
 
-                tmp1[0] += ders [ 0 ](0, k) * vertexCoords[0] * w; // sum(Nu*x*w)
-                tmp1[1] += ders [ 0 ](0, k) * vertexCoords[1] * w; // sum(Nu*y*w)
-                tmp1[2] += ders [ 0 ](0, k) * w;           // sum(Nu*w)
+                tmp1 [ 0 ] += ders [ 0 ](0, k) * vertexCoords [ 0 ] * w; // sum(Nu*x*w)
+                tmp1 [ 1 ] += ders [ 0 ](0, k) * vertexCoords [ 1 ] * w; // sum(Nu*y*w)
+                tmp1 [ 2 ] += ders [ 0 ](0, k) * w;           // sum(Nu*w)
 
-                tmp2[0] += ders [ 0 ](1, k) * vertexCoords[0] * w; // sum(dNu/du*x*w)
-                tmp2[1] += ders [ 0 ](1, k) * vertexCoords[1] * w; // sum(dNu/du*y*w)
-                tmp2[2] += ders [ 0 ](1, k) * w;           // sum(dNu/du*w)
+                tmp2 [ 0 ] += ders [ 0 ](1, k) * vertexCoords [ 0 ] * w; // sum(dNu/du*x*w)
+                tmp2 [ 1 ] += ders [ 0 ](1, k) * vertexCoords [ 1 ] * w; // sum(dNu/du*y*w)
+                tmp2 [ 2 ] += ders [ 0 ](1, k) * w;           // sum(dNu/du*w)
             }
 
             ind += numberOfControlPoints [ 0 ];
 
-            Aders [ 0 ][0] += ders [ 1 ](0, l) * tmp1[0]; // xw=sum(Nv*sum(Nu*x*w)
-            Aders [ 1 ][0] += ders [ 1 ](0, l) * tmp1[1]; // yw=sum(Nv*sum(Nu*y*w)
-            wders[0]    += ders [ 1 ](0, l) * tmp1[2]; // w=sum(Nv*sum(Nu*w)
+            Aders [ 0 ] [ 0 ] += ders [ 1 ](0, l) * tmp1 [ 0 ]; // xw=sum(Nv*sum(Nu*x*w)
+            Aders [ 1 ] [ 0 ] += ders [ 1 ](0, l) * tmp1 [ 1 ]; // yw=sum(Nv*sum(Nu*y*w)
+            wders [ 0 ]    += ders [ 1 ](0, l) * tmp1 [ 2 ]; // w=sum(Nv*sum(Nu*w)
 
-            Aders [ 0 ][1] += ders [ 1 ](0, l) * tmp2[0]; // dxw/du=sum(Nv*sum(dNu/du*x*w)
-            Aders [ 1 ][1] += ders [ 1 ](0, l) * tmp2[1]; // dyw/du=sum(Nv*sum(dNu/du*y*w)
-            wders[1]    += ders [ 1 ](0, l) * tmp2[2];        // dw/du=sum(Nv*sum(dNu/du*w)
+            Aders [ 0 ] [ 1 ] += ders [ 1 ](0, l) * tmp2 [ 0 ]; // dxw/du=sum(Nv*sum(dNu/du*x*w)
+            Aders [ 1 ] [ 1 ] += ders [ 1 ](0, l) * tmp2 [ 1 ]; // dyw/du=sum(Nv*sum(dNu/du*y*w)
+            wders [ 1 ]    += ders [ 1 ](0, l) * tmp2 [ 2 ];        // dw/du=sum(Nv*sum(dNu/du*w)
 
-            Aders [ 0 ][2] += ders [ 1 ](1, l) * tmp1[0]; // dxw/dv=sum(dNv/dv*sum(Nu*x*w)
-            Aders [ 1 ][2] += ders [ 1 ](1, l) * tmp1[1]; // dyw/dv=sum(dNv/dv*sum(Nu*y*w)
-            wders[2]    += ders [ 1 ](1, l) * tmp1[2]; // dw/dv=sum(dNv/dv*sum(Nu*w)
+            Aders [ 0 ] [ 2 ] += ders [ 1 ](1, l) * tmp1 [ 0 ]; // dxw/dv=sum(dNv/dv*sum(Nu*x*w)
+            Aders [ 1 ] [ 2 ] += ders [ 1 ](1, l) * tmp1 [ 1 ]; // dyw/dv=sum(dNv/dv*sum(Nu*y*w)
+            wders [ 2 ]    += ders [ 1 ](1, l) * tmp1 [ 2 ]; // dw/dv=sum(dNv/dv*sum(Nu*w)
         }
 
-        double weight = wders[0];
+        double weight = wders [ 0 ];
 
         // calculation of jacobian matrix according to Eq 4.19
-        tmp1[0] = Aders [ 0 ][0] / weight;
-        tmp1[1] = Aders [ 1 ][0] / weight;
-        jacobian(0, 0) = ( Aders [ 0 ][1] - wders[1] * tmp1[0] ) / weight; // dx/du
-        jacobian(0, 1) = ( Aders [ 1 ][1] - wders[1] * tmp1[1] ) / weight; // dy/du
-        jacobian(1, 0) = ( Aders [ 0 ][2] - wders[2] * tmp1[0] ) / weight; // dx/dv
-        jacobian(1, 1) = ( Aders [ 1 ][2] - wders[2] * tmp1[1] ) / weight; // dy/dv
+        tmp1 [ 0 ] = Aders [ 0 ] [ 0 ] / weight;
+        tmp1 [ 1 ] = Aders [ 1 ] [ 0 ] / weight;
+        jacobian(0, 0) = ( Aders [ 0 ] [ 1 ] - wders [ 1 ] * tmp1 [ 0 ] ) / weight; // dx/du
+        jacobian(0, 1) = ( Aders [ 1 ] [ 1 ] - wders [ 1 ] * tmp1 [ 1 ] ) / weight; // dy/du
+        jacobian(1, 0) = ( Aders [ 0 ] [ 2 ] - wders [ 2 ] * tmp1 [ 0 ] ) / weight; // dx/dv
+        jacobian(1, 1) = ( Aders [ 1 ] [ 2 ] - wders [ 2 ] * tmp1 [ 1 ] ) / weight; // dy/dv
 
         Jacob = jacobian.giveDeterminant();
 
@@ -429,12 +431,12 @@ double NURBSInterpolation :: evaldNdx(FloatMatrix &answer, const FloatArray &lco
             for ( int k = 0; k <= degree [ 0 ]; k++ ) {
                 double w = cellgeo.giveVertexCoordinates(ind + k)->at(3);
                 // dNu/du*Nv*w*sum(Nu*Nv*w) - Nu*Nv*w*sum(dNu/du*Nv*w)
-                tmp1[0] = ders [ 0 ](1, k) * ders [ 1 ](0, l) * w * weight - ders [ 0 ](0, k) * ders [ 1 ](0, l) * w * wders[1];
+                tmp1 [ 0 ] = ders [ 0 ](1, k) * ders [ 1 ](0, l) * w * weight - ders [ 0 ](0, k) * ders [ 1 ](0, l) * w * wders [ 1 ];
                 // Nu*dNv/dv*w*sum(Nu*Nv*w) - Nu*Nv*w*sum(Nu*dNv/dv*w)
-                tmp1[1] = ders [ 0 ](0, k) * ders [ 1 ](1, l) * w * weight - ders [ 0 ](0, k) * ders [ 1 ](0, l) * w * wders[2];
+                tmp1 [ 1 ] = ders [ 0 ](0, k) * ders [ 1 ](1, l) * w * weight - ders [ 0 ](0, k) * ders [ 1 ](0, l) * w * wders [ 2 ];
 
-                answer(cnt, 0) = ( +jacobian(1, 1) * tmp1[0] - jacobian(0, 1) * tmp1[1] ) / product;
-                answer(cnt, 1) = ( -jacobian(1, 0) * tmp1[0] + jacobian(0, 0) * tmp1[1] ) / product;
+                answer(cnt, 0) = ( +jacobian(1, 1) * tmp1 [ 0 ] - jacobian(0, 1) * tmp1 [ 1 ] ) / product;
+                answer(cnt, 1) = ( -jacobian(1, 0) * tmp1 [ 0 ] + jacobian(0, 0) * tmp1 [ 1 ] ) / product;
                 cnt++;
             }
 
@@ -445,9 +447,9 @@ double NURBSInterpolation :: evaldNdx(FloatMatrix &answer, const FloatArray &lco
         FloatArray temp1(fsd + 1), temp2(fsd + 1), temp3(fsd + 1); // allow for weight
 
         // calculate values and derivatives of nonrational Bspline solid with weights at first (Aders, wders)
-        int uind = span[0] - degree [ 0 ];
-        int vind = span[1] - degree [ 1 ];
-        int tind = span[2] - degree [ 2 ];
+        int uind = span [ 0 ] - degree [ 0 ];
+        int vind = span [ 1 ] - degree [ 1 ];
+        int tind = span [ 2 ] - degree [ 2 ];
         int ind = tind * numberOfControlPoints [ 0 ] * numberOfControlPoints [ 1 ] + vind * numberOfControlPoints [ 0 ] + uind + 1;
         for ( int m = 0; m <= degree [ 2 ]; m++ ) {
             temp1.zero();
@@ -458,76 +460,76 @@ double NURBSInterpolation :: evaldNdx(FloatMatrix &answer, const FloatArray &lco
                 tmp1.zero();
                 tmp2.zero();
                 for ( int k = 0; k <= degree [ 0 ]; k++ ) {
-                    const FloatArray &vertexCoords = *cellgeo.giveVertexCoordinates(ind + k);
-                    double w = vertexCoords[3];
+                    const FloatArray &vertexCoords = * cellgeo.giveVertexCoordinates(ind + k);
+                    double w = vertexCoords [ 3 ];
 
-                    tmp1[0] += ders [ 0 ](0, k) * vertexCoords[0] * w;              // sum(Nu*x*w)
-                    tmp1[1] += ders [ 0 ](0, k) * vertexCoords[1] * w;              // sum(Nu*y*w)
-                    tmp1[2] += ders [ 0 ](0, k) * vertexCoords[2] * w;              // sum(Nu*z*w)
-                    tmp1[3] += ders [ 0 ](0, k) * w;                                       // sum(Nu*w)
+                    tmp1 [ 0 ] += ders [ 0 ](0, k) * vertexCoords [ 0 ] * w;              // sum(Nu*x*w)
+                    tmp1 [ 1 ] += ders [ 0 ](0, k) * vertexCoords [ 1 ] * w;              // sum(Nu*y*w)
+                    tmp1 [ 2 ] += ders [ 0 ](0, k) * vertexCoords [ 2 ] * w;              // sum(Nu*z*w)
+                    tmp1 [ 3 ] += ders [ 0 ](0, k) * w;                                       // sum(Nu*w)
 
-                    tmp2[0] += ders [ 0 ](1, k) * vertexCoords[0] * w;              // sum(dNu/du*x*w)
-                    tmp2[1] += ders [ 0 ](1, k) * vertexCoords[1] * w;              // sum(dNu/du*y*w)
-                    tmp2[2] += ders [ 0 ](1, k) * vertexCoords[2] * w;              // sum(dNu/du*z*w)
-                    tmp2[3] += ders [ 0 ](1, k) * w;                                       // sum(dNu/du*w)
+                    tmp2 [ 0 ] += ders [ 0 ](1, k) * vertexCoords [ 0 ] * w;              // sum(dNu/du*x*w)
+                    tmp2 [ 1 ] += ders [ 0 ](1, k) * vertexCoords [ 1 ] * w;              // sum(dNu/du*y*w)
+                    tmp2 [ 2 ] += ders [ 0 ](1, k) * vertexCoords [ 2 ] * w;              // sum(dNu/du*z*w)
+                    tmp2 [ 3 ] += ders [ 0 ](1, k) * w;                                       // sum(dNu/du*w)
                 }
 
                 ind += numberOfControlPoints [ 0 ];
 
-                temp1[0] += ders [ 1 ](0, l) * tmp1[0];            // sum(Nv*sum(Nu*x*w))
-                temp1[1] += ders [ 1 ](0, l) * tmp1[1];            // sum(Nv*sum(Nu*y*w))
-                temp1[2] += ders [ 1 ](0, l) * tmp1[2];            // sum(Nv*sum(Nu*z*w))
-                temp1[3] += ders [ 1 ](0, l) * tmp1[3];            // sum(Nv*sum(Nu*w))
+                temp1 [ 0 ] += ders [ 1 ](0, l) * tmp1 [ 0 ];            // sum(Nv*sum(Nu*x*w))
+                temp1 [ 1 ] += ders [ 1 ](0, l) * tmp1 [ 1 ];            // sum(Nv*sum(Nu*y*w))
+                temp1 [ 2 ] += ders [ 1 ](0, l) * tmp1 [ 2 ];            // sum(Nv*sum(Nu*z*w))
+                temp1 [ 3 ] += ders [ 1 ](0, l) * tmp1 [ 3 ];            // sum(Nv*sum(Nu*w))
 
-                temp2[0] += ders [ 1 ](0, l) * tmp2[0];            // sum(Nv*sum(dNu/du*x*w))
-                temp2[1] += ders [ 1 ](0, l) * tmp2[1];            // sum(Nv*sum(dNu/du*y*w))
-                temp2[2] += ders [ 1 ](0, l) * tmp2[2];            // sum(Nv*sum(dNu/du*z*w))
-                temp2[3] += ders [ 1 ](0, l) * tmp2[3];            // sum(Nv*sum(dNu/du*w))
+                temp2 [ 0 ] += ders [ 1 ](0, l) * tmp2 [ 0 ];            // sum(Nv*sum(dNu/du*x*w))
+                temp2 [ 1 ] += ders [ 1 ](0, l) * tmp2 [ 1 ];            // sum(Nv*sum(dNu/du*y*w))
+                temp2 [ 2 ] += ders [ 1 ](0, l) * tmp2 [ 2 ];            // sum(Nv*sum(dNu/du*z*w))
+                temp2 [ 3 ] += ders [ 1 ](0, l) * tmp2 [ 3 ];            // sum(Nv*sum(dNu/du*w))
 
-                temp3[0] += ders [ 1 ](1, l) * tmp1[0];            // sum(dNv/dv*sum(Nu*x*w))
-                temp3[1] += ders [ 1 ](1, l) * tmp1[1];            // sum(dNv/dv*sum(Nu*y*w))
-                temp3[2] += ders [ 1 ](1, l) * tmp1[2];            // sum(dNv/dv*sum(Nu*z*w))
-                temp3[3] += ders [ 1 ](1, l) * tmp1[3];            // sum(dNv/dv*sum(Nu*w))
+                temp3 [ 0 ] += ders [ 1 ](1, l) * tmp1 [ 0 ];            // sum(dNv/dv*sum(Nu*x*w))
+                temp3 [ 1 ] += ders [ 1 ](1, l) * tmp1 [ 1 ];            // sum(dNv/dv*sum(Nu*y*w))
+                temp3 [ 2 ] += ders [ 1 ](1, l) * tmp1 [ 2 ];            // sum(dNv/dv*sum(Nu*z*w))
+                temp3 [ 3 ] += ders [ 1 ](1, l) * tmp1 [ 3 ];            // sum(dNv/dv*sum(Nu*w))
             }
 
             ind = indx + numberOfControlPoints [ 0 ] * numberOfControlPoints [ 1 ];
 
-            Aders [ 0 ][0] += ders [ 2 ](0, m) * temp1[0];     // x=sum(Nt*sum(Nv*sum(Nu*x*w)))
-            Aders [ 1 ][0] += ders [ 2 ](0, m) * temp1[1];     // y=sum(Nt*sum(Nv*sum(Nu*y*w)))
-            Aders [ 2 ][0] += ders [ 2 ](0, m) * temp1[2];     // y=sum(Nt*sum(Nv*sum(Nu*y*w)))
-            wders[0]    += ders [ 2 ](0, m) * temp1[3];        // w=sum(Nt*sum(Nv*sum(Nu*w)))
+            Aders [ 0 ] [ 0 ] += ders [ 2 ](0, m) * temp1 [ 0 ];     // x=sum(Nt*sum(Nv*sum(Nu*x*w)))
+            Aders [ 1 ] [ 0 ] += ders [ 2 ](0, m) * temp1 [ 1 ];     // y=sum(Nt*sum(Nv*sum(Nu*y*w)))
+            Aders [ 2 ] [ 0 ] += ders [ 2 ](0, m) * temp1 [ 2 ];     // y=sum(Nt*sum(Nv*sum(Nu*y*w)))
+            wders [ 0 ]    += ders [ 2 ](0, m) * temp1 [ 3 ];        // w=sum(Nt*sum(Nv*sum(Nu*w)))
 
-            Aders [ 0 ][1] += ders [ 2 ](0, m) * temp2[0];     // dx/du=sum(Nt*sum(Nv*sum(dNu/du*x*w)))
-            Aders [ 1 ][1] += ders [ 2 ](0, m) * temp2[1];     // dy/du=sum(Nt*sum(Nv*sum(dNu/du*y*w)))
-            Aders [ 2 ][1] += ders [ 2 ](0, m) * temp2[2];     // dy/du=sum(Nt*sum(Nv*sum(dNu/du*y*w)))
-            wders[1]    += ders [ 2 ](0, m) * temp2[3];        // dw/du=sum(Nt*sum(Nv*sum(dNu/du*w)))
+            Aders [ 0 ] [ 1 ] += ders [ 2 ](0, m) * temp2 [ 0 ];     // dx/du=sum(Nt*sum(Nv*sum(dNu/du*x*w)))
+            Aders [ 1 ] [ 1 ] += ders [ 2 ](0, m) * temp2 [ 1 ];     // dy/du=sum(Nt*sum(Nv*sum(dNu/du*y*w)))
+            Aders [ 2 ] [ 1 ] += ders [ 2 ](0, m) * temp2 [ 2 ];     // dy/du=sum(Nt*sum(Nv*sum(dNu/du*y*w)))
+            wders [ 1 ]    += ders [ 2 ](0, m) * temp2 [ 3 ];        // dw/du=sum(Nt*sum(Nv*sum(dNu/du*w)))
 
-            Aders [ 0 ][2] += ders [ 2 ](0, m) * temp3[0];     // dx/dv=sum(Nt*sum(dNv/dv*sum(Nu*x*w)))
-            Aders [ 1 ][2] += ders [ 2 ](0, m) * temp3[1];     // dy/dv=sum(Nt*sum(dNv/dv*sum(Nu*y*w)))
-            Aders [ 2 ][2] += ders [ 2 ](0, m) * temp3[2];     // dy/dv=sum(Nt*sum(dNv/dv*sum(Nu*y*w)))
-            wders[2]    += ders [ 2 ](0, m) * temp3[3];        // dw/dv=sum(Nt*sum(dNv/dv*sum(Nu*w)))
+            Aders [ 0 ] [ 2 ] += ders [ 2 ](0, m) * temp3 [ 0 ];     // dx/dv=sum(Nt*sum(dNv/dv*sum(Nu*x*w)))
+            Aders [ 1 ] [ 2 ] += ders [ 2 ](0, m) * temp3 [ 1 ];     // dy/dv=sum(Nt*sum(dNv/dv*sum(Nu*y*w)))
+            Aders [ 2 ] [ 2 ] += ders [ 2 ](0, m) * temp3 [ 2 ];     // dy/dv=sum(Nt*sum(dNv/dv*sum(Nu*y*w)))
+            wders [ 2 ]    += ders [ 2 ](0, m) * temp3 [ 3 ];        // dw/dv=sum(Nt*sum(dNv/dv*sum(Nu*w)))
 
-            Aders [ 0 ][3] += ders [ 2 ](1, m) * temp1[0];     // dx/dt=sum(dNt/dt*sum(Nv*sum(Nu*x*w)))
-            Aders [ 1 ][3] += ders [ 2 ](1, m) * temp1[1];     // dy/dt=sum(dNt/dt*sum(Nv*sum(Nu*y*w)))
-            Aders [ 2 ][3] += ders [ 2 ](1, m) * temp1[2];     // dy/dt=sum(dNt/dt*sum(Nv*sum(Nu*y*w)))
-            wders[3]    += ders [ 2 ](1, m) * temp1[3];        // dw/dt=sum(dNt/dt*sum(Nv*sum(Nu*w)))
+            Aders [ 0 ] [ 3 ] += ders [ 2 ](1, m) * temp1 [ 0 ];     // dx/dt=sum(dNt/dt*sum(Nv*sum(Nu*x*w)))
+            Aders [ 1 ] [ 3 ] += ders [ 2 ](1, m) * temp1 [ 1 ];     // dy/dt=sum(dNt/dt*sum(Nv*sum(Nu*y*w)))
+            Aders [ 2 ] [ 3 ] += ders [ 2 ](1, m) * temp1 [ 2 ];     // dy/dt=sum(dNt/dt*sum(Nv*sum(Nu*y*w)))
+            wders [ 3 ]    += ders [ 2 ](1, m) * temp1 [ 3 ];        // dw/dt=sum(dNt/dt*sum(Nv*sum(Nu*w)))
         }
 
-        double weight = wders[0];
+        double weight = wders [ 0 ];
 
         // calculation of jacobian matrix
-        tmp1[0] = Aders [ 0 ][0] / weight;
-        tmp1[1] = Aders [ 1 ][0] / weight;
-        tmp1[2] = Aders [ 2 ][0] / weight;
-        jacobian(0, 0) = ( Aders [ 0 ][1] - wders[1] * tmp1[0] ) / weight; // dx/du
-        jacobian(0, 1) = ( Aders [ 1 ][1] - wders[1] * tmp1[1] ) / weight; // dy/du
-        jacobian(0, 2) = ( Aders [ 2 ][1] - wders[1] * tmp1[2] ) / weight; // dz/du
-        jacobian(1, 0) = ( Aders [ 0 ][2] - wders[2] * tmp1[0] ) / weight; // dx/dv
-        jacobian(1, 1) = ( Aders [ 1 ][2] - wders[2] * tmp1[1] ) / weight; // dy/dv
-        jacobian(1, 2) = ( Aders [ 2 ][2] - wders[2] * tmp1[2] ) / weight; // dz/dv
-        jacobian(2, 0) = ( Aders [ 0 ][3] - wders[3] * tmp1[0] ) / weight; // dx/dt
-        jacobian(2, 1) = ( Aders [ 1 ][3] - wders[3] * tmp1[1] ) / weight; // dy/dt
-        jacobian(2, 2) = ( Aders [ 2 ][3] - wders[3] * tmp1[2] ) / weight; // dz/dt
+        tmp1 [ 0 ] = Aders [ 0 ] [ 0 ] / weight;
+        tmp1 [ 1 ] = Aders [ 1 ] [ 0 ] / weight;
+        tmp1 [ 2 ] = Aders [ 2 ] [ 0 ] / weight;
+        jacobian(0, 0) = ( Aders [ 0 ] [ 1 ] - wders [ 1 ] * tmp1 [ 0 ] ) / weight; // dx/du
+        jacobian(0, 1) = ( Aders [ 1 ] [ 1 ] - wders [ 1 ] * tmp1 [ 1 ] ) / weight; // dy/du
+        jacobian(0, 2) = ( Aders [ 2 ] [ 1 ] - wders [ 1 ] * tmp1 [ 2 ] ) / weight; // dz/du
+        jacobian(1, 0) = ( Aders [ 0 ] [ 2 ] - wders [ 2 ] * tmp1 [ 0 ] ) / weight; // dx/dv
+        jacobian(1, 1) = ( Aders [ 1 ] [ 2 ] - wders [ 2 ] * tmp1 [ 1 ] ) / weight; // dy/dv
+        jacobian(1, 2) = ( Aders [ 2 ] [ 2 ] - wders [ 2 ] * tmp1 [ 2 ] ) / weight; // dz/dv
+        jacobian(2, 0) = ( Aders [ 0 ] [ 3 ] - wders [ 3 ] * tmp1 [ 0 ] ) / weight; // dx/dt
+        jacobian(2, 1) = ( Aders [ 1 ] [ 3 ] - wders [ 3 ] * tmp1 [ 1 ] ) / weight; // dy/dt
+        jacobian(2, 2) = ( Aders [ 2 ] [ 3 ] - wders [ 3 ] * tmp1 [ 2 ] ) / weight; // dz/dt
 
         Jacob = jacobian.giveDeterminant();
 
@@ -541,21 +543,21 @@ double NURBSInterpolation :: evaldNdx(FloatMatrix &answer, const FloatArray &lco
                 for ( int k = 0; k <= degree [ 0 ]; k++ ) {
                     double w = cellgeo.giveVertexCoordinates(ind + k)->at(4);
                     // dNu/du*Nv*Nt*w*sum(Nu*Nv*Nt*w) - Nu*Nv*Nt*w*sum(dNu/du*Nv*Nt*w)
-                    tmp1[0] = ders [ 0 ](1, k) * ders [ 1 ](0, l) * ders [ 2 ](0, m) * w * weight - ders [ 0 ](0, k) * ders [ 1 ](0, l) * ders [ 2 ](0, m) * w * wders[1];
+                    tmp1 [ 0 ] = ders [ 0 ](1, k) * ders [ 1 ](0, l) * ders [ 2 ](0, m) * w * weight - ders [ 0 ](0, k) * ders [ 1 ](0, l) * ders [ 2 ](0, m) * w * wders [ 1 ];
                     // Nu*dNv/dv*Nt*w*sum(Nu*Nv*Nt*w) - Nu*Nv*Nt*w*sum(Nu*dNv/dv*Nt*w)
-                    tmp1[1] = ders [ 0 ](0, k) * ders [ 1 ](1, l) * ders [ 2 ](0, m) * w * weight - ders [ 0 ](0, k) * ders [ 1 ](0, l) * ders [ 2 ](0, m) * w * wders[2];
+                    tmp1 [ 1 ] = ders [ 0 ](0, k) * ders [ 1 ](1, l) * ders [ 2 ](0, m) * w * weight - ders [ 0 ](0, k) * ders [ 1 ](0, l) * ders [ 2 ](0, m) * w * wders [ 2 ];
                     // Nu*Nv*dNt/dt*w*sum(Nu*Nv*Nt*w) - Nu*Nv*Nt*w*sum(Nu*Nv*dNt/dt*w)
-                    tmp1[2] = ders [ 0 ](0, k) * ders [ 1 ](0, l) * ders [ 2 ](1, m) * w * weight - ders [ 0 ](0, k) * ders [ 1 ](0, l) * ders [ 2 ](0, m) * w * wders[3];
+                    tmp1 [ 2 ] = ders [ 0 ](0, k) * ders [ 1 ](0, l) * ders [ 2 ](1, m) * w * weight - ders [ 0 ](0, k) * ders [ 1 ](0, l) * ders [ 2 ](0, m) * w * wders [ 3 ];
 
-                    answer(cnt, 0) = ( ( jacobian(1, 1) * jacobian(2, 2) - jacobian(1, 2) * jacobian(2, 1) ) * tmp1[0] +
-                                      ( jacobian(0, 2) * jacobian(2, 1) - jacobian(0, 1) * jacobian(2, 2) ) * tmp1[1] +
-                                      ( jacobian(0, 1) * jacobian(1, 2) - jacobian(0, 2) * jacobian(1, 1) ) * tmp1[2] ) / product;                                                      // dN/dx
-                    answer(cnt, 1) = ( ( jacobian(1, 2) * jacobian(2, 0) - jacobian(1, 0) * jacobian(2, 2) ) * tmp1[0] +
-                                      ( jacobian(0, 0) * jacobian(2, 2) - jacobian(0, 2) * jacobian(2, 0) ) * tmp1[1] +
-                                      ( jacobian(0, 2) * jacobian(1, 0) - jacobian(0, 0) * jacobian(1, 2) ) * tmp1[2] ) / product;                                                      // dN/dy
-                    answer(cnt, 2) = ( ( jacobian(1, 0) * jacobian(2, 1) - jacobian(1, 1) * jacobian(2, 0) ) * tmp1[0] +
-                                      ( jacobian(0, 1) * jacobian(2, 0) - jacobian(0, 0) * jacobian(2, 1) ) * tmp1[1] +
-                                      ( jacobian(0, 0) * jacobian(1, 1) - jacobian(0, 1) * jacobian(1, 0) ) * tmp1[2] ) / product;                                                      // dN/dz
+                    answer(cnt, 0) = ( ( jacobian(1, 1) * jacobian(2, 2) - jacobian(1, 2) * jacobian(2, 1) ) * tmp1 [ 0 ] +
+                                       ( jacobian(0, 2) * jacobian(2, 1) - jacobian(0, 1) * jacobian(2, 2) ) * tmp1 [ 1 ] +
+                                       ( jacobian(0, 1) * jacobian(1, 2) - jacobian(0, 2) * jacobian(1, 1) ) * tmp1 [ 2 ] ) / product;                                                  // dN/dx
+                    answer(cnt, 1) = ( ( jacobian(1, 2) * jacobian(2, 0) - jacobian(1, 0) * jacobian(2, 2) ) * tmp1 [ 0 ] +
+                                       ( jacobian(0, 0) * jacobian(2, 2) - jacobian(0, 2) * jacobian(2, 0) ) * tmp1 [ 1 ] +
+                                       ( jacobian(0, 2) * jacobian(1, 0) - jacobian(0, 0) * jacobian(1, 2) ) * tmp1 [ 2 ] ) / product;                                                  // dN/dy
+                    answer(cnt, 2) = ( ( jacobian(1, 0) * jacobian(2, 1) - jacobian(1, 1) * jacobian(2, 0) ) * tmp1 [ 0 ] +
+                                       ( jacobian(0, 1) * jacobian(2, 0) - jacobian(0, 0) * jacobian(2, 1) ) * tmp1 [ 1 ] +
+                                       ( jacobian(0, 0) * jacobian(1, 1) - jacobian(0, 1) * jacobian(1, 0) ) * tmp1 [ 2 ] ) / product;                                                  // dN/dz
                     cnt++;
                 }
 
@@ -577,62 +579,62 @@ double NURBSInterpolation :: evaldNdx(FloatMatrix &answer, const FloatArray &lco
 void NURBSInterpolation :: local2global(FloatArray &answer, const FloatArray &lcoords, const FEICellGeometry &cellgeo)
 {
     /* Based on SurfacePoint A4.3 implementation*/
-    const FEIIGAElementGeometryWrapper &gw = static_cast< const FEIIGAElementGeometryWrapper& >(cellgeo);
+    const FEIIGAElementGeometryWrapper &gw = static_cast< const FEIIGAElementGeometryWrapper & >(cellgeo);
     IntArray span(nsd);
     double weight = 0.0;
-    std :: vector< FloatArray > N(nsd);
+    std :: vector< FloatArray >N(nsd);
 
     if ( gw.knotSpan ) {
         span = * gw.knotSpan;
     } else {
         for ( int i = 0; i < nsd; i++ ) {
-            span[i] = this->findSpan(numberOfControlPoints [ i ], degree [ i ], lcoords[i], knotVector [ i ]);
+            span [ i ] = this->findSpan(numberOfControlPoints [ i ], degree [ i ], lcoords [ i ], knotVector [ i ]);
         }
     }
 
     for ( int i = 0; i < nsd; i++ ) {
-        this->basisFuns(N [ i ], span[i], lcoords[i], degree [ i ], knotVector [ i ]);
+        this->basisFuns(N [ i ], span [ i ], lcoords [ i ], degree [ i ], knotVector [ i ]);
     }
 
     answer.resize(nsd);
     answer.zero();
 
     if ( nsd == 1 ) {
-        int uind = span[0] - degree [ 0 ];
+        int uind = span [ 0 ] - degree [ 0 ];
         int ind = uind + 1;
         for ( int k = 0; k <= degree [ 0 ]; k++ ) {
-            const FloatArray &vertexCoords = *cellgeo.giveVertexCoordinates(ind + k);
-            double w = vertexCoords[1];
-            answer[0] += N [ 0 ][k] * vertexCoords[0] * w;       // xw=sum(Nu*x*w)
-            weight    += N [ 0 ][k] * w;                                // w=sum(Nu*w)
+            const FloatArray &vertexCoords = * cellgeo.giveVertexCoordinates(ind + k);
+            double w = vertexCoords [ 1 ];
+            answer [ 0 ] += N [ 0 ] [ k ] * vertexCoords [ 0 ] * w;       // xw=sum(Nu*x*w)
+            weight    += N [ 0 ] [ k ] * w;                                // w=sum(Nu*w)
         }
     } else if ( nsd == 2 ) {
         FloatArray tmp(nsd + 1);       // allow for weight
 
-        int uind = span[0] - degree [ 0 ];
-        int vind = span[1] - degree [ 1 ];
+        int uind = span [ 0 ] - degree [ 0 ];
+        int vind = span [ 1 ] - degree [ 1 ];
         int ind = vind * numberOfControlPoints [ 0 ] + uind + 1;
         for ( int l = 0; l <= degree [ 1 ]; l++ ) {
             tmp.zero();
             for ( int k = 0; k <= degree [ 0 ]; k++ ) {
-                const FloatArray &vertexCoords = *cellgeo.giveVertexCoordinates(ind + k);
-                double w = vertexCoords[2];
-                tmp[0] += N [ 0 ][k] * vertexCoords[0] * w; // sum(Nu*x*w)
-                tmp[1] += N [ 0 ][k] * vertexCoords[1] * w; // sum(Nu*y*w)
-                tmp[2] += N [ 0 ][k] * w;            // sum(Nu*w)
+                const FloatArray &vertexCoords = * cellgeo.giveVertexCoordinates(ind + k);
+                double w = vertexCoords [ 2 ];
+                tmp [ 0 ] += N [ 0 ] [ k ] * vertexCoords [ 0 ] * w; // sum(Nu*x*w)
+                tmp [ 1 ] += N [ 0 ] [ k ] * vertexCoords [ 1 ] * w; // sum(Nu*y*w)
+                tmp [ 2 ] += N [ 0 ] [ k ] * w;            // sum(Nu*w)
             }
 
             ind += numberOfControlPoints [ 0 ];
-            answer[0] += N [ 1 ][l] * tmp[0]; // xw=sum(Nv*Nu*x*w)
-            answer[1] += N [ 1 ][l] * tmp[1]; // yw=sum(Nv*Nu*y*w)
-            weight    += N [ 1 ][l] * tmp[2]; // w=sum(Nv*Nu*w)
+            answer [ 0 ] += N [ 1 ] [ l ] * tmp [ 0 ]; // xw=sum(Nv*Nu*x*w)
+            answer [ 1 ] += N [ 1 ] [ l ] * tmp [ 1 ]; // yw=sum(Nv*Nu*y*w)
+            weight    += N [ 1 ] [ l ] * tmp [ 2 ]; // w=sum(Nv*Nu*w)
         }
     } else if ( nsd == 3 ) {
         FloatArray tmp(nsd + 1), temp(nsd + 1);    // allow for weight
 
-        int uind = span[0] - degree [ 0 ];
-        int vind = span[1] - degree [ 1 ];
-        int tind = span[2] - degree [ 2 ];
+        int uind = span [ 0 ] - degree [ 0 ];
+        int vind = span [ 1 ] - degree [ 1 ];
+        int tind = span [ 2 ] - degree [ 2 ];
         int ind = tind * numberOfControlPoints [ 0 ] * numberOfControlPoints [ 1 ] + vind * numberOfControlPoints [ 0 ] + uind + 1;
         for ( int m = 0; m <= degree [ 2 ]; m++ ) {
             temp.zero();
@@ -640,28 +642,28 @@ void NURBSInterpolation :: local2global(FloatArray &answer, const FloatArray &lc
             for ( int l = 0; l <= degree [ 1 ]; l++ ) {
                 tmp.zero();
                 for ( int k = 0; k <= degree [ 0 ]; k++ ) {
-                    const FloatArray &vertexCoords = *cellgeo.giveVertexCoordinates(ind + k);
-                    double w = vertexCoords[3];
-                    tmp[0] += N [ 0 ][k] * vertexCoords[1] * w;               // sum(Nu*x*w)
-                    tmp[1] += N [ 0 ][k] * vertexCoords[2] * w;               // sum(Nu*y*w)
-                    tmp[2] += N [ 0 ][k] * vertexCoords[3] * w;               // sum(Nu*z*w)
-                    tmp[3] += N [ 0 ][k] * w;                                        // sum(Nu*w)
+                    const FloatArray &vertexCoords = * cellgeo.giveVertexCoordinates(ind + k);
+                    double w = vertexCoords [ 3 ];
+                    tmp [ 0 ] += N [ 0 ] [ k ] * vertexCoords [ 1 ] * w;               // sum(Nu*x*w)
+                    tmp [ 1 ] += N [ 0 ] [ k ] * vertexCoords [ 2 ] * w;               // sum(Nu*y*w)
+                    tmp [ 2 ] += N [ 0 ] [ k ] * vertexCoords [ 3 ] * w;               // sum(Nu*z*w)
+                    tmp [ 3 ] += N [ 0 ] [ k ] * w;                                        // sum(Nu*w)
                 }
 
                 ind += numberOfControlPoints [ 0 ];
 
-                temp[0] += N [ 1 ][l] * tmp[0];             // sum(Nv*Nu*x*w)
-                temp[1] += N [ 1 ][l] * tmp[1];             // sum(Nv*Nu*y*w)
-                temp[2] += N [ 1 ][l] * tmp[2];             // sum(Nv*Nu*z*w)
-                temp[3] += N [ 1 ][l] * tmp[3];             // sum(Nv*Nu*w)
+                temp [ 0 ] += N [ 1 ] [ l ] * tmp [ 0 ];             // sum(Nv*Nu*x*w)
+                temp [ 1 ] += N [ 1 ] [ l ] * tmp [ 1 ];             // sum(Nv*Nu*y*w)
+                temp [ 2 ] += N [ 1 ] [ l ] * tmp [ 2 ];             // sum(Nv*Nu*z*w)
+                temp [ 3 ] += N [ 1 ] [ l ] * tmp [ 3 ];             // sum(Nv*Nu*w)
             }
 
             ind = indx + numberOfControlPoints [ 0 ] * numberOfControlPoints [ 1 ];
 
-            answer[0] += N [ 2 ][m] * temp[0]; // xw=sum(Nv*Nu*Nt*x*w)
-            answer[1] += N [ 2 ][m] * temp[1]; // yw=sum(Nv*Nu*Nt*y*w)
-            answer[2] += N [ 2 ][m] * temp[2]; // zw=sum(Nv*Nu*Nt*z*w)
-            weight    += N [ 2 ][m] * temp[3]; // w=sum(Nv*Nu*Nt*w)
+            answer [ 0 ] += N [ 2 ] [ m ] * temp [ 0 ]; // xw=sum(Nv*Nu*Nt*x*w)
+            answer [ 1 ] += N [ 2 ] [ m ] * temp [ 1 ]; // yw=sum(Nv*Nu*Nt*y*w)
+            answer [ 2 ] += N [ 2 ] [ m ] * temp [ 2 ]; // zw=sum(Nv*Nu*Nt*z*w)
+            weight    += N [ 2 ] [ m ] * temp [ 3 ]; // w=sum(Nv*Nu*Nt*w)
         }
     } else {
         OOFEM_ERROR("lnot implemented for nsd = %d", nsd);
@@ -671,25 +673,25 @@ void NURBSInterpolation :: local2global(FloatArray &answer, const FloatArray &lc
 }
 
 void NURBSInterpolation :: giveJacobianMatrixAt(FloatMatrix &jacobian, const FloatArray &lcoords, const FEICellGeometry &cellgeo)
-    {
+{
     //
     // Based on Algorithm A4.4 (p. 137) for d=1
     //
-    const FEIIGAElementGeometryWrapper &gw = static_cast< const FEIIGAElementGeometryWrapper& >(cellgeo);
+    const FEIIGAElementGeometryWrapper &gw = static_cast< const FEIIGAElementGeometryWrapper & >(cellgeo);
     IntArray span(fsd);
-    std :: vector< FloatMatrix > ders(fsd);
+    std :: vector< FloatMatrix >ders(fsd);
     jacobian.resize(fsd, fsd);
 
     if ( gw.knotSpan ) {
         span = * gw.knotSpan;
     } else {
         for ( int i = 0; i < fsd; i++ ) {
-            span[i] = this->findSpan(numberOfControlPoints [ i ], degree [ i ], lcoords[i], knotVector [ i ]);
+            span [ i ] = this->findSpan(numberOfControlPoints [ i ], degree [ i ], lcoords [ i ], knotVector [ i ]);
         }
     }
 
     for ( int i = 0; i < fsd; i++ ) {
-        this->dersBasisFuns(1, lcoords[i], span[i], degree [ i ], knotVector [ i ], ders [ i ]);
+        this->dersBasisFuns(1, lcoords [ i ], span [ i ], degree [ i ], knotVector [ i ], ders [ i ]);
     }
 
 #if 0                       // code according NURBS book (too general allowing higher derivatives)
@@ -722,38 +724,38 @@ void NURBSInterpolation :: giveJacobianMatrixAt(FloatMatrix &jacobian, const Flo
 
         // calculation of jacobian matrix according to A4.4
         // calculate values and derivatives of nonrational Bspline surface with weights at first (Aders, wders)
-        int uind = span[0] - degree [ 0 ];
-        int vind = span[1] - degree [ 1 ];
+        int uind = span [ 0 ] - degree [ 0 ];
+        int vind = span [ 1 ] - degree [ 1 ];
         int ind = vind * numberOfControlPoints [ 0 ] + uind + 1;
         for ( int l = 0; l <= degree [ 1 ]; l++ ) {
             tmp1.zero();
             tmp2.zero();
             for ( int k = 0; k <= degree [ 0 ]; k++ ) {
-                const FloatArray &vertexCoords = *cellgeo.giveVertexCoordinates(ind + k);
-                double w = vertexCoords[2];
+                const FloatArray &vertexCoords = * cellgeo.giveVertexCoordinates(ind + k);
+                double w = vertexCoords [ 2 ];
 
-                tmp1[0] += ders [ 0 ](0, k) * vertexCoords[0] * w; // sum(Nu*x*w)
-                tmp1[1] += ders [ 0 ](0, k) * vertexCoords[1] * w; // sum(Nu*y*w)
-                tmp1[2] += ders [ 0 ](0, k) * w;           // sum(Nu*w)
+                tmp1 [ 0 ] += ders [ 0 ](0, k) * vertexCoords [ 0 ] * w; // sum(Nu*x*w)
+                tmp1 [ 1 ] += ders [ 0 ](0, k) * vertexCoords [ 1 ] * w; // sum(Nu*y*w)
+                tmp1 [ 2 ] += ders [ 0 ](0, k) * w;           // sum(Nu*w)
 
-                tmp2[0] += ders [ 0 ](1, k) * vertexCoords[0] * w; // sum(dNu/du*x*w)
-                tmp2[1] += ders [ 0 ](1, k) * vertexCoords[1] * w; // sum(dNu/du*y*w)
-                tmp2[2] += ders [ 0 ](1, k) * w;           // sum(dNu/du*w)
+                tmp2 [ 0 ] += ders [ 0 ](1, k) * vertexCoords [ 0 ] * w; // sum(dNu/du*x*w)
+                tmp2 [ 1 ] += ders [ 0 ](1, k) * vertexCoords [ 1 ] * w; // sum(dNu/du*y*w)
+                tmp2 [ 2 ] += ders [ 0 ](1, k) * w;           // sum(dNu/du*w)
             }
 
             ind += numberOfControlPoints [ 0 ];
 
-            Aders [ 0 ](0, 0) += ders [ 1 ](0, l) * tmp1[0]; // xw=sum(Nv*sum(Nu*x*w))
-            Aders [ 1 ](0, 0) += ders [ 1 ](0, l) * tmp1[1]; // yw=sum(Nv*sum(Nu*y*w))
-            wders(0, 0)    += ders [ 1 ](0, l) * tmp1[2]; // w=sum(Nv*sum(Nu*w))
+            Aders [ 0 ](0, 0) += ders [ 1 ](0, l) * tmp1 [ 0 ]; // xw=sum(Nv*sum(Nu*x*w))
+            Aders [ 1 ](0, 0) += ders [ 1 ](0, l) * tmp1 [ 1 ]; // yw=sum(Nv*sum(Nu*y*w))
+            wders(0, 0)    += ders [ 1 ](0, l) * tmp1 [ 2 ]; // w=sum(Nv*sum(Nu*w))
 
-            Aders [ 0 ](0, 1) += ders [ 1 ](1, l) * tmp1[0]; // dxw/dv=sum(dNv/dv*sum(Nu*x*w))
-            Aders [ 1 ](0, 1) += ders [ 1 ](1, l) * tmp1[1]; // dyw/dv=sum(dNv/dv*sum(Nu*y*w))
-            wders(0, 1)    += ders [ 1 ](1, l) * tmp1[2]; // dw/dv=sum(dNv/dv*sum(Nu*w))
+            Aders [ 0 ](0, 1) += ders [ 1 ](1, l) * tmp1 [ 0 ]; // dxw/dv=sum(dNv/dv*sum(Nu*x*w))
+            Aders [ 1 ](0, 1) += ders [ 1 ](1, l) * tmp1 [ 1 ]; // dyw/dv=sum(dNv/dv*sum(Nu*y*w))
+            wders(0, 1)    += ders [ 1 ](1, l) * tmp1 [ 2 ]; // dw/dv=sum(dNv/dv*sum(Nu*w))
 
-            Aders [ 0 ](1, 0) += ders [ 1 ](0, l) * tmp2[0]; // dxw/du=sum(Nv*sum(dNu/du*x*w))
-            Aders [ 1 ](1, 0) += ders [ 1 ](0, l) * tmp2[1]; // dyw/du=sum(Nv*sum(dNu/du*y*w))
-            wders(1, 0)    += ders [ 1 ](0, l) * tmp2[2];       // dw/du=sum(Nv*sum(dNu/du*w))
+            Aders [ 0 ](1, 0) += ders [ 1 ](0, l) * tmp2 [ 0 ]; // dxw/du=sum(Nv*sum(dNu/du*x*w))
+            Aders [ 1 ](1, 0) += ders [ 1 ](0, l) * tmp2 [ 1 ]; // dyw/du=sum(Nv*sum(dNu/du*y*w))
+            wders(1, 0)    += ders [ 1 ](0, l) * tmp2 [ 2 ];       // dw/du=sum(Nv*sum(dNu/du*w))
         }
 
         double weight = wders(0, 0);
@@ -764,28 +766,28 @@ void NURBSInterpolation :: giveJacobianMatrixAt(FloatMatrix &jacobian, const Flo
         // since all entries in Pascal triangle up to d=1 are 1, binomial coefficients are ignored
         for ( int k = 0; k <= d; k++ ) {
             for ( int l = 0; l <= d - k; l++ ) {
-                tmp1[0] = Aders [ 0 ](k, l);
-                tmp1[1] = Aders [ 1 ](k, l);
+                tmp1 [ 0 ] = Aders [ 0 ](k, l);
+                tmp1 [ 1 ] = Aders [ 1 ](k, l);
                 for ( j = 1; j <= l; j++ ) {
-                    tmp1[0] -= wders(0, j) * Sders [ 0 ](k, l - j);            // *Bin(l,j)
-                    tmp1[1] -= wders(0, j) * Sders [ 1 ](k, l - j);            // *Bin(l,j)
+                    tmp1 [ 0 ] -= wders(0, j) * Sders [ 0 ](k, l - j);            // *Bin(l,j)
+                    tmp1 [ 1 ] -= wders(0, j) * Sders [ 1 ](k, l - j);            // *Bin(l,j)
                 }
 
                 for ( int i = 1; i <= k; i++ ) {
-                    tmp1[0] -= wders(i, 0) * Sders [ 0 ](k - i, l);            // *Bin(k,i)
-                    tmp1[1] -= wders(i, 0) * Sders [ 1 ](k - i, l);            // *Bin(k,i)
+                    tmp1 [ 0 ] -= wders(i, 0) * Sders [ 0 ](k - i, l);            // *Bin(k,i)
+                    tmp1 [ 1 ] -= wders(i, 0) * Sders [ 1 ](k - i, l);            // *Bin(k,i)
                     tmp2.zero();
                     for ( int j = 1; j <= l; j++ ) {
-                        tmp2[0] += wders(i, j) * Sders [ 0 ](k - i, l - j);              // *Bin(l,j)
-                        tmp2[1] += wders(i, j) * Sders [ 1 ](k - i, l - j);              // *Bin(l,j)
+                        tmp2 [ 0 ] += wders(i, j) * Sders [ 0 ](k - i, l - j);              // *Bin(l,j)
+                        tmp2 [ 1 ] += wders(i, j) * Sders [ 1 ](k - i, l - j);              // *Bin(l,j)
                     }
 
-                    tmp1[0] -= tmp2[0];                     // *Bin(k,i)
-                    tmp1[1] -= tmp2[1];                     // *Bin(k,i)
+                    tmp1 [ 0 ] -= tmp2 [ 0 ];                     // *Bin(k,i)
+                    tmp1 [ 1 ] -= tmp2 [ 1 ];                     // *Bin(k,i)
                 }
 
-                Sders [ 0 ](k, l) = tmp1[0] / weight;
-                Sders [ 1 ](k, l) = tmp1[1] / weight;
+                Sders [ 0 ](k, l) = tmp1 [ 0 ] / weight;
+                Sders [ 1 ](k, l) = tmp1 [ 1 ] / weight;
             }
         }
 
@@ -814,21 +816,21 @@ void NURBSInterpolation :: giveJacobianMatrixAt(FloatMatrix &jacobian, const Flo
          */
 
         // k=0 l=0 loop
-        tmp1[0] = Aders [ 0 ](0, 0) / weight;
-        tmp1[1] = Aders [ 1 ](0, 0) / weight;
+        tmp1 [ 0 ] = Aders [ 0 ](0, 0) / weight;
+        tmp1 [ 1 ] = Aders [ 1 ](0, 0) / weight;
         // k=1 l=0 loop
-        jacobian(0, 0) = ( Aders [ 0 ](1, 0) - wders(1, 0) * tmp1[0] ) / weight; // dx/du
-        jacobian(0, 1) = ( Aders [ 1 ](1, 0) - wders(1, 0) * tmp1[1] ) / weight; // dy/du
+        jacobian(0, 0) = ( Aders [ 0 ](1, 0) - wders(1, 0) * tmp1 [ 0 ] ) / weight; // dx/du
+        jacobian(0, 1) = ( Aders [ 1 ](1, 0) - wders(1, 0) * tmp1 [ 1 ] ) / weight; // dy/du
         // k=0 l=1 loop
-        jacobian(1, 0) = ( Aders [ 0 ](0, 1) - wders(0, 1) * tmp1[0] ) / weight; // dx/dv
-        jacobian(1, 1) = ( Aders [ 1 ](0, 1) - wders(0, 1) * tmp1[1] ) / weight; // dy/dv
+        jacobian(1, 0) = ( Aders [ 0 ](0, 1) - wders(0, 1) * tmp1 [ 0 ] ) / weight; // dx/dv
+        jacobian(1, 1) = ( Aders [ 1 ](0, 1) - wders(0, 1) * tmp1 [ 1 ] ) / weight; // dy/dv
  #endif
     }     else {
         OOFEM_ERROR("not implemented for nsd = %d", nsd);
     }
 
 #else
-    std :: vector< FloatArray > Aders(fsd);
+    std :: vector< FloatArray >Aders(fsd);
     FloatArray wders;          // 0th and 1st derivatives in w direction on BSpline
 
     for ( int i = 0; i < fsd; i++ ) {
@@ -841,93 +843,93 @@ void NURBSInterpolation :: giveJacobianMatrixAt(FloatMatrix &jacobian, const Flo
 
     if ( fsd == 1 ) {
         // calculate values and derivatives of nonrational Bspline curve with weights at first (Aders, wders)
-        int uind = span[0] - degree [ 0 ];
+        int uind = span [ 0 ] - degree [ 0 ];
         int ind = uind + 1;
         for ( int k = 0; k <= degree [ 0 ]; k++ ) {
-            const FloatArray &vertexCoords = *cellgeo.giveVertexCoordinates(ind + k);
-            double w = vertexCoords[nsd];
+            const FloatArray &vertexCoords = * cellgeo.giveVertexCoordinates(ind + k);
+            double w = vertexCoords [ nsd ];
 
-            Aders [ 0 ][0] += ders [ 0 ](0, k) * vertexCoords[0] * w;   // xw=sum(Nu*x*w)
-            wders[0]    += ders [ 0 ](0, k) * w;                               // w=sum(Nu*w)
+            Aders [ 0 ] [ 0 ] += ders [ 0 ](0, k) * vertexCoords [ 0 ] * w;   // xw=sum(Nu*x*w)
+            wders [ 0 ]    += ders [ 0 ](0, k) * w;                               // w=sum(Nu*w)
 
-            Aders [ 0 ][1] += ders [ 0 ](1, k) * vertexCoords[0] * w;   // dxw/du=sum(dNu/du*x*w)
-            wders[1]    += ders [ 0 ](1, k) * w;                               // dw/du=sum(dNu/du*w)
-	    /*=======
-	      if ( fsd == 1 ) {
-	      FloatArray locCoords = {0.0, 1.0/3., 1.0};
-	      uind = span(0) - degree [ 0 ];
-	      ind = uind + 1;
-	      for ( int k = 0; k <= degree [ 0 ]; k++ ) {
-	      vertexCoordsPtr = cellgeo.giveVertexCoordinates(ind + k);
-	      w = vertexCoordsPtr->at(nsd+1);
-
-	      Aders [ 0 ](0) += ders [ 0 ](0, k) * w * locCoords(k);// vertexCoordsPtr->at(1) * w;   // xw=sum(Nu*x*w)
-	      wders(0)    += ders [ 0 ](0, k) * w;                               // w=sum(Nu*w)
-
-	      Aders [ 0 ](1) += ders [ 0 ](1, k) * w * locCoords(k);//vertexCoordsPtr->at(1) * w;   // dxw/du=sum(dNu/du*x*w)
-	      wders(1)    += ders [ 0 ](1, k) * w;                               // dw/du=sum(dNu/du*w)
-	      >>>>>>> Implemented NURBSBeam2dElement with no locking treatment*/
+            Aders [ 0 ] [ 1 ] += ders [ 0 ](1, k) * vertexCoords [ 0 ] * w;   // dxw/du=sum(dNu/du*x*w)
+            wders [ 1 ]    += ders [ 0 ](1, k) * w;                               // dw/du=sum(dNu/du*w)
+            /*=======
+             * if ( fsd == 1 ) {
+             * FloatArray locCoords = {0.0, 1.0/3., 1.0};
+             * uind = span(0) - degree [ 0 ];
+             * ind = uind + 1;
+             * for ( int k = 0; k <= degree [ 0 ]; k++ ) {
+             * vertexCoordsPtr = cellgeo.giveVertexCoordinates(ind + k);
+             * w = vertexCoordsPtr->at(nsd+1);
+             *
+             * Aders [ 0 ](0) += ders [ 0 ](0, k) * w * locCoords(k);// vertexCoordsPtr->at(1) * w;   // xw=sum(Nu*x*w)
+             * wders(0)    += ders [ 0 ](0, k) * w;                               // w=sum(Nu*w)
+             *
+             * Aders [ 0 ](1) += ders [ 0 ](1, k) * w * locCoords(k);//vertexCoordsPtr->at(1) * w;   // dxw/du=sum(dNu/du*x*w)
+             * wders(1)    += ders [ 0 ](1, k) * w;                               // dw/du=sum(dNu/du*w)
+             * >>>>>>> Implemented NURBSBeam2dElement with no locking treatment*/
         }
 
-        double weight = wders[0];
+        double weight = wders [ 0 ];
 
         // calculation of jacobian matrix according to Eq 4.7
-        jacobian(0, 0) = ( Aders [ 0 ][1] - wders[1] * Aders [ 0 ][0] / weight ) / weight; // dx/du
+        jacobian(0, 0) = ( Aders [ 0 ] [ 1 ] - wders [ 1 ] * Aders [ 0 ] [ 0 ] / weight ) / weight; // dx/du
     } else if ( fsd == 2 ) {
         FloatArray tmp1(fsd + 1), tmp2(fsd + 1);    // allow for weight
 
         // calculate values and derivatives of nonrational Bspline surface with weights at first (Aders, wders)
-        int uind = span[0] - degree [ 0 ];
-        int vind = span[1] - degree [ 1 ];
+        int uind = span [ 0 ] - degree [ 0 ];
+        int vind = span [ 1 ] - degree [ 1 ];
         int ind = vind * numberOfControlPoints [ 0 ] + uind + 1;
         for ( int l = 0; l <= degree [ 1 ]; l++ ) {
             tmp1.zero();
             tmp2.zero();
             for ( int k = 0; k <= degree [ 0 ]; k++ ) {
-                const FloatArray &vertexCoords = *cellgeo.giveVertexCoordinates(ind + k);
-                double w = vertexCoords[2];
+                const FloatArray &vertexCoords = * cellgeo.giveVertexCoordinates(ind + k);
+                double w = vertexCoords [ 2 ];
 
-                tmp1[0] += ders [ 0 ](0, k) * vertexCoords[0] * w; // sum(Nu*x*w)
-                tmp1[1] += ders [ 0 ](0, k) * vertexCoords[1] * w; // sum(Nu*y*w)
-                tmp1[2] += ders [ 0 ](0, k) * w;           // sum(Nu*w)
+                tmp1 [ 0 ] += ders [ 0 ](0, k) * vertexCoords [ 0 ] * w; // sum(Nu*x*w)
+                tmp1 [ 1 ] += ders [ 0 ](0, k) * vertexCoords [ 1 ] * w; // sum(Nu*y*w)
+                tmp1 [ 2 ] += ders [ 0 ](0, k) * w;           // sum(Nu*w)
 
-                tmp2[0] += ders [ 0 ](1, k) * vertexCoords[0] * w; // sum(dNu/du*x*w)
-                tmp2[1] += ders [ 0 ](1, k) * vertexCoords[1] * w; // sum(dNu/du*y*w)
-                tmp2[2] += ders [ 0 ](1, k) * w;           // sum(dNu/du*w)
+                tmp2 [ 0 ] += ders [ 0 ](1, k) * vertexCoords [ 0 ] * w; // sum(dNu/du*x*w)
+                tmp2 [ 1 ] += ders [ 0 ](1, k) * vertexCoords [ 1 ] * w; // sum(dNu/du*y*w)
+                tmp2 [ 2 ] += ders [ 0 ](1, k) * w;           // sum(dNu/du*w)
             }
 
             ind += numberOfControlPoints [ 0 ];
 
-            Aders [ 0 ][0] += ders [ 1 ](0, l) * tmp1[0]; // xw=sum(Nv*sum(Nu*x*w)
-            Aders [ 1 ][0] += ders [ 1 ](0, l) * tmp1[1]; // yw=sum(Nv*sum(Nu*y*w)
-            wders[0]    += ders [ 1 ](0, l) * tmp1[2]; // w=sum(Nv*sum(Nu*w)
+            Aders [ 0 ] [ 0 ] += ders [ 1 ](0, l) * tmp1 [ 0 ]; // xw=sum(Nv*sum(Nu*x*w)
+            Aders [ 1 ] [ 0 ] += ders [ 1 ](0, l) * tmp1 [ 1 ]; // yw=sum(Nv*sum(Nu*y*w)
+            wders [ 0 ]    += ders [ 1 ](0, l) * tmp1 [ 2 ]; // w=sum(Nv*sum(Nu*w)
 
-            Aders [ 0 ][1] += ders [ 1 ](0, l) * tmp2[0]; // dxw/du=sum(Nv*sum(dNu/du*x*w)
-            Aders [ 1 ][1] += ders [ 1 ](0, l) * tmp2[1]; // dyw/du=sum(Nv*sum(dNu/du*y*w)
-            wders[1]    += ders [ 1 ](0, l) * tmp2[2];        // dw/du=sum(Nv*sum(dNu/du*w)
+            Aders [ 0 ] [ 1 ] += ders [ 1 ](0, l) * tmp2 [ 0 ]; // dxw/du=sum(Nv*sum(dNu/du*x*w)
+            Aders [ 1 ] [ 1 ] += ders [ 1 ](0, l) * tmp2 [ 1 ]; // dyw/du=sum(Nv*sum(dNu/du*y*w)
+            wders [ 1 ]    += ders [ 1 ](0, l) * tmp2 [ 2 ];        // dw/du=sum(Nv*sum(dNu/du*w)
 
-            Aders [ 0 ][2] += ders [ 1 ](1, l) * tmp1[0]; // dxw/dv=sum(dNv/dv*sum(Nu*x*w)
-            Aders [ 1 ][2] += ders [ 1 ](1, l) * tmp1[1]; // dyw/dv=sum(dNv/dv*sum(Nu*y*w)
-            wders[2]    += ders [ 1 ](1, l) * tmp1[2]; // dw/dv=sum(dNv/dv*sum(Nu*w)
+            Aders [ 0 ] [ 2 ] += ders [ 1 ](1, l) * tmp1 [ 0 ]; // dxw/dv=sum(dNv/dv*sum(Nu*x*w)
+            Aders [ 1 ] [ 2 ] += ders [ 1 ](1, l) * tmp1 [ 1 ]; // dyw/dv=sum(dNv/dv*sum(Nu*y*w)
+            wders [ 2 ]    += ders [ 1 ](1, l) * tmp1 [ 2 ]; // dw/dv=sum(dNv/dv*sum(Nu*w)
         }
 
-        double weight = wders[0];
+        double weight = wders [ 0 ];
 
         // calculation of jacobian matrix according to Eq 4.19
-        tmp1[0] = Aders [ 0 ][0] / weight;
-        tmp1[1] = Aders [ 1 ][0] / weight;
-        jacobian(0, 0) = ( Aders [ 0 ][1] - wders[1] * tmp1[0] ) / weight; // dx/du
-        jacobian(0, 1) = ( Aders [ 1 ][1] - wders[1] * tmp1[1] ) / weight; // dy/du
-        jacobian(1, 0) = ( Aders [ 0 ][2] - wders[2] * tmp1[0] ) / weight; // dx/dv
-        jacobian(1, 1) = ( Aders [ 1 ][2] - wders[2] * tmp1[1] ) / weight; // dy/dv
+        tmp1 [ 0 ] = Aders [ 0 ] [ 0 ] / weight;
+        tmp1 [ 1 ] = Aders [ 1 ] [ 0 ] / weight;
+        jacobian(0, 0) = ( Aders [ 0 ] [ 1 ] - wders [ 1 ] * tmp1 [ 0 ] ) / weight; // dx/du
+        jacobian(0, 1) = ( Aders [ 1 ] [ 1 ] - wders [ 1 ] * tmp1 [ 1 ] ) / weight; // dy/du
+        jacobian(1, 0) = ( Aders [ 0 ] [ 2 ] - wders [ 2 ] * tmp1 [ 0 ] ) / weight; // dx/dv
+        jacobian(1, 1) = ( Aders [ 1 ] [ 2 ] - wders [ 2 ] * tmp1 [ 1 ] ) / weight; // dy/dv
     } else if ( fsd == 3 ) {
         FloatArray tmp1(fsd + 1), tmp2(fsd + 1);    // allow for weight
         FloatArray temp1(fsd + 1), temp2(fsd + 1), temp3(fsd + 1); // allow for weight
 
         // calculate values and derivatives of nonrational Bspline solid with weights at first (Aders, wders)
-        int uind = span[0] - degree [ 0 ];
-        int vind = span[1] - degree [ 1 ];
-        int tind = span[2] - degree [ 2 ];
+        int uind = span [ 0 ] - degree [ 0 ];
+        int vind = span [ 1 ] - degree [ 1 ];
+        int tind = span [ 2 ] - degree [ 2 ];
         int ind = tind * numberOfControlPoints [ 0 ] * numberOfControlPoints [ 1 ] + vind * numberOfControlPoints [ 0 ] + uind + 1;
         for ( int m = 0; m <= degree [ 2 ]; m++ ) {
             temp1.zero();
@@ -938,76 +940,76 @@ void NURBSInterpolation :: giveJacobianMatrixAt(FloatMatrix &jacobian, const Flo
                 tmp1.zero();
                 tmp2.zero();
                 for ( int k = 0; k <= degree [ 0 ]; k++ ) {
-                    const FloatArray &vertexCoords = *cellgeo.giveVertexCoordinates(ind + k);
-                    double w = vertexCoords[3];
+                    const FloatArray &vertexCoords = * cellgeo.giveVertexCoordinates(ind + k);
+                    double w = vertexCoords [ 3 ];
 
-                    tmp1[0] += ders [ 0 ](0, k) * vertexCoords[0] * w;              // sum(Nu*x*w)
-                    tmp1[1] += ders [ 0 ](0, k) * vertexCoords[1] * w;              // sum(Nu*y*w)
-                    tmp1[2] += ders [ 0 ](0, k) * vertexCoords[2] * w;              // sum(Nu*z*w)
-                    tmp1[3] += ders [ 0 ](0, k) * w;                                       // sum(Nu*w)
+                    tmp1 [ 0 ] += ders [ 0 ](0, k) * vertexCoords [ 0 ] * w;              // sum(Nu*x*w)
+                    tmp1 [ 1 ] += ders [ 0 ](0, k) * vertexCoords [ 1 ] * w;              // sum(Nu*y*w)
+                    tmp1 [ 2 ] += ders [ 0 ](0, k) * vertexCoords [ 2 ] * w;              // sum(Nu*z*w)
+                    tmp1 [ 3 ] += ders [ 0 ](0, k) * w;                                       // sum(Nu*w)
 
-                    tmp2[0] += ders [ 0 ](1, k) * vertexCoords[0] * w;              // sum(dNu/du*x*w)
-                    tmp2[1] += ders [ 0 ](1, k) * vertexCoords[1] * w;              // sum(dNu/du*y*w)
-                    tmp2[2] += ders [ 0 ](1, k) * vertexCoords[2] * w;              // sum(dNu/du*z*w)
-                    tmp2[3] += ders [ 0 ](1, k) * w;                                       // sum(dNu/du*w)
+                    tmp2 [ 0 ] += ders [ 0 ](1, k) * vertexCoords [ 0 ] * w;              // sum(dNu/du*x*w)
+                    tmp2 [ 1 ] += ders [ 0 ](1, k) * vertexCoords [ 1 ] * w;              // sum(dNu/du*y*w)
+                    tmp2 [ 2 ] += ders [ 0 ](1, k) * vertexCoords [ 2 ] * w;              // sum(dNu/du*z*w)
+                    tmp2 [ 3 ] += ders [ 0 ](1, k) * w;                                       // sum(dNu/du*w)
                 }
 
                 ind += numberOfControlPoints [ 0 ];
 
-                temp1[0] += ders [ 1 ](0, l) * tmp1[0];            // sum(Nv*sum(Nu*x*w))
-                temp1[1] += ders [ 1 ](0, l) * tmp1[1];            // sum(Nv*sum(Nu*y*w))
-                temp1[2] += ders [ 1 ](0, l) * tmp1[2];            // sum(Nv*sum(Nu*z*w))
-                temp1[3] += ders [ 1 ](0, l) * tmp1[3];            // sum(Nv*sum(Nu*w))
+                temp1 [ 0 ] += ders [ 1 ](0, l) * tmp1 [ 0 ];            // sum(Nv*sum(Nu*x*w))
+                temp1 [ 1 ] += ders [ 1 ](0, l) * tmp1 [ 1 ];            // sum(Nv*sum(Nu*y*w))
+                temp1 [ 2 ] += ders [ 1 ](0, l) * tmp1 [ 2 ];            // sum(Nv*sum(Nu*z*w))
+                temp1 [ 3 ] += ders [ 1 ](0, l) * tmp1 [ 3 ];            // sum(Nv*sum(Nu*w))
 
-                temp2[0] += ders [ 1 ](0, l) * tmp2[0];            // sum(Nv*sum(dNu/du*x*w))
-                temp2[1] += ders [ 1 ](0, l) * tmp2[1];            // sum(Nv*sum(dNu/du*y*w))
-                temp2[2] += ders [ 1 ](0, l) * tmp2[2];            // sum(Nv*sum(dNu/du*z*w))
-                temp2[3] += ders [ 1 ](0, l) * tmp2[3];            // sum(Nv*sum(dNu/du*w))
+                temp2 [ 0 ] += ders [ 1 ](0, l) * tmp2 [ 0 ];            // sum(Nv*sum(dNu/du*x*w))
+                temp2 [ 1 ] += ders [ 1 ](0, l) * tmp2 [ 1 ];            // sum(Nv*sum(dNu/du*y*w))
+                temp2 [ 2 ] += ders [ 1 ](0, l) * tmp2 [ 2 ];            // sum(Nv*sum(dNu/du*z*w))
+                temp2 [ 3 ] += ders [ 1 ](0, l) * tmp2 [ 3 ];            // sum(Nv*sum(dNu/du*w))
 
-                temp3[0] += ders [ 1 ](1, l) * tmp1[0];            // sum(dNv/dv*sum(Nu*x*w))
-                temp3[1] += ders [ 1 ](1, l) * tmp1[1];            // sum(dNv/dv*sum(Nu*y*w))
-                temp3[2] += ders [ 1 ](1, l) * tmp1[2];            // sum(dNv/dv*sum(Nu*z*w))
-                temp3[3] += ders [ 1 ](1, l) * tmp1[3];            // sum(dNv/dv*sum(Nu*w))
+                temp3 [ 0 ] += ders [ 1 ](1, l) * tmp1 [ 0 ];            // sum(dNv/dv*sum(Nu*x*w))
+                temp3 [ 1 ] += ders [ 1 ](1, l) * tmp1 [ 1 ];            // sum(dNv/dv*sum(Nu*y*w))
+                temp3 [ 2 ] += ders [ 1 ](1, l) * tmp1 [ 2 ];            // sum(dNv/dv*sum(Nu*z*w))
+                temp3 [ 3 ] += ders [ 1 ](1, l) * tmp1 [ 3 ];            // sum(dNv/dv*sum(Nu*w))
             }
 
             ind = indx + numberOfControlPoints [ 0 ] * numberOfControlPoints [ 1 ];
 
-            Aders [ 0 ][0] += ders [ 2 ](0, m) * temp1[0];     // x=sum(Nt*sum(Nv*sum(Nu*x*w)))
-            Aders [ 1 ][0] += ders [ 2 ](0, m) * temp1[1];     // y=sum(Nt*sum(Nv*sum(Nu*y*w)))
-            Aders [ 2 ][0] += ders [ 2 ](0, m) * temp1[2];     // y=sum(Nt*sum(Nv*sum(Nu*y*w)))
-            wders[0]    += ders [ 2 ](0, m) * temp1[3];        // w=sum(Nt*sum(Nv*sum(Nu*w)))
+            Aders [ 0 ] [ 0 ] += ders [ 2 ](0, m) * temp1 [ 0 ];     // x=sum(Nt*sum(Nv*sum(Nu*x*w)))
+            Aders [ 1 ] [ 0 ] += ders [ 2 ](0, m) * temp1 [ 1 ];     // y=sum(Nt*sum(Nv*sum(Nu*y*w)))
+            Aders [ 2 ] [ 0 ] += ders [ 2 ](0, m) * temp1 [ 2 ];     // y=sum(Nt*sum(Nv*sum(Nu*y*w)))
+            wders [ 0 ]    += ders [ 2 ](0, m) * temp1 [ 3 ];        // w=sum(Nt*sum(Nv*sum(Nu*w)))
 
-            Aders [ 0 ][1] += ders [ 2 ](0, m) * temp2[0];     // dx/du=sum(Nt*sum(Nv*sum(dNu/du*x*w)))
-            Aders [ 1 ][1] += ders [ 2 ](0, m) * temp2[1];     // dy/du=sum(Nt*sum(Nv*sum(dNu/du*y*w)))
-            Aders [ 2 ][1] += ders [ 2 ](0, m) * temp2[2];     // dy/du=sum(Nt*sum(Nv*sum(dNu/du*y*w)))
-            wders[1]    += ders [ 2 ](0, m) * temp2[3];        // dw/du=sum(Nt*sum(Nv*sum(dNu/du*w)))
+            Aders [ 0 ] [ 1 ] += ders [ 2 ](0, m) * temp2 [ 0 ];     // dx/du=sum(Nt*sum(Nv*sum(dNu/du*x*w)))
+            Aders [ 1 ] [ 1 ] += ders [ 2 ](0, m) * temp2 [ 1 ];     // dy/du=sum(Nt*sum(Nv*sum(dNu/du*y*w)))
+            Aders [ 2 ] [ 1 ] += ders [ 2 ](0, m) * temp2 [ 2 ];     // dy/du=sum(Nt*sum(Nv*sum(dNu/du*y*w)))
+            wders [ 1 ]    += ders [ 2 ](0, m) * temp2 [ 3 ];        // dw/du=sum(Nt*sum(Nv*sum(dNu/du*w)))
 
-            Aders [ 0 ][2] += ders [ 2 ](0, m) * temp3[0];     // dx/dv=sum(Nt*sum(dNv/dv*sum(Nu*x*w)))
-            Aders [ 1 ][2] += ders [ 2 ](0, m) * temp3[1];     // dy/dv=sum(Nt*sum(dNv/dv*sum(Nu*y*w)))
-            Aders [ 2 ][2] += ders [ 2 ](0, m) * temp3[2];     // dy/dv=sum(Nt*sum(dNv/dv*sum(Nu*y*w)))
-            wders[2]    += ders [ 2 ](0, m) * temp3[3];        // dw/dv=sum(Nt*sum(dNv/dv*sum(Nu*w)))
+            Aders [ 0 ] [ 2 ] += ders [ 2 ](0, m) * temp3 [ 0 ];     // dx/dv=sum(Nt*sum(dNv/dv*sum(Nu*x*w)))
+            Aders [ 1 ] [ 2 ] += ders [ 2 ](0, m) * temp3 [ 1 ];     // dy/dv=sum(Nt*sum(dNv/dv*sum(Nu*y*w)))
+            Aders [ 2 ] [ 2 ] += ders [ 2 ](0, m) * temp3 [ 2 ];     // dy/dv=sum(Nt*sum(dNv/dv*sum(Nu*y*w)))
+            wders [ 2 ]    += ders [ 2 ](0, m) * temp3 [ 3 ];        // dw/dv=sum(Nt*sum(dNv/dv*sum(Nu*w)))
 
-            Aders [ 0 ][3] += ders [ 2 ](1, m) * temp1[0];     // dx/dt=sum(dNt/dt*sum(Nv*sum(Nu*x*w)))
-            Aders [ 1 ][3] += ders [ 2 ](1, m) * temp1[1];     // dy/dt=sum(dNt/dt*sum(Nv*sum(Nu*y*w)))
-            Aders [ 2 ][3] += ders [ 2 ](1, m) * temp1[2];     // dy/dt=sum(dNt/dt*sum(Nv*sum(Nu*y*w)))
-            wders[3]    += ders [ 2 ](1, m) * temp1[3];        // dw/dt=sum(dNt/dt*sum(Nv*sum(Nu*w)))
+            Aders [ 0 ] [ 3 ] += ders [ 2 ](1, m) * temp1 [ 0 ];     // dx/dt=sum(dNt/dt*sum(Nv*sum(Nu*x*w)))
+            Aders [ 1 ] [ 3 ] += ders [ 2 ](1, m) * temp1 [ 1 ];     // dy/dt=sum(dNt/dt*sum(Nv*sum(Nu*y*w)))
+            Aders [ 2 ] [ 3 ] += ders [ 2 ](1, m) * temp1 [ 2 ];     // dy/dt=sum(dNt/dt*sum(Nv*sum(Nu*y*w)))
+            wders [ 3 ]    += ders [ 2 ](1, m) * temp1 [ 3 ];        // dw/dt=sum(dNt/dt*sum(Nv*sum(Nu*w)))
         }
 
-        double weight = wders[0];
+        double weight = wders [ 0 ];
 
         // calculation of jacobian matrix
-        tmp1[0] = Aders [ 0 ][0] / weight;
-        tmp1[1] = Aders [ 1 ][0] / weight;
-        tmp1[2] = Aders [ 2 ][0] / weight;
-        jacobian(0, 0) = ( Aders [ 0 ][1] - wders[1] * tmp1[0] ) / weight; // dx/du
-        jacobian(0, 1) = ( Aders [ 1 ][1] - wders[1] * tmp1[1] ) / weight; // dy/du
-        jacobian(0, 2) = ( Aders [ 2 ][1] - wders[1] * tmp1[2] ) / weight; // dz/du
-        jacobian(1, 0) = ( Aders [ 0 ][2] - wders[2] * tmp1[0] ) / weight; // dx/dv
-        jacobian(1, 1) = ( Aders [ 1 ][2] - wders[2] * tmp1[1] ) / weight; // dy/dv
-        jacobian(1, 2) = ( Aders [ 2 ][2] - wders[2] * tmp1[2] ) / weight; // dz/dv
-        jacobian(2, 0) = ( Aders [ 0 ][3] - wders[3] * tmp1[0] ) / weight; // dx/dt
-        jacobian(2, 1) = ( Aders [ 1 ][3] - wders[3] * tmp1[1] ) / weight; // dy/dt
-        jacobian(2, 2) = ( Aders [ 2 ][3] - wders[3] * tmp1[2] ) / weight; // dz/dt
+        tmp1 [ 0 ] = Aders [ 0 ] [ 0 ] / weight;
+        tmp1 [ 1 ] = Aders [ 1 ] [ 0 ] / weight;
+        tmp1 [ 2 ] = Aders [ 2 ] [ 0 ] / weight;
+        jacobian(0, 0) = ( Aders [ 0 ] [ 1 ] - wders [ 1 ] * tmp1 [ 0 ] ) / weight; // dx/du
+        jacobian(0, 1) = ( Aders [ 1 ] [ 1 ] - wders [ 1 ] * tmp1 [ 1 ] ) / weight; // dy/du
+        jacobian(0, 2) = ( Aders [ 2 ] [ 1 ] - wders [ 1 ] * tmp1 [ 2 ] ) / weight; // dz/du
+        jacobian(1, 0) = ( Aders [ 0 ] [ 2 ] - wders [ 2 ] * tmp1 [ 0 ] ) / weight; // dx/dv
+        jacobian(1, 1) = ( Aders [ 1 ] [ 2 ] - wders [ 2 ] * tmp1 [ 1 ] ) / weight; // dy/dv
+        jacobian(1, 2) = ( Aders [ 2 ] [ 2 ] - wders [ 2 ] * tmp1 [ 2 ] ) / weight; // dz/dv
+        jacobian(2, 0) = ( Aders [ 0 ] [ 3 ] - wders [ 3 ] * tmp1 [ 0 ] ) / weight; // dx/dt
+        jacobian(2, 1) = ( Aders [ 1 ] [ 3 ] - wders [ 3 ] * tmp1 [ 1 ] ) / weight; // dy/dt
+        jacobian(2, 2) = ( Aders [ 2 ] [ 3 ] - wders [ 3 ] * tmp1 [ 2 ] ) / weight; // dz/dt
     } else {
         OOFEM_ERROR("not implemented for fsd = %d", fsd);
     }

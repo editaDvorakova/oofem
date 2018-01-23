@@ -48,7 +48,7 @@
 namespace oofem {
 #ifdef __OOFEG
 class StructuralElementEvaluator;
-void drawIGAPatchDeformedGeometry(Element *elem, StructuralElementEvaluator *se, oofegGraphicContext &gc, TimeStep *tStep, UnknownType);
+void drawIGAPatchDeformedGeometry(Element * elem, StructuralElementEvaluator * se, oofegGraphicContext & gc, TimeStep * tStep, UnknownType);
 #endif
 
 /**
@@ -60,11 +60,11 @@ public:
     const IntArray *knotSpan;
     Element *elem;
 public:
-    FEIIGAElementGeometryWrapper(Element * _elem, const IntArray * _knotSpan) : FEICellGeometry() {
+    FEIIGAElementGeometryWrapper(Element *_elem, const IntArray *_knotSpan) : FEICellGeometry() {
         this->elem = _elem;
         this->knotSpan = _knotSpan;
     }
-    FEIIGAElementGeometryWrapper(Element * _elem) : FEICellGeometry() {
+    FEIIGAElementGeometryWrapper(Element *_elem) : FEICellGeometry() {
         this->elem = _elem;
         this->knotSpan = NULL;
     }
@@ -82,7 +82,7 @@ class OOFEM_EXPORT IGAIntegrationElement : public GaussIntegrationRule
 protected:
     IntArray knotSpan;     // knot_span(nsd)
 public:
-    IGAIntegrationElement(int _n, Element * _e, IntArray & _knotSpan) :
+    IGAIntegrationElement(int _n, Element *_e, IntArray &_knotSpan) :
         GaussIntegrationRule(_n, _e, 0, 0, false),
         knotSpan(_knotSpan) { }
     const IntArray *giveKnotSpan() { return & this->knotSpan; }
@@ -100,7 +100,7 @@ protected:
     IntArray knotSpanParallelMode;
 #endif
 public:
-    IGAElement(int n, Domain * aDomain) : Element(n, aDomain) { }
+    IGAElement(int n, Domain *aDomain) : Element(n, aDomain) { }
     IRResultType initializeFrom(InputRecord *ir) override;
 
 #ifdef __PARALLEL_MODE
@@ -120,10 +120,11 @@ public:
     // lagrange multipliers
     virtual void computeDofsGtoLMatrix(FloatMatrix &answer, FloatArray coords,  const FEICellGeometry &cellgeo) { OOFEM_ERROR("computeDofsGtoLMatrix - not supported") }
     virtual void computeLtoCSMatrix(FloatMatrix &answer, FloatArray coordSys, FloatArray coords,  const FEICellGeometry &cellgeo) { OOFEM_ERROR("computeLtoCSMatrix - not supported") }
-    virtual void computeKnotspanGtoLRotationMatrix(FloatMatrix &answer, IntArray knotSpan){ OOFEM_ERROR("computeKnotspanGtoLRotationMatrix - not supported")  }
+    virtual void computeKnotspanGtoLRotationMatrix(FloatMatrix &answer, IntArray knotSpan) { OOFEM_ERROR("computeKnotspanGtoLRotationMatrix - not supported")  }
 
     // grasshopper export
-    virtual void computeInternalForces( FloatMatrix &internalForces, int divisions, TimeStep *tStep){ OOFEM_ERROR("computeInternalForces - not supported")
+    virtual void computeInternalForces(FloatMatrix &internalForces, int divisions, TimeStep *tStep) {
+        OOFEM_ERROR("computeInternalForces - not supported")
     }
 protected:
     virtual int giveNsd() = 0;
@@ -137,7 +138,7 @@ protected:
 class OOFEM_EXPORT IGATSplineElement : public IGAElement
 {
 public:
-    IGATSplineElement(int n, Domain * aDomain) : IGAElement(n, aDomain) { }
+    IGATSplineElement(int n, Domain *aDomain) : IGAElement(n, aDomain) { }
     IRResultType initializeFrom(InputRecord *ir) override;
 
 protected:

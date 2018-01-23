@@ -74,7 +74,7 @@ protected:
     BSplineInterpolation interpolation;
 
 public:
-    BsplinePlaneStressElement(int n, Domain * aDomain);
+    BsplinePlaneStressElement(int n, Domain *aDomain);
 
     virtual IRResultType initializeFrom(InputRecord *ir);
     virtual int checkConsistency();
@@ -86,7 +86,7 @@ public:
         PlaneStressStructuralElementEvaluator :: giveCharacteristicVector(answer, type, mode, t);
     }
 
-    virtual FEInterpolation *giveInterpolation() const { return const_cast< BSplineInterpolation * >(& this->interpolation); }
+    virtual FEInterpolation *giveInterpolation() const { return const_cast< BSplineInterpolation * >( & this->interpolation ); }
     virtual Element *giveElement() { return this; }
     virtual void giveDofManDofIDMask(int inode, IntArray &answer) const {
         PlaneStressStructuralElementEvaluator :: giveDofManDofIDMask(inode, answer);
@@ -117,7 +117,7 @@ protected:
     NURBSInterpolation interpolation;
 
 public:
-    NURBSPlaneStressElement(int n, Domain * aDomain);
+    NURBSPlaneStressElement(int n, Domain *aDomain);
 
     virtual IRResultType initializeFrom(InputRecord *ir);
     virtual int checkConsistency();
@@ -129,7 +129,7 @@ public:
         PlaneStressStructuralElementEvaluator :: giveCharacteristicVector(answer, type, mode, t);
     }
 
-    virtual FEInterpolation *giveInterpolation() const { return const_cast< NURBSInterpolation * >(& this->interpolation); }
+    virtual FEInterpolation *giveInterpolation() const { return const_cast< NURBSInterpolation * >( & this->interpolation ); }
     virtual Element *giveElement() { return this; }
     virtual void giveDofManDofIDMask(int inode, IntArray &answer) const {
         PlaneStressStructuralElementEvaluator :: giveDofManDofIDMask(inode, answer);
@@ -163,7 +163,7 @@ protected:
     TSplineInterpolation interpolation;
 
 public:
-    TSplinePlaneStressElement(int n, Domain * aDomain);
+    TSplinePlaneStressElement(int n, Domain *aDomain);
 
     virtual IRResultType initializeFrom(InputRecord *ir) {
         IGATSplineElement :: initializeFrom(ir);
@@ -178,7 +178,7 @@ public:
         PlaneStressStructuralElementEvaluator :: giveCharacteristicVector(answer, type, mode, t);
     }
 
-    virtual FEInterpolation *giveInterpolation() const { return const_cast< TSplineInterpolation * >(& this->interpolation); }
+    virtual FEInterpolation *giveInterpolation() const { return const_cast< TSplineInterpolation * >( & this->interpolation ); }
     virtual Element *giveElement() { return this; }
     virtual void giveDofManDofIDMask(int inode, IntArray &answer) const {
         PlaneStressStructuralElementEvaluator :: giveDofManDofIDMask(inode, answer);
@@ -196,7 +196,6 @@ public:
 protected:
     virtual int giveNsd() { return 2; }
     virtual int giveFsd() { return 2; }
-
 };
 
 
@@ -206,7 +205,7 @@ protected:
     NURBSInterpolation interpolation;
 
 public:
-    NURBSSpace3dElement(int n, Domain * aDomain);
+    NURBSSpace3dElement(int n, Domain *aDomain);
 
     virtual IRResultType initializeFrom(InputRecord *ir);
     virtual int checkConsistency();
@@ -218,7 +217,7 @@ public:
         Space3dStructuralElementEvaluator :: giveCharacteristicVector(answer, type, mode, t);
     }
 
-    virtual FEInterpolation *giveInterpolation() const { return const_cast< NURBSInterpolation * >(& this->interpolation); }
+    virtual FEInterpolation *giveInterpolation() const { return const_cast< NURBSInterpolation * >( & this->interpolation ); }
     virtual Element *giveElement() { return this; }
 
     virtual void giveDofManDofIDMask(int inode, IntArray &answer) const {
@@ -248,7 +247,7 @@ protected:
     NURBSInterpolationLine2d interpolation;
 
 public:
-    NURBSBeam2dElement(int n, Domain * aDomain);
+    NURBSBeam2dElement(int n, Domain *aDomain);
 
     virtual IRResultType initializeFrom(InputRecord *ir);
     virtual int checkConsistency();
@@ -260,34 +259,34 @@ public:
         Beam2dElementEvaluator :: giveCharacteristicVector(answer, type, mode, t);
     }
 
-    virtual FEInterpolation *giveInterpolation() const { return const_cast< NURBSInterpolationLine2d * >(& this->interpolation); }
+    virtual FEInterpolation *giveInterpolation() const { return const_cast< NURBSInterpolationLine2d * >( & this->interpolation ); }
     virtual Element *giveElement() { return this; }
     virtual void giveDofManDofIDMask(int inode, IntArray &answer) const {
         Beam2dElementEvaluator :: giveDofManDofIDMask(inode, answer);
     }
-    virtual int computeNumberOfDofs() { return numberOfDofMans * 3; } 
+    virtual int computeNumberOfDofs() { return numberOfDofMans * 3; }
     virtual void updateInternalState(TimeStep *tStep) { Beam2dElementEvaluator :: updateInternalState(tStep); }
     // transformation
-     virtual bool computeGtoLRotationMatrix(FloatMatrix &answer) {
-      return (Beam2dElementEvaluator :: computeGtoLRotationMatrix(answer));
-      }
+    virtual bool computeGtoLRotationMatrix(FloatMatrix &answer) {
+        return ( Beam2dElementEvaluator :: computeGtoLRotationMatrix(answer) );
+    }
     // definition & identification
     virtual const char *giveInputRecordName() const { return _IFT_NURBSBeam2dElement_Name; }
     virtual const char *giveClassName() const { return "NURBSBeam2dElement"; }
-    
+
 
     // edge load support
     virtual void computeBoundaryEdgeLoadVector(FloatArray &answer, BoundaryLoad *load, int edge, CharType type, ValueModeType mode, TimeStep *tStep, bool global) {
-	Beam2dElementEvaluator :: computeBoundaryEdgeLoadVector(answer, load, edge, type, mode, tStep, global);
+        Beam2dElementEvaluator :: computeBoundaryEdgeLoadVector(answer, load, edge, type, mode, tStep, global);
     }
-    virtual void giveBoundaryEdgeNodes (IntArray& bNodes, int boundary){
-	Beam2dElementEvaluator :: boundaryEdgeGiveNodes(bNodes, boundary);
+    virtual void giveBoundaryEdgeNodes(IntArray &bNodes, int boundary) {
+        Beam2dElementEvaluator :: boundaryEdgeGiveNodes(bNodes, boundary);
     }
 
     // body load support
     void computeLoadVector(FloatArray &answer, BodyLoad *load, CharType type, ValueModeType mode, TimeStep *tStep);
     virtual void computeBodyLoadVectorAt(FloatArray &answer, Load *load, TimeStep *tStep, ValueModeType mode) {
-	Beam2dElementEvaluator :: computeBodyLoadVectorAt(answer, load, tStep, mode);
+        Beam2dElementEvaluator :: computeBodyLoadVectorAt(answer, load, tStep, mode);
     }
 
     // point load
@@ -296,21 +295,21 @@ public:
     }
 
     // grasshopper export
-    void computeInternalForces( FloatMatrix &internalForces, int divisions, TimeStep *tStep){
-	Beam2dElementEvaluator :: computeInternalForces( internalForces, divisions, tStep);
+    void computeInternalForces(FloatMatrix &internalForces, int divisions, TimeStep *tStep) {
+        Beam2dElementEvaluator :: computeInternalForces(internalForces, divisions, tStep);
     }
     // edita - OOFEG ?
-    void computeNormal (FloatArray &n, FloatArray c, int knotSpan) { Beam2dElementEvaluator :: computeNormal ( n, c, knotSpan); }
+    void computeNormal(FloatArray &n, FloatArray c, int knotSpan) { Beam2dElementEvaluator :: computeNormal(n, c, knotSpan); }
 #ifdef __OOFEG
     //
     // Graphics output
     //
     //virtual void  drawScalar(oofegGraphicContext &gc, TimeStep *tStep);
     /*
-    virtual void drawRawGeometry(oofegGraphicContext &gc, TimeStep *tStep);
-    virtual void drawDeformedGeometry(oofegGraphicContext &gc, TimeStep *tStep, UnknownType ut) ;
-    virtual void drawScalar(oofegGraphicContext &gc, TimeStep *tStep);
-    */
+     * virtual void drawRawGeometry(oofegGraphicContext &gc, TimeStep *tStep);
+     * virtual void drawDeformedGeometry(oofegGraphicContext &gc, TimeStep *tStep, UnknownType ut) ;
+     * virtual void drawScalar(oofegGraphicContext &gc, TimeStep *tStep);
+     */
 #endif
 
 protected:
@@ -325,10 +324,10 @@ protected:
     NURBSInterpolationLine3d interpolation;
     FloatArray zaxis;
     int integrationType;
-    std::vector< std :: unique_ptr< IntegrationRule > > reducedIntegrationRulesArray;
+    std :: vector< std :: unique_ptr< IntegrationRule > >reducedIntegrationRulesArray;
 
 public:
-    NURBSBeam3dElement(int n, Domain * aDomain);
+    NURBSBeam3dElement(int n, Domain *aDomain);
 
     void computeGaussPoints();
     virtual IRResultType initializeFrom(InputRecord *ir);
@@ -342,51 +341,51 @@ public:
     }
     virtual IntegrationRule *giveReducedIntegrationRule(int i) { return reducedIntegrationRulesArray [ i ].get(); }
 
-    virtual FEInterpolation *giveInterpolation() const { return const_cast< NURBSInterpolationLine3d * >(& this->interpolation); }
+    virtual FEInterpolation *giveInterpolation() const { return const_cast< NURBSInterpolationLine3d * >( & this->interpolation ); }
 
     virtual void giveRINumberOfGaussPoints(IntArray &answer, int nkns);
-    virtual FloatArray giveZaxis() { return  this->zaxis; }
-    virtual int giveIntegrationType() { return  this->integrationType; }
+    virtual FloatArray giveZaxis() { return this->zaxis; }
+    virtual int giveIntegrationType() { return this->integrationType; }
     // virtual FloatArray *giveZaxis() const { return const_cast< FloatArray * >(& this->zaxis); }
     virtual Element *giveElement() { return this; }
     virtual void giveDofManDofIDMask(int inode, IntArray &answer) const {
         Beam3dElementEvaluator :: giveDofManDofIDMask(inode, answer);
     }
-    virtual int computeNumberOfDofs() { return numberOfDofMans * 6; } 
+    virtual int computeNumberOfDofs() { return numberOfDofMans * 6; }
     virtual void updateInternalState(TimeStep *tStep) { Beam3dElementEvaluator :: updateInternalState(tStep); }
     // transformation
-     virtual bool computeGtoLRotationMatrix(FloatMatrix &answer) {
-      return (Beam3dElementEvaluator :: computeGtoLRotationMatrix(answer));
-      }
+    virtual bool computeGtoLRotationMatrix(FloatMatrix &answer) {
+        return ( Beam3dElementEvaluator :: computeGtoLRotationMatrix(answer) );
+    }
     // definition & identification
     virtual const char *giveInputRecordName() const { return _IFT_NURBSBeam3dElement_Name; }
     virtual const char *giveClassName() const { return "NURBSBeam3dElement"; }
-    
+
 
     // edge load support
     virtual void computeBoundaryEdgeLoadVector(FloatArray &answer, BoundaryLoad *load, int edge, CharType type, ValueModeType mode, TimeStep *tStep, bool global) {
-	Beam3dElementEvaluator :: computeBoundaryEdgeLoadVector(answer, load, edge, type, mode, tStep, global);
+        Beam3dElementEvaluator :: computeBoundaryEdgeLoadVector(answer, load, edge, type, mode, tStep, global);
     }
-    virtual void giveBoundaryEdgeNodes (IntArray& bNodes, int boundary){
-	Beam3dElementEvaluator :: boundaryEdgeGiveNodes(bNodes, boundary);
+    virtual void giveBoundaryEdgeNodes(IntArray &bNodes, int boundary) {
+        Beam3dElementEvaluator :: boundaryEdgeGiveNodes(bNodes, boundary);
     }
 
     // lagrange multipliers
     virtual void computeDofsGtoLMatrix(FloatMatrix &answer, FloatArray coords,  const FEICellGeometry &cellgeo) {
-	Beam3dElementEvaluator :: computeDofsGtoLMatrix(answer, coords, cellgeo) ;
+        Beam3dElementEvaluator :: computeDofsGtoLMatrix(answer, coords, cellgeo);
     }
     virtual void computeLtoCSMatrix(FloatMatrix &answer, FloatArray coordSys, FloatArray coords,  const FEICellGeometry &cellgeo) {
-	Beam3dElementEvaluator :: computeLtoCSMatrix(answer, coordSys, coords, cellgeo) ;
+        Beam3dElementEvaluator :: computeLtoCSMatrix(answer, coordSys, coords, cellgeo);
     }
-    virtual void computeKnotspanGtoLRotationMatrix(FloatMatrix &answer, IntArray knotSpan){
-	Beam3dElementEvaluator :: computeKnotspanGtoLRotationMatrix(answer, knotSpan) ;
+    virtual void computeKnotspanGtoLRotationMatrix(FloatMatrix &answer, IntArray knotSpan) {
+        Beam3dElementEvaluator :: computeKnotspanGtoLRotationMatrix(answer, knotSpan);
     }
 
-    
+
     // body load support
     void computeLoadVector(FloatArray &answer, BodyLoad *load, CharType type, ValueModeType mode, TimeStep *tStep);
     virtual void computeBodyLoadVectorAt(FloatArray &answer, Load *load, TimeStep *tStep, ValueModeType mode) {
-	Beam3dElementEvaluator :: computeBodyLoadVectorAt(answer, load, tStep, mode);
+        Beam3dElementEvaluator :: computeBodyLoadVectorAt(answer, load, tStep, mode);
     }
 
     //GH
@@ -398,17 +397,17 @@ public:
     }
 
     // edita - OOFEG ?
-    void computeNormal (FloatArray &n, FloatArray c, int knotSpan) { Beam3dElementEvaluator :: computeNormal ( n, c, knotSpan); }
+    void computeNormal(FloatArray &n, FloatArray c, int knotSpan) { Beam3dElementEvaluator :: computeNormal(n, c, knotSpan); }
 #ifdef __OOFEG
     //
     // Graphics output
     //
     //virtual void  drawScalar(oofegGraphicContext &gc, TimeStep *tStep);
     /*
-    virtual void drawRawGeometry(oofegGraphicContext &gc, TimeStep *tStep);
-    virtual void drawDeformedGeometry(oofegGraphicContext &gc, TimeStep *tStep, UnknownType ut) ;
-    virtual void drawScalar(oofegGraphicContext &gc, TimeStep *tStep);
-    */
+     * virtual void drawRawGeometry(oofegGraphicContext &gc, TimeStep *tStep);
+     * virtual void drawDeformedGeometry(oofegGraphicContext &gc, TimeStep *tStep, UnknownType ut) ;
+     * virtual void drawScalar(oofegGraphicContext &gc, TimeStep *tStep);
+     */
 #endif
 
 protected:
@@ -422,7 +421,7 @@ protected:
     NURBSInterpolationLine2d interpolation;
 
 public:
-    NURBSBeam2dElementDsg(int n, Domain * aDomain);
+    NURBSBeam2dElementDsg(int n, Domain *aDomain);
 
     virtual IRResultType initializeFrom(InputRecord *ir);
     virtual int checkConsistency();
@@ -434,34 +433,34 @@ public:
         Beam2dElementEvaluatorDsg :: giveCharacteristicVector(answer, type, mode, t);
     }
 
-    virtual FEInterpolation *giveInterpolation() const { return const_cast< NURBSInterpolationLine2d * >(& this->interpolation); }
+    virtual FEInterpolation *giveInterpolation() const { return const_cast< NURBSInterpolationLine2d * >( & this->interpolation ); }
     virtual Element *giveElement() { return this; }
     virtual void giveDofManDofIDMask(int inode, IntArray &answer) const {
         Beam2dElementEvaluatorDsg :: giveDofManDofIDMask(inode, answer);
     }
-    virtual int computeNumberOfDofs() { return numberOfDofMans * 3; } 
+    virtual int computeNumberOfDofs() { return numberOfDofMans * 3; }
     virtual void updateInternalState(TimeStep *tStep) { Beam2dElementEvaluatorDsg :: updateInternalState(tStep); }
     // transformation
-     virtual bool computeGtoLRotationMatrix(FloatMatrix &answer) {
-      return (Beam2dElementEvaluatorDsg :: computeGtoLRotationMatrix(answer));
-      }
+    virtual bool computeGtoLRotationMatrix(FloatMatrix &answer) {
+        return ( Beam2dElementEvaluatorDsg :: computeGtoLRotationMatrix(answer) );
+    }
     // definition & identification
     virtual const char *giveInputRecordName() const { return _IFT_NURBSBeam2dElementDsg_Name; }
     virtual const char *giveClassName() const { return "NURBSBeam2dElementDsg"; }
-    
+
 
     // edge load support
     virtual void computeBoundaryEdgeLoadVector(FloatArray &answer, BoundaryLoad *load, int edge, CharType type, ValueModeType mode, TimeStep *tStep, bool global) {
-	Beam2dElementEvaluatorDsg :: computeBoundaryEdgeLoadVector(answer, load, edge, type, mode, tStep, global);
+        Beam2dElementEvaluatorDsg :: computeBoundaryEdgeLoadVector(answer, load, edge, type, mode, tStep, global);
     }
-    virtual void giveBoundaryEdgeNodes (IntArray& bNodes, int boundary){
-	Beam2dElementEvaluatorDsg :: boundaryEdgeGiveNodes(bNodes, boundary);
+    virtual void giveBoundaryEdgeNodes(IntArray &bNodes, int boundary) {
+        Beam2dElementEvaluatorDsg :: boundaryEdgeGiveNodes(bNodes, boundary);
     }
 
     // body load support
     void computeLoadVector(FloatArray &answer, BodyLoad *load, CharType type, ValueModeType mode, TimeStep *tStep);
     virtual void computeBodyLoadVectorAt(FloatArray &answer, Load *load, TimeStep *tStep, ValueModeType mode) {
-	Beam2dElementEvaluatorDsg :: computeBodyLoadVectorAt(answer, load, tStep, mode);
+        Beam2dElementEvaluatorDsg :: computeBodyLoadVectorAt(answer, load, tStep, mode);
     }
 
     // point load
@@ -471,12 +470,12 @@ public:
 
 
     // grasshopper export
-    void computeInternalForces( FloatMatrix &internalForces, int divisions, TimeStep *tStep){
-	Beam2dElementEvaluatorDsg :: computeInternalForces( internalForces, divisions, tStep);
+    void computeInternalForces(FloatMatrix &internalForces, int divisions, TimeStep *tStep) {
+        Beam2dElementEvaluatorDsg :: computeInternalForces(internalForces, divisions, tStep);
     }
 
     // edita - OOFEG ?
-    void computeNormal (FloatArray &n, FloatArray c, int knotSpan) { Beam2dElementEvaluatorDsg :: computeNormal ( n, c, knotSpan); }
+    void computeNormal(FloatArray &n, FloatArray c, int knotSpan) { Beam2dElementEvaluatorDsg :: computeNormal(n, c, knotSpan); }
 #ifdef __OOFEG
     //
     // Graphics output
@@ -484,7 +483,7 @@ public:
     //virtual void  drawScalar(oofegGraphicContext &gc, TimeStep *tStep);
 
     virtual void drawRawGeometry(oofegGraphicContext &gc, TimeStep *tStep);
-    virtual void drawDeformedGeometry(oofegGraphicContext &gc, TimeStep *tStep, UnknownType ut) ;
+    virtual void drawDeformedGeometry(oofegGraphicContext &gc, TimeStep *tStep, UnknownType ut);
     virtual void drawScalar(oofegGraphicContext &gc, TimeStep *tStep);
 
 #endif
@@ -502,7 +501,7 @@ protected:
     FloatArray zaxis;
 
 public:
-    NURBSBeam3dElementDsg(int n, Domain * aDomain);
+    NURBSBeam3dElementDsg(int n, Domain *aDomain);
 
     virtual IRResultType initializeFrom(InputRecord *ir);
     virtual int checkConsistency();
@@ -514,49 +513,49 @@ public:
         Beam3dElementEvaluatorDsg :: giveCharacteristicVector(answer, type, mode, t);
     }
 
-    virtual FloatArray giveZaxis() { return  this->zaxis; }
-    virtual FEInterpolation *giveInterpolation() const { return const_cast< NURBSInterpolationLine3d * >(& this->interpolation); }
+    virtual FloatArray giveZaxis() { return this->zaxis; }
+    virtual FEInterpolation *giveInterpolation() const { return const_cast< NURBSInterpolationLine3d * >( & this->interpolation ); }
     virtual Element *giveElement() { return this; }
     virtual void giveDofManDofIDMask(int inode, IntArray &answer) const {
         Beam3dElementEvaluatorDsg :: giveDofManDofIDMask(inode, answer);
     }
-    virtual int computeNumberOfDofs() { return numberOfDofMans * 6; } 
+    virtual int computeNumberOfDofs() { return numberOfDofMans * 6; }
     virtual void updateInternalState(TimeStep *tStep) { Beam3dElementEvaluatorDsg :: updateInternalState(tStep); }
     // transformation
-     virtual bool computeGtoLRotationMatrix(FloatMatrix &answer) {
-      return (Beam3dElementEvaluatorDsg :: computeGtoLRotationMatrix(answer));
-      }
+    virtual bool computeGtoLRotationMatrix(FloatMatrix &answer) {
+        return ( Beam3dElementEvaluatorDsg :: computeGtoLRotationMatrix(answer) );
+    }
     // definition & identification
     virtual const char *giveInputRecordName() const { return _IFT_NURBSBeam3dElementDsg_Name; }
     virtual const char *giveClassName() const { return "NURBSBeam3dElementDsg"; }
-    
+
     // edge load support
     virtual void computeBoundaryEdgeLoadVector(FloatArray &answer, BoundaryLoad *load, int edge, CharType type, ValueModeType mode, TimeStep *tStep, bool global) {
-	Beam3dElementEvaluatorDsg :: computeBoundaryEdgeLoadVector(answer, load, edge, type, mode, tStep, global);
+        Beam3dElementEvaluatorDsg :: computeBoundaryEdgeLoadVector(answer, load, edge, type, mode, tStep, global);
     }
-    virtual void giveBoundaryEdgeNodes (IntArray& bNodes, int boundary){
-	Beam3dElementEvaluatorDsg :: boundaryEdgeGiveNodes(bNodes, boundary);
+    virtual void giveBoundaryEdgeNodes(IntArray &bNodes, int boundary) {
+        Beam3dElementEvaluatorDsg :: boundaryEdgeGiveNodes(bNodes, boundary);
     }
 
     // lagrange multipliers
     virtual void computeDofsGtoLMatrix(FloatMatrix &answer, FloatArray coords,  const FEICellGeometry &cellgeo) {
-	Beam3dElementEvaluatorDsg :: computeDofsGtoLMatrix(answer, coords, cellgeo) ;
+        Beam3dElementEvaluatorDsg :: computeDofsGtoLMatrix(answer, coords, cellgeo);
     }
     virtual void computeLtoCSMatrix(FloatMatrix &answer, FloatArray coordSys, FloatArray coords,  const FEICellGeometry &cellgeo) {
-	Beam3dElementEvaluatorDsg :: computeLtoCSMatrix(answer, coordSys, coords, cellgeo) ;
+        Beam3dElementEvaluatorDsg :: computeLtoCSMatrix(answer, coordSys, coords, cellgeo);
     }
-    virtual void computeKnotspanGtoLRotationMatrix(FloatMatrix &answer, IntArray knotSpan){
-	Beam3dElementEvaluatorDsg :: computeKnotspanGtoLRotationMatrix(answer, knotSpan) ;
+    virtual void computeKnotspanGtoLRotationMatrix(FloatMatrix &answer, IntArray knotSpan) {
+        Beam3dElementEvaluatorDsg :: computeKnotspanGtoLRotationMatrix(answer, knotSpan);
     }
 
     // body load support
     void computeLoadVector(FloatArray &answer, BodyLoad *load, CharType type, ValueModeType mode, TimeStep *tStep);
     virtual void computeBodyLoadVectorAt(FloatArray &answer, Load *load, TimeStep *tStep, ValueModeType mode) {
-	Beam3dElementEvaluatorDsg :: computeBodyLoadVectorAt(answer, load, tStep, mode);
+        Beam3dElementEvaluatorDsg :: computeBodyLoadVectorAt(answer, load, tStep, mode);
     }
 
     //GH
-    void computeMidUnknownVector(FloatArray &local, FloatArray &global, TimeStep *tStep) ;
+    void computeMidUnknownVector(FloatArray &local, FloatArray &global, TimeStep *tStep);
 
     // point load
     virtual void computePointLoadVectorAt(FloatArray &answer, Load *load, TimeStep *tStep, ValueModeType mode) {
@@ -564,7 +563,7 @@ public:
     }
 
     // edita - OOFEG ?
-    void computeNormal (FloatArray &n, FloatArray c, int knotSpan) { Beam3dElementEvaluatorDsg :: computeNormal ( n, c, knotSpan); }
+    void computeNormal(FloatArray &n, FloatArray c, int knotSpan) { Beam3dElementEvaluatorDsg :: computeNormal(n, c, knotSpan); }
 #ifdef __OOFEG
     //
     // Graphics output
@@ -572,7 +571,7 @@ public:
     virtual void  drawScalar(oofegGraphicContext &gc, TimeStep *tStep);
 
     virtual void drawRawGeometry(oofegGraphicContext &gc, TimeStep *tStep);
-    virtual void drawDeformedGeometry(oofegGraphicContext &gc, TimeStep *tStep, UnknownType ut) ;
+    virtual void drawDeformedGeometry(oofegGraphicContext &gc, TimeStep *tStep, UnknownType ut);
 
 #endif
 
@@ -591,7 +590,7 @@ protected:
     FloatArray zaxis;
 
 public:
-    NURBSBeam3dElementBbar(int n, Domain * aDomain);
+    NURBSBeam3dElementBbar(int n, Domain *aDomain);
 
     virtual IRResultType initializeFrom(InputRecord *ir);
     virtual int checkConsistency();
@@ -603,38 +602,38 @@ public:
         Beam3dElementEvaluatorBbar :: giveCharacteristicVector(answer, type, mode, t);
     }
 
-    virtual FloatArray giveZaxis() { return  this->zaxis; }
-    virtual FEInterpolation *giveInterpolation() const { return const_cast< NURBSInterpolationLine3d * >(& this->interpolation); }
-    virtual FEInterpolation *giveBbarInterpolation() const { return const_cast< NURBSInterpolationLine3d * >(& this->bBarInterpolation); }
+    virtual FloatArray giveZaxis() { return this->zaxis; }
+    virtual FEInterpolation *giveInterpolation() const { return const_cast< NURBSInterpolationLine3d * >( & this->interpolation ); }
+    virtual FEInterpolation *giveBbarInterpolation() const { return const_cast< NURBSInterpolationLine3d * >( & this->bBarInterpolation ); }
     virtual Element *giveElement() { return this; }
     virtual void giveDofManDofIDMask(int inode, IntArray &answer) const {
         Beam3dElementEvaluatorBbar :: giveDofManDofIDMask(inode, answer);
     }
-    virtual int computeNumberOfDofs() { return numberOfDofMans * 6; } 
+    virtual int computeNumberOfDofs() { return numberOfDofMans * 6; }
     virtual void updateInternalState(TimeStep *tStep) { Beam3dElementEvaluatorBbar :: updateInternalState(tStep); }
     // transformation
-     virtual bool computeGtoLRotationMatrix(FloatMatrix &answer) {
-      return (Beam3dElementEvaluatorBbar :: computeGtoLRotationMatrix(answer));
-      }
+    virtual bool computeGtoLRotationMatrix(FloatMatrix &answer) {
+        return ( Beam3dElementEvaluatorBbar :: computeGtoLRotationMatrix(answer) );
+    }
     // definition & identification
     virtual const char *giveInputRecordName() const { return _IFT_NURBSBeam3dElementBbar_Name; }
     virtual const char *giveClassName() const { return "NURBSBeam3dElementBbar"; }
-    
+
     //GH
-    void computeMidUnknownVector(FloatArray &local, FloatArray &global, TimeStep *tStep) ;
+    void computeMidUnknownVector(FloatArray &local, FloatArray &global, TimeStep *tStep);
 
     // edge load support
     virtual void computeBoundaryEdgeLoadVector(FloatArray &answer, BoundaryLoad *load, int edge, CharType type, ValueModeType mode, TimeStep *tStep, bool global) {
-	Beam3dElementEvaluatorBbar :: computeBoundaryEdgeLoadVector(answer, load, edge, type, mode, tStep, global);
+        Beam3dElementEvaluatorBbar :: computeBoundaryEdgeLoadVector(answer, load, edge, type, mode, tStep, global);
     }
-    virtual void giveBoundaryEdgeNodes (IntArray& bNodes, int boundary){
-	Beam3dElementEvaluatorBbar :: boundaryEdgeGiveNodes(bNodes, boundary);
+    virtual void giveBoundaryEdgeNodes(IntArray &bNodes, int boundary) {
+        Beam3dElementEvaluatorBbar :: boundaryEdgeGiveNodes(bNodes, boundary);
     }
 
     // body load support
     void computeLoadVector(FloatArray &answer, BodyLoad *load, CharType type, ValueModeType mode, TimeStep *tStep);
     virtual void computeBodyLoadVectorAt(FloatArray &answer, Load *load, TimeStep *tStep, ValueModeType mode) {
-	Beam3dElementEvaluatorBbar :: computeBodyLoadVectorAt(answer, load, tStep, mode);
+        Beam3dElementEvaluatorBbar :: computeBodyLoadVectorAt(answer, load, tStep, mode);
     }
 
     // point load
@@ -644,18 +643,18 @@ public:
 
     // lagrange multipliers
     virtual void computeDofsGtoLMatrix(FloatMatrix &answer, FloatArray coords,  const FEICellGeometry &cellgeo) {
-	Beam3dElementEvaluatorBbar :: computeDofsGtoLMatrix(answer, coords, cellgeo) ;
+        Beam3dElementEvaluatorBbar :: computeDofsGtoLMatrix(answer, coords, cellgeo);
     }
     virtual void computeLtoCSMatrix(FloatMatrix &answer, FloatArray coordSys, FloatArray coords,  const FEICellGeometry &cellgeo) {
-	Beam3dElementEvaluatorBbar :: computeLtoCSMatrix(answer, coordSys, coords, cellgeo) ;
+        Beam3dElementEvaluatorBbar :: computeLtoCSMatrix(answer, coordSys, coords, cellgeo);
     }
-    virtual void computeKnotspanGtoLRotationMatrix(FloatMatrix &answer, IntArray knotSpan){
-	Beam3dElementEvaluatorBbar :: computeKnotspanGtoLRotationMatrix(answer, knotSpan) ;
+    virtual void computeKnotspanGtoLRotationMatrix(FloatMatrix &answer, IntArray knotSpan) {
+        Beam3dElementEvaluatorBbar :: computeKnotspanGtoLRotationMatrix(answer, knotSpan);
     }
 
 
     // edita - OOFEG ?
-    void computeNormal (FloatArray &n, FloatArray c, int knotSpan) { Beam3dElementEvaluatorBbar :: computeNormal ( n, c, knotSpan); }
+    void computeNormal(FloatArray &n, FloatArray c, int knotSpan) { Beam3dElementEvaluatorBbar :: computeNormal(n, c, knotSpan); }
 #ifdef __OOFEG
     //
     // Graphics output
@@ -663,7 +662,7 @@ public:
     virtual void  drawScalar(oofegGraphicContext &gc, TimeStep *tStep);
 
     virtual void drawRawGeometry(oofegGraphicContext &gc, TimeStep *tStep);
-    virtual void drawDeformedGeometry(oofegGraphicContext &gc, TimeStep *tStep, UnknownType ut) ;
+    virtual void drawDeformedGeometry(oofegGraphicContext &gc, TimeStep *tStep, UnknownType ut);
 
 #endif
 
@@ -671,11 +670,5 @@ protected:
     virtual int giveNsd() { return 3; }
     virtual int giveFsd() { return 1; }
 };
-
-
-
-
-
-
 } // end namespace oofem
 #endif //igaelements_h

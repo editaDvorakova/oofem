@@ -47,17 +47,17 @@ namespace oofem {
 class NURBSInterpolationLine2d : public BSplineInterpolation
 {
 public:
- NURBSInterpolationLine2d(int nsd, int fsd) : BSplineInterpolation(nsd, fsd) { }
+    NURBSInterpolationLine2d(int nsd, int fsd) : BSplineInterpolation(nsd, fsd) { }
     virtual ~NURBSInterpolationLine2d();
 
     virtual void evalN(FloatArray &answer, const FloatArray &lcoords, const FEICellGeometry &cellgeo);
     virtual double evaldNdx(FloatMatrix &answer, const FloatArray &lcoords, const FEICellGeometry &cellgeo);
     virtual void local2global(FloatArray &answer, const FloatArray &lcoords, const FEICellGeometry &cellgeo);
-    virtual int  global2local(FloatArray &answer, const FloatArray &lcoords, const FEICellGeometry &cellgeo) 
-      {
+    virtual int  global2local(FloatArray &answer, const FloatArray &lcoords, const FEICellGeometry &cellgeo)
+    {
         OOFEM_ERROR("NURBSInterpolation :: global2local - Not yet implemented.");
         return 0;
-      }
+    }
     virtual double giveTransformationJacobian(const FloatArray &lcoords, const FEICellGeometry &cellgeo);
     // double  givedY(const FloatArray &lcoords, const FEICellGeometry &cellgeo);
     virtual const char *giveClassName() const { return "NURBSInterpolationLine2d"; }

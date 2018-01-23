@@ -61,35 +61,33 @@ protected:
      * Assembles the strain-displacement matrix of the receiver at given integration point.
      * In case of IGAElements, B is assumed to contain only contribution from nonzero interpolation functions.
      */
-    virtual void computeBMatrixAt( FloatMatrix &answer, GaussPoint *gp);
+    virtual void computeBMatrixAt(FloatMatrix &answer, GaussPoint *gp);
 
 
     virtual void computeBendingPartOfBMatrix(FloatArray &Bb, GaussPoint *gp);
-    virtual const FloatMatrix * computeInvAMatrix();
-    virtual const FloatMatrix * computeDSGMatrix();
-    virtual const FloatArray * computeCollocationPoints();
+    virtual const FloatMatrix *computeInvAMatrix();
+    virtual const FloatMatrix *computeDSGMatrix();
+    virtual const FloatArray *computeCollocationPoints();
     void giveKnotSpanAt(IntArray &knotSpan, double lcoord);
     virtual int giveIntegrationElementLocalCodeNumbers(IntArray &answer, Element *elem, IntegrationRule *ie);
 
-    
+
     // transformation
     // virtual void giveLocalCoordinates( FloatArray &lcoords, FloatArray &gcoords );
     //int computeIFGToLRotationMtrx(FloatMatrix &answer);
 
     //void computeLToDirectorRotationMatrix(FloatMatrix &answer1, FloatMatrix &answer2, FloatMatrix &answer3, FloatMatrix &answer4);
     //int computeLoadLEToLRotationMatrix(FloatMatrix &answer, int iEdge, GaussPoint *gp);
-    
+
 
     // draw
     // void computeNormal (FloatArray &n, FloatArray c, int knotSpan);
 
- public:
+public:
 
     //loading
 
-     virtual void boundaryEdgeGiveNodes(IntArray& bNodes, int boundary);
-
-
+    virtual void boundaryEdgeGiveNodes(IntArray &bNodes, int boundary);
 }; // end of Beam2dElementEvaluator definition
 } // end namespace oofem
 #endif //beam2delementevaluator_h

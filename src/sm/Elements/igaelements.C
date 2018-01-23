@@ -66,7 +66,7 @@ REGISTER_Element(NURBSBeam3dElementDsg);
 REGISTER_Element(NURBSBeam3dElementBbar);
 
 
-  BsplinePlaneStressElement :: BsplinePlaneStressElement(int n, Domain *aDomain) : IGAElement(n, aDomain), PlaneStressStructuralElementEvaluator(), interpolation(2, 2) { }
+BsplinePlaneStressElement :: BsplinePlaneStressElement(int n, Domain *aDomain) : IGAElement(n, aDomain), PlaneStressStructuralElementEvaluator(), interpolation(2, 2) { }
 
 
 IRResultType BsplinePlaneStressElement :: initializeFrom(InputRecord *ir)
@@ -88,7 +88,7 @@ int BsplinePlaneStressElement :: checkConsistency()
 
 
 
-  NURBSPlaneStressElement :: NURBSPlaneStressElement(int n, Domain *aDomain) : IGAElement(n, aDomain), PlaneStressStructuralElementEvaluator(), interpolation(2, 2) { }
+NURBSPlaneStressElement :: NURBSPlaneStressElement(int n, Domain *aDomain) : IGAElement(n, aDomain), PlaneStressStructuralElementEvaluator(), interpolation(2, 2) { }
 
 
 IRResultType NURBSPlaneStressElement :: initializeFrom(InputRecord *ir)
@@ -108,12 +108,12 @@ int NURBSPlaneStressElement :: checkConsistency()
 }
 
 
-  TSplinePlaneStressElement :: TSplinePlaneStressElement(int n, Domain *aDomain) : IGATSplineElement(n, aDomain), PlaneStressStructuralElementEvaluator(), interpolation(2, 2) { }
+TSplinePlaneStressElement :: TSplinePlaneStressElement(int n, Domain *aDomain) : IGATSplineElement(n, aDomain), PlaneStressStructuralElementEvaluator(), interpolation(2, 2) { }
 
 
 
 
-  NURBSSpace3dElement :: NURBSSpace3dElement(int n, Domain *aDomain) : IGAElement(n, aDomain), Space3dStructuralElementEvaluator(), interpolation(3, 3) { }
+NURBSSpace3dElement :: NURBSSpace3dElement(int n, Domain *aDomain) : IGAElement(n, aDomain), Space3dStructuralElementEvaluator(), interpolation(3, 3) { }
 
 
 IRResultType NURBSSpace3dElement :: initializeFrom(InputRecord *ir)
@@ -134,8 +134,8 @@ int NURBSSpace3dElement :: checkConsistency()
 }
 
 
-  NURBSBeam2dElementDsg :: NURBSBeam2dElementDsg(int n, Domain *aDomain) : IGAElement(n, aDomain), Beam2dElementEvaluatorDsg(), interpolation(3, 1) { }
-  // interpolation(nsd, fsd)
+NURBSBeam2dElementDsg :: NURBSBeam2dElementDsg(int n, Domain *aDomain) : IGAElement(n, aDomain), Beam2dElementEvaluatorDsg(), interpolation(3, 1) { }
+// interpolation(nsd, fsd)
 
 IRResultType NURBSBeam2dElementDsg :: initializeFrom(InputRecord *ir)
 {
@@ -163,7 +163,7 @@ void NURBSBeam2dElementDsg :: computeLoadVector(FloatArray &answer, BodyLoad *lo
     PointLoad *p = dynamic_cast< PointLoad * >(load);
     if ( p ) {
         FloatArray lcoords;
-        if ( this->computeLocalCoordinates(lcoords, p->giveCoordinates()) ) {
+        if ( this->computeLocalCoordinates( lcoords, p->giveCoordinates() ) ) {
             this->computePointLoadVectorAt(answer, load, tStep, mode);
         }
     } else {
@@ -173,7 +173,7 @@ void NURBSBeam2dElementDsg :: computeLoadVector(FloatArray &answer, BodyLoad *lo
 }
 
 NURBSBeam3dElementDsg :: NURBSBeam3dElementDsg(int n, Domain *aDomain) : IGAElement(n, aDomain), Beam3dElementEvaluatorDsg(), interpolation(3, 1) { }
-  // interpolation(nsd, fsd)
+// interpolation(nsd, fsd)
 
 IRResultType NURBSBeam3dElementDsg :: initializeFrom(InputRecord *ir)
 {
@@ -183,16 +183,16 @@ IRResultType NURBSBeam3dElementDsg :: initializeFrom(InputRecord *ir)
     if ( ir->hasField(_IFT_NURBSBeam3dElementDsg_zaxis) ) {
         IR_GIVE_FIELD(ir, this->zaxis, _IFT_NURBSBeam3dElementDsg_zaxis);
     } /*else if ( ir->hasField(_IFT_Beam3d_refnode) ) {
-        IR_GIVE_FIELD(ir, referenceNode, _IFT_Beam3d_refnode);
-        if ( referenceNode == 0 ) {
-            OOFEM_WARNING("wrong reference node specified. Using default orientation.");
-        }
-    } else if ( ir->hasField(_IFT_Beam3d_refangle) ) {
-        IR_GIVE_FIELD(ir, referenceAngle, _IFT_Beam3d_refangle);
-    } else {
-        OOFEM_WARNING("y-axis, reference node or angle not set");
-        return IRRT_NOTFOUND;
-	}*/
+       * IR_GIVE_FIELD(ir, referenceNode, _IFT_Beam3d_refnode);
+       * if ( referenceNode == 0 ) {
+       *    OOFEM_WARNING("wrong reference node specified. Using default orientation.");
+       * }
+       * } else if ( ir->hasField(_IFT_Beam3d_refangle) ) {
+       * IR_GIVE_FIELD(ir, referenceAngle, _IFT_Beam3d_refangle);
+       * } else {
+       * OOFEM_WARNING("y-axis, reference node or angle not set");
+       * return IRRT_NOTFOUND;
+       * }*/
     return IGAElement :: initializeFrom(ir);
 }
 
@@ -217,7 +217,7 @@ void NURBSBeam3dElementDsg :: computeLoadVector(FloatArray &answer, BodyLoad *lo
     PointLoad *p = dynamic_cast< PointLoad * >(load);
     if ( p ) {
         FloatArray lcoords;
-        if ( this->computeLocalCoordinates(lcoords, p->giveCoordinates()) ) {
+        if ( this->computeLocalCoordinates( lcoords, p->giveCoordinates() ) ) {
             this->computePointLoadVectorAt(answer, load, tStep, mode);
         }
     } else {
@@ -228,7 +228,7 @@ void NURBSBeam3dElementDsg :: computeLoadVector(FloatArray &answer, BodyLoad *lo
 
 
 NURBSBeam3dElementBbar :: NURBSBeam3dElementBbar(int n, Domain *aDomain) : IGAElement(n, aDomain), Beam3dElementEvaluatorBbar(), interpolation(3, 1), bBarInterpolation(3, 1) { }
-  // interpolation(nsd, fsd)
+// interpolation(nsd, fsd)
 
 IRResultType NURBSBeam3dElementBbar :: initializeFrom(InputRecord *ir)
 {
@@ -268,7 +268,7 @@ void NURBSBeam3dElementBbar :: computeLoadVector(FloatArray &answer, BodyLoad *l
     PointLoad *p = dynamic_cast< PointLoad * >(load);
     if ( p ) {
         FloatArray lcoords;
-        if ( this->computeLocalCoordinates(lcoords, p->giveCoordinates()) ) {
+        if ( this->computeLocalCoordinates( lcoords, p->giveCoordinates() ) ) {
             this->computePointLoadVectorAt(answer, load, tStep, mode);
         }
     } else {
@@ -279,8 +279,8 @@ void NURBSBeam3dElementBbar :: computeLoadVector(FloatArray &answer, BodyLoad *l
 
 
 
-  NURBSBeam2dElement :: NURBSBeam2dElement(int n, Domain *aDomain) : IGAElement(n, aDomain), Beam2dElementEvaluator(), interpolation(3, 1) { }
-  // interpolation(nsd, fsd)
+NURBSBeam2dElement :: NURBSBeam2dElement(int n, Domain *aDomain) : IGAElement(n, aDomain), Beam2dElementEvaluator(), interpolation(3, 1) { }
+// interpolation(nsd, fsd)
 
 IRResultType NURBSBeam2dElement :: initializeFrom(InputRecord *ir)
 {
@@ -308,7 +308,7 @@ void NURBSBeam2dElement :: computeLoadVector(FloatArray &answer, BodyLoad *load,
     PointLoad *p = dynamic_cast< PointLoad * >(load);
     if ( p ) {
         FloatArray lcoords;
-        if ( this->computeLocalCoordinates(lcoords, p->giveCoordinates()) ) {
+        if ( this->computeLocalCoordinates( lcoords, p->giveCoordinates() ) ) {
             this->computePointLoadVectorAt(answer, load, tStep, mode);
         }
     } else {
@@ -318,14 +318,14 @@ void NURBSBeam2dElement :: computeLoadVector(FloatArray &answer, BodyLoad *load,
 }
 
 
-  NURBSBeam3dElement :: NURBSBeam3dElement(int n, Domain *aDomain) : IGAElement(n, aDomain), Beam3dElementEvaluator(), interpolation(3, 1) { }
-  // interpolation(nsd, fsd)
+NURBSBeam3dElement :: NURBSBeam3dElement(int n, Domain *aDomain) : IGAElement(n, aDomain), Beam3dElementEvaluator(), interpolation(3, 1) { }
+// interpolation(nsd, fsd)
 
 IRResultType NURBSBeam3dElement :: initializeFrom(InputRecord *ir)
 {
     IRResultType result;                    // Required by IR_GIVE_FIELD macro
 
-    this->integrationType = 0; 
+    this->integrationType = 0;
     if ( ir->hasField(_IFT_NURBSBeam3dElement_integrationType) ) {
         IR_GIVE_FIELD(ir, this->integrationType, _IFT_NURBSBeam3dElement_integrationType);
     }
@@ -334,16 +334,16 @@ IRResultType NURBSBeam3dElement :: initializeFrom(InputRecord *ir)
     if ( ir->hasField(_IFT_NURBSBeam3dElement_zaxis) ) {
         IR_GIVE_FIELD(ir, this->zaxis, _IFT_NURBSBeam3dElement_zaxis);
     } /*else if ( ir->hasField(_IFT_Beam3d_refnode) ) {
-        IR_GIVE_FIELD(ir, referenceNode, _IFT_Beam3d_refnode);
-        if ( referenceNode == 0 ) {
-            OOFEM_WARNING("wrong reference node specified. Using default orientation.");
-        }
-    } else if ( ir->hasField(_IFT_Beam3d_refangle) ) {
-        IR_GIVE_FIELD(ir, referenceAngle, _IFT_Beam3d_refangle);
-    } else {
-        OOFEM_WARNING("y-axis, reference node or angle not set");
-        return IRRT_NOTFOUND;
-	}*/
+       * IR_GIVE_FIELD(ir, referenceNode, _IFT_Beam3d_refnode);
+       * if ( referenceNode == 0 ) {
+       *    OOFEM_WARNING("wrong reference node specified. Using default orientation.");
+       * }
+       * } else if ( ir->hasField(_IFT_Beam3d_refangle) ) {
+       * IR_GIVE_FIELD(ir, referenceAngle, _IFT_Beam3d_refangle);
+       * } else {
+       * OOFEM_WARNING("y-axis, reference node or angle not set");
+       * return IRRT_NOTFOUND;
+       * }*/
     result = IGAElement :: initializeFrom(ir);
 
     int indx = 0;
@@ -352,7 +352,7 @@ IRResultType NURBSBeam3dElement :: initializeFrom(InputRecord *ir)
     FloatArray newgpcoords;
     IntArray knotSpan;
 
-    if (integrationType == 1) {
+    if ( integrationType == 1 ) {
         int numberOfKnotSpansU = this->giveInterpolation()->giveNumberOfKnotSpans(1);
         const IntArray *knotMultiplicityU = this->giveInterpolation()->giveKnotMultiplicity(1);
         const FloatArray *knotValuesU = this->giveInterpolation()->giveKnotValues(1);
@@ -360,29 +360,29 @@ IRResultType NURBSBeam3dElement :: initializeFrom(InputRecord *ir)
         newgpcoords.resize(1);
         knotSpan.resize(1);
 
-	IntArray reducedNumberOfGaussPoints;
-	this->giveRINumberOfGaussPoints(reducedNumberOfGaussPoints, numberOfKnotSpansU);
-	//	int reducedNumberOfGaussPoints = numberOfGaussPoints-2;
+        IntArray reducedNumberOfGaussPoints;
+        this->giveRINumberOfGaussPoints(reducedNumberOfGaussPoints, numberOfKnotSpansU);
+        //	int reducedNumberOfGaussPoints = numberOfGaussPoints-2;
         int numberOfIntegrationRules = numberOfKnotSpansU;
-        reducedIntegrationRulesArray.resize( numberOfIntegrationRules );
-	
-	knotSpan.at(1) = -1;
-	for ( int ui = 1; ui <= numberOfKnotSpansU; ui++ ) {
-	  du = knotValuesU->at(ui + 1) - knotValuesU->at(ui);
-	  knotSpan.at(1) += knotMultiplicityU->at(ui);
-	  
-	  reducedIntegrationRulesArray [ indx ].reset( new IGAIntegrationElement(indx, this, knotSpan) );
-	  reducedIntegrationRulesArray [ indx ]->SetUpPointsOnLine(reducedNumberOfGaussPoints(indx), _2dBeam); // HUHU 
+        reducedIntegrationRulesArray.resize(numberOfIntegrationRules);
 
-	  // remap local subelement gp coordinates into knot span coordinates and update integration weight
-	  for ( GaussPoint *gp: *reducedIntegrationRulesArray [ indx ] ) {
-	    const FloatArray &gpcoords = gp->giveNaturalCoordinates();
-	    
-	    newgpcoords.at(1) = knotValuesU->at(ui) + du * ( gpcoords.at(1) / 2.0 + 0.5 );
-	    gp->setNaturalCoordinates(newgpcoords);
-	    gp->setWeight(gp->giveWeight() / 2.0 * du );
-	  }
-	  indx++;
+        knotSpan.at(1) = -1;
+        for ( int ui = 1; ui <= numberOfKnotSpansU; ui++ ) {
+            du = knotValuesU->at(ui + 1) - knotValuesU->at(ui);
+            knotSpan.at(1) += knotMultiplicityU->at(ui);
+
+            reducedIntegrationRulesArray [ indx ].reset( new IGAIntegrationElement(indx, this, knotSpan) );
+            reducedIntegrationRulesArray [ indx ]->SetUpPointsOnLine(reducedNumberOfGaussPoints(indx), _2dBeam); // HUHU
+
+            // remap local subelement gp coordinates into knot span coordinates and update integration weight
+            for ( GaussPoint *gp : *reducedIntegrationRulesArray [ indx ] ) {
+                const FloatArray &gpcoords = gp->giveNaturalCoordinates();
+
+                newgpcoords.at(1) = knotValuesU->at(ui) + du * ( gpcoords.at(1) / 2.0 + 0.5 );
+                gp->setNaturalCoordinates(newgpcoords);
+                gp->setWeight(gp->giveWeight() / 2.0 * du);
+            }
+            indx++;
         }
     }
 
@@ -406,29 +406,29 @@ void NURBSBeam3dElement :: giveRINumberOfGaussPoints(IntArray &answer, int nkns)
 
     NURBSInterpolationLine3d *interpol = static_cast< NURBSInterpolationLine3d * >( this->giveInterpolation() );
     int degree = interpol->giveDegree(1);
-    if (degree == 3){
-	for (int i = 1; i<=nkns; i++){
-	    answer.at(i) = 1;
-	}
-	answer.at(1) ++;
-	answer.at(nkns) ++;
-    } else if (degree == 4){
-	for (int i = 1; i<=nkns; i++){
-	    answer.at(i) = 1;
-	}
-	answer.at(1) ++;
-	answer.at(nkns) ++;
-	answer.at(ceil(nkns/2)) ++;
-    } else if (degree == 5){
-	for (int i = 1; i<=nkns; i++){
-	    answer.at(i) = 1;
-	}
-	answer.at(1) ++;
-	answer.at(ceil(nkns/2)) ++;
-       	answer.at(floor(nkns/2)) ++;
-	answer.at(nkns) ++;
+    if ( degree == 3 ) {
+        for ( int i = 1; i <= nkns; i++ ) {
+            answer.at(i) = 1;
+        }
+        answer.at(1)++;
+        answer.at(nkns)++;
+    } else if ( degree == 4 ) {
+        for ( int i = 1; i <= nkns; i++ ) {
+            answer.at(i) = 1;
+        }
+        answer.at(1)++;
+        answer.at(nkns)++;
+        answer.at( ceil(nkns / 2) )++;
+    } else if ( degree == 5 ) {
+        for ( int i = 1; i <= nkns; i++ ) {
+            answer.at(i) = 1;
+        }
+        answer.at(1)++;
+        answer.at( ceil(nkns / 2) )++;
+        answer.at( floor(nkns / 2) )++;
+        answer.at(nkns)++;
     }  else {
-	OOFEM_ERROR("Reduced integration not supported for degree %d", degree);
+        OOFEM_ERROR("Reduced integration not supported for degree %d", degree);
     }
 }
 
@@ -436,25 +436,25 @@ void NURBSBeam3dElement :: giveRINumberOfGaussPoints(IntArray &answer, int nkns)
 void NURBSBeam3dElement :: computeGaussPoints()
 // Sets up the array of Gauss Points of the receiver.
 {
-    if (integrationType == 0) {
-	if ( integrationRulesArray.size() == 0 ) {
-	    // the gauss point is used only when methods from crosssection and/or material
-	    // classes are requested
-	    integrationRulesArray.resize(1);
-	    integrationRulesArray [ 0 ].reset( new GaussIntegrationRule(1, this, 1, 3) );
-	    this->giveCrossSection()->setupIntegrationPoints(* integrationRulesArray [ 0 ], this->numberOfGaussPoints, this);
-	}
-    } else if (integrationType == 1) {
-	//	OOFEM_ERROR("Reduced integration not supported yet");
-	if ( integrationRulesArray.size() == 0 ) {
-	    // the gauss point is used only when methods from crosssection and/or material
-	    // classes are requested
-	    integrationRulesArray.resize(1);
-	    integrationRulesArray [ 0 ].reset( new GaussIntegrationRule(1, this, 1, 3) );
-	    this->giveCrossSection()->setupIntegrationPoints(* integrationRulesArray [ 0 ], this->numberOfGaussPoints-7, this);
-	}
+    if ( integrationType == 0 ) {
+        if ( integrationRulesArray.size() == 0 ) {
+            // the gauss point is used only when methods from crosssection and/or material
+            // classes are requested
+            integrationRulesArray.resize(1);
+            integrationRulesArray [ 0 ].reset( new GaussIntegrationRule(1, this, 1, 3) );
+            this->giveCrossSection()->setupIntegrationPoints(* integrationRulesArray [ 0 ], this->numberOfGaussPoints, this);
+        }
+    } else if ( integrationType == 1 ) {
+        //	OOFEM_ERROR("Reduced integration not supported yet");
+        if ( integrationRulesArray.size() == 0 ) {
+            // the gauss point is used only when methods from crosssection and/or material
+            // classes are requested
+            integrationRulesArray.resize(1);
+            integrationRulesArray [ 0 ].reset( new GaussIntegrationRule(1, this, 1, 3) );
+            this->giveCrossSection()->setupIntegrationPoints(* integrationRulesArray [ 0 ], this->numberOfGaussPoints - 7, this);
+        }
     } else {
-	OOFEM_ERROR("IntegrationType %d not supported", integrationType);
+        OOFEM_ERROR("IntegrationType %d not supported", integrationType);
     }
 }
 
@@ -468,7 +468,7 @@ void NURBSBeam3dElement :: computeLoadVector(FloatArray &answer, BodyLoad *load,
     PointLoad *p = dynamic_cast< PointLoad * >(load);
     if ( p ) {
         FloatArray lcoords;
-        if ( this->computeLocalCoordinates(lcoords, p->giveCoordinates()) ) {
+        if ( this->computeLocalCoordinates( lcoords, p->giveCoordinates() ) ) {
             this->computePointLoadVectorAt(answer, load, tStep, mode);
         }
     } else {
@@ -479,7 +479,6 @@ void NURBSBeam3dElement :: computeLoadVector(FloatArray &answer, BodyLoad *load,
 
 void NURBSBeam3dElement :: computeMidUnknownVector(FloatArray &local, FloatArray &global, TimeStep *tStep)
 {
-
     FloatArray displ;
     // beamelem->computeMidUnknownVector(displ, tStep);
     FloatMatrix N;
@@ -489,41 +488,39 @@ void NURBSBeam3dElement :: computeMidUnknownVector(FloatArray &local, FloatArray
     FloatArray gpcoords;
     gpcoords.resize(3);
     gpcoords.at(1) = 0.5;
-    int midRule = floor( (double) (numberOfIntegrationRules) /2);
+    int midRule = floor( ( double ) ( numberOfIntegrationRules ) / 2 );
     IntegrationRule *iRule = this->giveIntegrationRule(midRule);
     GaussPoint *gp = iRule->getIntegrationPoint(0);
     gp->setNaturalCoordinates(gpcoords);
 
     FloatArray u, ur;
-    this->StructuralElementEvaluator::computeVectorOf(VM_Total, tStep, u);
+    this->StructuralElementEvaluator :: computeVectorOf(VM_Total, tStep, u);
     this->computeNMatrixAt(N,  gp);
 
     IntArray irlocnum;
-    this->giveIntegrationElementLocalCodeNumbers(irlocnum, this, iRule) ;
+    this->giveIntegrationElementLocalCodeNumbers(irlocnum, this, iRule);
     // get local code numbers corresponding to ir
     ur.resize( N.giveNumberOfColumns() );
-    for (int n = 1; n <= irlocnum.giveSize(); n++ ) {
-	ur.at(n) = u.at( irlocnum.at(n) );
+    for ( int n = 1; n <= irlocnum.giveSize(); n++ ) {
+        ur.at(n) = u.at( irlocnum.at(n) );
     }
-    
+
     // interpolate displacements
     local.beProductOf(N, ur);
     global.beProductOf(N, ur);
 
     FloatMatrix T;
-    this->computeLoadGToLRotationMtrx(T, gp); 
+    this->computeLoadGToLRotationMtrx(T, gp);
     global.rotatedWith(T, 't');
 
-    
+
 
     // interp->local2global( cg [ k ], c [ k ], FEIIGAElementGeometryWrapper( this, iRule->giveKnotSpan() ) );
-    
 }
-    
+
 
 void NURBSBeam3dElementDsg :: computeMidUnknownVector(FloatArray &local, FloatArray &global, TimeStep *tStep)
 {
-
     FloatArray displ;
     // beamelem->computeMidUnknownVector(displ, tStep);
     FloatMatrix N;
@@ -533,39 +530,36 @@ void NURBSBeam3dElementDsg :: computeMidUnknownVector(FloatArray &local, FloatAr
     FloatArray gpcoords;
     gpcoords.resize(3);
     gpcoords.at(1) = 0.5;
-    int midRule = floor( (double) (numberOfIntegrationRules) /2);
+    int midRule = floor( ( double ) ( numberOfIntegrationRules ) / 2 );
     IntegrationRule *iRule = this->giveIntegrationRule(midRule);
     GaussPoint *gp = iRule->getIntegrationPoint(0);
     gp->setNaturalCoordinates(gpcoords);
 
     FloatArray u, ur;
-    this->StructuralElementEvaluator::computeVectorOf(VM_Total, tStep, u);
+    this->StructuralElementEvaluator :: computeVectorOf(VM_Total, tStep, u);
     this->computeNMatrixAt(N,  gp);
-    
+
     IntArray irlocnum;
-    this->giveIntegrationElementLocalCodeNumbers(irlocnum, this, iRule) ;
+    this->giveIntegrationElementLocalCodeNumbers(irlocnum, this, iRule);
     // get local code numbers corresponding to ir
     ur.resize( N.giveNumberOfColumns() );
-    for (int n = 1; n <= irlocnum.giveSize(); n++ ) {
-	ur.at(n) = u.at( irlocnum.at(n) );
+    for ( int n = 1; n <= irlocnum.giveSize(); n++ ) {
+        ur.at(n) = u.at( irlocnum.at(n) );
     }
-    
+
     // interpolate displacements
     local.beProductOf(N, ur);
     global.beProductOf(N, ur);
 
     FloatMatrix T;
-    this->computeLoadGToLRotationMtrx(T, gp); 
+    this->computeLoadGToLRotationMtrx(T, gp);
     global.rotatedWith(T, 't');
-
-    
 }
-    
+
 
 
 void NURBSBeam3dElementBbar :: computeMidUnknownVector(FloatArray &local, FloatArray &global, TimeStep *tStep)
 {
-
     FloatArray displ;
     // beamelem->computeMidUnknownVector(displ, tStep);
     FloatMatrix N;
@@ -575,33 +569,32 @@ void NURBSBeam3dElementBbar :: computeMidUnknownVector(FloatArray &local, FloatA
     FloatArray gpcoords;
     gpcoords.resize(3);
     gpcoords.at(1) = 0.5;
-    int midRule = floor( (double) (numberOfIntegrationRules) /2);
+    int midRule = floor( ( double ) ( numberOfIntegrationRules ) / 2 );
     IntegrationRule *iRule = this->giveIntegrationRule(midRule);
     GaussPoint *gp = iRule->getIntegrationPoint(0);
     gp->setNaturalCoordinates(gpcoords);
 
     FloatArray u, ur;
-    this->StructuralElementEvaluator::computeVectorOf(VM_Total, tStep, u);
+    this->StructuralElementEvaluator :: computeVectorOf(VM_Total, tStep, u);
     this->computeNMatrixAt(N,  gp);
-    
+
     IntArray irlocnum;
-    this->giveIntegrationElementLocalCodeNumbers(irlocnum, this, iRule) ;
+    this->giveIntegrationElementLocalCodeNumbers(irlocnum, this, iRule);
     // get local code numbers corresponding to ir
     ur.resize( N.giveNumberOfColumns() );
-    for (int n = 1; n <= irlocnum.giveSize(); n++ ) {
-	ur.at(n) = u.at( irlocnum.at(n) );
+    for ( int n = 1; n <= irlocnum.giveSize(); n++ ) {
+        ur.at(n) = u.at( irlocnum.at(n) );
     }
-    
+
     // interpolate displacements
     local.beProductOf(N, ur);
     global.beProductOf(N, ur);
 
     FloatMatrix T;
-    this->computeLoadGToLRotationMtrx(T, gp); 
+    this->computeLoadGToLRotationMtrx(T, gp);
     global.rotatedWith(T, 't');
-
 }
-    
+
 // HUHU should be implemented by IGA element (it is the same for Bspline NURBS and TSpline)
 // however in such a case it should be generalized in terms of appropriately multiplying
 // nseq for those integration elements which span more than just a single knot span
@@ -657,7 +650,7 @@ void BsplinePlaneStressElement :: drawScalar(oofegGraphicContext &gc, TimeStep *
     StructuralElementEvaluator :: computeVectorOf(VM_Total, tStep, u);
 
     // loop over individual integration rules (i.e., knot spans)
-    for ( auto &iRule: integrationRulesArray ) {
+    for ( auto &iRule : integrationRulesArray ) {
         span = iRule->giveKnotSpan();
         if ( nsd == 2 ) {
             // divide span locally to get finer geometry rep.
@@ -703,7 +696,7 @@ void BsplinePlaneStressElement :: drawScalar(oofegGraphicContext &gc, TimeStep *
                         s [ k ] = val.at(indx);
                     }
 
-                    if ( ( std::isnan(s [ 0 ]) ) || ( std::isnan(s [ 1 ]) ) || ( std::isnan(s [ 2 ]) ) || ( std::isnan(s [ 3 ]) ) ) {
+                    if ( ( std :: isnan(s [ 0 ]) ) || ( std :: isnan(s [ 1 ]) ) || ( std :: isnan(s [ 2 ]) ) || ( std :: isnan(s [ 3 ]) ) ) {
                         continue;
                     }
 
@@ -771,7 +764,7 @@ void NURBSPlaneStressElement :: drawScalar(oofegGraphicContext &gc, TimeStep *tS
     //double maxs=-1.0e10, mins=1.0e10;
 
     // loop over individual integration rules (i.e., knot spans)
-    for ( auto &iRule: integrationRulesArray ) {
+    for ( auto &iRule : integrationRulesArray ) {
         span = iRule->giveKnotSpan();
         if ( nsd == 2 ) {
             // divide span locally to get finer geometry rep.
@@ -896,7 +889,7 @@ void NURBSPlaneStressElement :: drawScalar(oofegGraphicContext &gc, TimeStep *tS
  #endif
                     }
 
-                    if ( ( std::isnan(s [ 0 ]) ) || ( std::isnan(s [ 1 ]) ) || ( std::isnan(s [ 2 ]) ) || ( std::isnan(s [ 3 ]) ) ) {
+                    if ( ( std :: isnan(s [ 0 ]) ) || ( std :: isnan(s [ 1 ]) ) || ( std :: isnan(s [ 2 ]) ) || ( std :: isnan(s [ 3 ]) ) ) {
                         continue;
                     }
 
@@ -971,7 +964,7 @@ void TSplinePlaneStressElement :: drawScalar(oofegGraphicContext &gc, TimeStep *
     StructuralElementEvaluator :: computeVectorOf(VM_Total, tStep, u);
 
     // loop over individual integration rules (i.e., knot spans)
-    for ( auto &iRule: integrationRulesArray ) {
+    for ( auto &iRule : integrationRulesArray ) {
         span = iRule->giveKnotSpan();
         if ( nsd == 2 ) {
             // divide span locally to get finer geometry rep.
@@ -1016,7 +1009,7 @@ void TSplinePlaneStressElement :: drawScalar(oofegGraphicContext &gc, TimeStep *
                         s [ k ] = val.at(indx);
                     }
 
-                    if ( ( std::isnan(s [ 0 ]) ) || ( std::isnan(s [ 1 ]) ) || ( std::isnan(s [ 2 ]) ) || ( std::isnan(s [ 3 ]) ) ) {
+                    if ( ( std :: isnan(s [ 0 ]) ) || ( std :: isnan(s [ 1 ]) ) || ( std :: isnan(s [ 2 ]) ) || ( std :: isnan(s [ 3 ]) ) ) {
                         continue;
                     }
 
@@ -1114,7 +1107,7 @@ void NURBSSpace3dElement :: drawScalar(oofegGraphicContext &gc, TimeStep *tStep)
     //double maxs=-1.0e10, mins=1.0e10;
 
     // loop over individual integration rules (i.e., knot spans)
-    for ( auto &iRule: integrationRulesArray ) {
+    for ( auto &iRule : integrationRulesArray ) {
         span = iRule->giveKnotSpan();
         if ( nsd == 3 ) {
             // divide span locally to get finer geometry rep.
@@ -1271,11 +1264,11 @@ void NURBSSpace3dElement :: drawScalar(oofegGraphicContext &gc, TimeStep *tStep)
  #endif
                         }
 
-                        if ( ( std::isnan(s [ 0 ]) ) || ( std::isnan(s [ 1 ]) ) || ( std::isnan(s [ 2 ]) ) || ( std::isnan(s [ 3 ]) ) ) {
+                        if ( ( std :: isnan(s [ 0 ]) ) || ( std :: isnan(s [ 1 ]) ) || ( std :: isnan(s [ 2 ]) ) || ( std :: isnan(s [ 3 ]) ) ) {
                             continue;
                         }
 
-                        if ( ( std::isnan(s [ 4 ]) ) || ( std::isnan(s [ 5 ]) ) || ( std::isnan(s [ 6 ]) ) || ( std::isnan(s [ 7 ]) ) ) {
+                        if ( ( std :: isnan(s [ 4 ]) ) || ( std :: isnan(s [ 5 ]) ) || ( std :: isnan(s [ 6 ]) ) || ( std :: isnan(s [ 7 ]) ) ) {
                             continue;
                         }
 
@@ -1331,7 +1324,7 @@ void NURBSSpace3dElement :: drawScalar(oofegGraphicContext &gc, TimeStep *tStep)
 
 
 void
-NURBSBeam2dElementDsg::drawRawGeometry(oofegGraphicContext &gc, TimeStep *tStep)
+NURBSBeam2dElementDsg :: drawRawGeometry(oofegGraphicContext &gc, TimeStep *tStep)
 {
     WCRec p [ 2 ];
     GraphicObj *go;
@@ -1351,36 +1344,35 @@ NURBSBeam2dElementDsg::drawRawGeometry(oofegGraphicContext &gc, TimeStep *tStep)
 
     c [ 0 ].resize(2);
     c [ 1 ].resize(2);
-    cg[ 0 ].resize(2);
-    cg[ 1 ].resize(2);
+    cg [ 0 ].resize(2);
+    cg [ 1 ].resize(2);
 
     // loop over individual integration rules (i.e., knot spans)
-    for ( auto &iRule: integrationRulesArray ) {
-      int i, k, nseg = 20;
+    for ( auto &iRule : integrationRulesArray ) {
+        int i, k, nseg = 20;
         span = iRule->giveKnotSpan();
-	double du = ( knotVector [ 0 ] [ span->at(1) + 1 ] - knotVector [ 0 ] [ span->at(1) ] ) / nseg;
-	for ( i = 1; i <= nseg; i++ ) {
-	  c [ 0 ].at(1) = knotVector [ 0 ] [ span->at(1) ] + du * ( i - 1 );
-	  c [ 1 ].at(1) = knotVector [ 0 ] [ span->at(1) ] + du * i;
-	  for ( k = 0; k < 2; k++ ) {
-	    interp->local2global( cg [ k ], c [ k ], FEIIGAElementGeometryWrapper( this, iRule->giveKnotSpan() ) );
-	    p [ k ].x = ( FPNum ) cg [ k ].at(1);
-	    p [ k ].y = ( FPNum ) cg [ k ].at(2);
-	    p [ k ].z = 0.;
-	  }
-	  go = CreateLine3D(p);
-	  EGWithMaskChangeAttributes(WIDTH_MASK | COLOR_MASK | LAYER_MASK, go);
-	  EGAttachObject(go, ( EObjectP ) this);
-	  EMAddGraphicsToModel(ESIModel(), go);
-	}
+        double du = ( knotVector [ 0 ] [ span->at(1) + 1 ] - knotVector [ 0 ] [ span->at(1) ] ) / nseg;
+        for ( i = 1; i <= nseg; i++ ) {
+            c [ 0 ].at(1) = knotVector [ 0 ] [ span->at(1) ] + du * ( i - 1 );
+            c [ 1 ].at(1) = knotVector [ 0 ] [ span->at(1) ] + du * i;
+            for ( k = 0; k < 2; k++ ) {
+                interp->local2global( cg [ k ], c [ k ], FEIIGAElementGeometryWrapper( this, iRule->giveKnotSpan() ) );
+                p [ k ].x = ( FPNum ) cg [ k ].at(1);
+                p [ k ].y = ( FPNum ) cg [ k ].at(2);
+                p [ k ].z = 0.;
+            }
+            go = CreateLine3D(p);
+            EGWithMaskChangeAttributes(WIDTH_MASK | COLOR_MASK | LAYER_MASK, go);
+            EGAttachObject(go, ( EObjectP ) this);
+            EMAddGraphicsToModel(ESIModel(), go);
+        }
     }
 }
 
 
-void 
-NURBSBeam2dElementDsg::drawDeformedGeometry(oofegGraphicContext &gc, TimeStep *tStep, UnknownType ut) 
+void
+NURBSBeam2dElementDsg :: drawDeformedGeometry(oofegGraphicContext &gc, TimeStep *tStep, UnknownType ut)
 {
-
     WCRec p [ 2 ];
     GraphicObj *go;
     int i, j, k, n, nseg;
@@ -1410,73 +1402,73 @@ NURBSBeam2dElementDsg::drawDeformedGeometry(oofegGraphicContext &gc, TimeStep *t
     const double *const *knotVector = interp->giveKnotVector();
     const IntArray *span;
 
-    this->StructuralElementEvaluator::computeVectorOf(VM_Total, tStep, u);
+    this->StructuralElementEvaluator :: computeVectorOf(VM_Total, tStep, u);
 
     FloatArray c [ 2 ], cg [ 2 ], d, dg;
     dg.resize(2);
     double du;
 
     for ( j = 0; j < 2; j++ ) {
-      c [ j ].resize(2);
-      cg [ j ].resize(2);
+        c [ j ].resize(2);
+        cg [ j ].resize(2);
     }
 
     // loop over individual integration rules (i.e., knot spans)
     for ( int ir = 0; ir < this->giveNumberOfIntegrationRules(); ir++ ) {
-      IntegrationRule *iRule = this->giveIntegrationRule(ir);
-      span = iRule->giveKnotSpan();
-      // divide span locally to get finer geometry rep.
-      du = ( knotVector [ 0 ] [ span->at(1) + 1 ] - knotVector [ 0 ] [ span->at(1) ] ) / nseg;
-      for ( i = 1; i <= nseg; i++ ) {
-	c [ 0 ].at(1) = knotVector [ 0 ] [ span->at(1) ] + du * ( i - 1 );
-	c [ 1 ].at(1) = knotVector [ 0 ] [ span->at(1) ] + du * i;
+        IntegrationRule *iRule = this->giveIntegrationRule(ir);
+        span = iRule->giveKnotSpan();
+        // divide span locally to get finer geometry rep.
+        du = ( knotVector [ 0 ] [ span->at(1) + 1 ] - knotVector [ 0 ] [ span->at(1) ] ) / nseg;
+        for ( i = 1; i <= nseg; i++ ) {
+            c [ 0 ].at(1) = knotVector [ 0 ] [ span->at(1) ] + du * ( i - 1 );
+            c [ 1 ].at(1) = knotVector [ 0 ] [ span->at(1) ] + du * i;
 
-	for ( k = 0; k < 2; k++ ) {
-	  // create a dummy ip's
-	  GaussPoint gp(iRule, 999, c [ k ], 1.0, _2dBeam);
+            for ( k = 0; k < 2; k++ ) {
+                // create a dummy ip's
+                GaussPoint gp(iRule, 999, c [ k ], 1.0, _2dBeam);
 
-	  // compute displacements at gp
-	  this->computeNMatrixAt(N, & gp);
+                // compute displacements at gp
+                this->computeNMatrixAt(N, & gp);
 
-	  // get local code numbers corresponding to ir
-	  this->giveIntegrationElementLocalCodeNumbers(lc, this, gp.giveIntegrationRule());
-	  ur.resize( N.giveNumberOfColumns() );
-	  for ( n = 1; n <= lc.giveSize(); n++ ) {
-	    ur.at(n) = u.at( lc.at(n) );
-	  }
+                // get local code numbers corresponding to ir
+                this->giveIntegrationElementLocalCodeNumbers( lc, this, gp.giveIntegrationRule() );
+                ur.resize( N.giveNumberOfColumns() );
+                for ( n = 1; n <= lc.giveSize(); n++ ) {
+                    ur.at(n) = u.at( lc.at(n) );
+                }
 
-	  // interpolate displacements
-	  d.beProductOf(N, ur);
+                // interpolate displacements
+                d.beProductOf(N, ur);
 
-	  interp->local2global( cg [ k ], c [ k ], FEIIGAElementGeometryWrapper( this, iRule->giveKnotSpan() ) );
+                interp->local2global( cg [ k ], c [ k ], FEIIGAElementGeometryWrapper( this, iRule->giveKnotSpan() ) );
 
-	  this->computeNormal (normal, c[k], ir);
+                this->computeNormal(normal, c [ k ], ir);
 
-	  dg.at(1) = d.at(1) * normal.at(2) + d.at(2) * normal.at(1);
-	  dg.at(2) = -d.at(1) * normal.at(1) + d.at(2) * normal.at(2);
-	  // interp->local2global( dg , d , FEIIGAElementGeometryWrapper( this, iRule->giveKnotSpan() ) );
-	  // dg.beVectorProductOf(normal, d);
+                dg.at(1) = d.at(1) * normal.at(2) + d.at(2) * normal.at(1);
+                dg.at(2) = -d.at(1) * normal.at(1) + d.at(2) * normal.at(2);
+                // interp->local2global( dg , d , FEIIGAElementGeometryWrapper( this, iRule->giveKnotSpan() ) );
+                // dg.beVectorProductOf(normal, d);
 
-	  p [ k ].x = ( FPNum ) ( cg [ k ].at(1) + dg.at(1) * defScale );
-	  p [ k ].y = ( FPNum ) ( cg [ k ].at(2) + dg.at(2) * defScale );
-	  p [ k ].z = 0.;
-	}
+                p [ k ].x = ( FPNum ) ( cg [ k ].at(1) + dg.at(1) * defScale );
+                p [ k ].y = ( FPNum ) ( cg [ k ].at(2) + dg.at(2) * defScale );
+                p [ k ].z = 0.;
+            }
 
-	go =  CreateLine3D(p);
-	EGWithMaskChangeAttributes(WIDTH_MASK | STYLE_MASK | COLOR_MASK | LAYER_MASK, go);
-	EGAttachObject(go, ( EObjectP ) this);
-	EMAddGraphicsToModel(ESIModel(), go);
-      }
+            go =  CreateLine3D(p);
+            EGWithMaskChangeAttributes(WIDTH_MASK | STYLE_MASK | COLOR_MASK | LAYER_MASK, go);
+            EGAttachObject(go, ( EObjectP ) this);
+            EMAddGraphicsToModel(ESIModel(), go);
+        }
     }                 // end loop over knot spans (irules)
 }
-  
 
-void 
-NURBSBeam2dElementDsg::drawScalar(oofegGraphicContext &gc, TimeStep *tStep)
+
+void
+NURBSBeam2dElementDsg :: drawScalar(oofegGraphicContext &gc, TimeStep *tStep)
 {
-  WCRec p [ 2 ];
-  WCRec p2 [ 2 ];
-  int indx;
+    WCRec p [ 2 ];
+    WCRec p2 [ 2 ];
+    int indx;
     GraphicObj *go;
     int i, j, k, nseg;
     FloatArray u;
@@ -1506,7 +1498,7 @@ NURBSBeam2dElementDsg::drawScalar(oofegGraphicContext &gc, TimeStep *tStep)
     double scale = gc.getDefScale();
 
 
-    this->StructuralElementEvaluator::computeVectorOf(VM_Total, tStep, u);
+    this->StructuralElementEvaluator :: computeVectorOf(VM_Total, tStep, u);
 
     indx = gc.giveIntVarIndx();
 
@@ -1515,80 +1507,77 @@ NURBSBeam2dElementDsg::drawScalar(oofegGraphicContext &gc, TimeStep *tStep)
     double s [ 2 ];
 
     for ( j = 0; j < 2; j++ ) {
-      c [ j ].resize(2);
-      cg [ j ].resize(2);
+        c [ j ].resize(2);
+        cg [ j ].resize(2);
     }
 
     // loop over individual integration rules (i.e., knot spans)
     for ( int ir = 0; ir < this->giveNumberOfIntegrationRules(); ir++ ) {
-      IntegrationRule *iRule = this->giveIntegrationRule(ir);
-      span = iRule->giveKnotSpan();
-      // divide span locally to get finer geometry rep.
-      du = ( knotVector [ 0 ] [ span->at(1) + 1 ] - knotVector [ 0 ] [ span->at(1) ] ) / nseg;
-      for ( i = 1; i <= nseg; i++ ) {
-	c [ 0 ].at(1) = knotVector [ 0 ] [ span->at(1) ] + du * ( i - 1 );
-	c [ 1 ].at(1) = knotVector [ 0 ] [ span->at(1) ] + du * i;
+        IntegrationRule *iRule = this->giveIntegrationRule(ir);
+        span = iRule->giveKnotSpan();
+        // divide span locally to get finer geometry rep.
+        du = ( knotVector [ 0 ] [ span->at(1) + 1 ] - knotVector [ 0 ] [ span->at(1) ] ) / nseg;
+        for ( i = 1; i <= nseg; i++ ) {
+            c [ 0 ].at(1) = knotVector [ 0 ] [ span->at(1) ] + du * ( i - 1 );
+            c [ 1 ].at(1) = knotVector [ 0 ] [ span->at(1) ] + du * i;
 
-	for ( k = 0; k < 2; k++ ) {
-	  // create a dummy ip's
-	  GaussPoint gp(iRule, 999, c [ k ], 1.0, _2dBeam);
-	  FloatArray strain;
-	  if ((gc.giveIntVarType() == IST_StrainTensor)){
-	    // copy to array of size 1x6
-	    this->computeStrainVector(val, & gp, tStep, u);
-	  }
-	    else if (gc.giveIntVarType() == IST_StressTensor) {
-		// copy to array of size 1x6
-		this->computeStrainVector(strain, & gp, tStep, u);
-		this->computeStressVector(val, strain, & gp, tStep);
-	    } else{
-		OOFEM_ERROR ("Internal Variable Type not recognized");
-	    }
-	  s [ k ] = val.at(indx);
-	  fprintf (stderr, " %e",  s [ k ]);
-	  
-	  interp->local2global( cg [ k ], c [ k ], FEIIGAElementGeometryWrapper( this, iRule->giveKnotSpan() ) );
-	  this->computeNormal (n, c[k], ir);
-	  //n = {0, 1, 0};
-	  p [ k ].x = ( FPNum ) ( cg [ k ].at(1) + n.at(1) * s[k] * scale );
-	  p [ k ].y = ( FPNum ) ( cg [ k ].at(2) + n.at(2) * s[k] * scale );
-	  p [ k ].z = 0.;
+            for ( k = 0; k < 2; k++ ) {
+                // create a dummy ip's
+                GaussPoint gp(iRule, 999, c [ k ], 1.0, _2dBeam);
+                FloatArray strain;
+                if ( ( gc.giveIntVarType() == IST_StrainTensor ) ) {
+                    // copy to array of size 1x6
+                    this->computeStrainVector(val, & gp, tStep, u);
+                } else if ( gc.giveIntVarType() == IST_StressTensor ) {
+                    // copy to array of size 1x6
+                    this->computeStrainVector(strain, & gp, tStep, u);
+                    this->computeStressVector(val, strain, & gp, tStep);
+                } else {
+                    OOFEM_ERROR("Internal Variable Type not recognized");
+                }
+                s [ k ] = val.at(indx);
+                fprintf(stderr, " %e",  s [ k ]);
 
-	  p2 [ k ].x = ( FPNum ) ( cg [ 0 ].at(1) + (1-k) * n.at(1) * s[k] * scale );
-	  p2 [ k ].y = ( FPNum ) ( cg [ 0 ].at(2) + (1-k) * n.at(2) * s[k] * scale );
-	  p2 [ k ].z = 0.;
+                interp->local2global( cg [ k ], c [ k ], FEIIGAElementGeometryWrapper( this, iRule->giveKnotSpan() ) );
+                this->computeNormal(n, c [ k ], ir);
+                //n = {0, 1, 0};
+                p [ k ].x = ( FPNum ) ( cg [ k ].at(1) + n.at(1) * s [ k ] * scale );
+                p [ k ].y = ( FPNum ) ( cg [ k ].at(2) + n.at(2) * s [ k ] * scale );
+                p [ k ].z = 0.;
 
-	}
+                p2 [ k ].x = ( FPNum ) ( cg [ 0 ].at(1) + ( 1 - k ) * n.at(1) * s [ k ] * scale );
+                p2 [ k ].y = ( FPNum ) ( cg [ 0 ].at(2) + ( 1 - k ) * n.at(2) * s [ k ] * scale );
+                p2 [ k ].z = 0.;
+            }
 
-	go =  CreateLine3D(p);
-	EGWithMaskChangeAttributes(WIDTH_MASK | STYLE_MASK | COLOR_MASK | LAYER_MASK, go);
-	EGAttachObject(go, ( EObjectP ) this);
-	EMAddGraphicsToModel(ESIModel(), go);
+            go =  CreateLine3D(p);
+            EGWithMaskChangeAttributes(WIDTH_MASK | STYLE_MASK | COLOR_MASK | LAYER_MASK, go);
+            EGAttachObject(go, ( EObjectP ) this);
+            EMAddGraphicsToModel(ESIModel(), go);
 
-	go =  CreateLine3D(p2);
-	EGWithMaskChangeAttributes(WIDTH_MASK | STYLE_MASK | COLOR_MASK | LAYER_MASK, go);
-	EGAttachObject(go, ( EObjectP ) this);
-	EMAddGraphicsToModel(ESIModel(), go);
-      }
+            go =  CreateLine3D(p2);
+            EGWithMaskChangeAttributes(WIDTH_MASK | STYLE_MASK | COLOR_MASK | LAYER_MASK, go);
+            EGAttachObject(go, ( EObjectP ) this);
+            EMAddGraphicsToModel(ESIModel(), go);
+        }
     }                // end loop over knot spans (irules)
 
-	    this->computeNormal (n, c[1], this->giveNumberOfIntegrationRules()-1);
-	  p2 [ 0 ].x = ( FPNum ) ( cg [ 1 ].at(1) + n.at(1) * s[1] * scale );
-	  p2 [ 0 ].y = ( FPNum ) ( cg [ 1 ].at(2) + n.at(2) * s[1] * scale );
+    this->computeNormal(n, c [ 1 ], this->giveNumberOfIntegrationRules() - 1);
+    p2 [ 0 ].x = ( FPNum ) ( cg [ 1 ].at(1) + n.at(1) * s [ 1 ] * scale );
+    p2 [ 0 ].y = ( FPNum ) ( cg [ 1 ].at(2) + n.at(2) * s [ 1 ] * scale );
 
-	  p2 [ 1 ].x = ( FPNum ) ( cg [ 1 ].at(1) );
-	  p2 [ 1 ].y = ( FPNum ) ( cg [ 1 ].at(2) );
+    p2 [ 1 ].x = ( FPNum ) ( cg [ 1 ].at(1) );
+    p2 [ 1 ].y = ( FPNum ) ( cg [ 1 ].at(2) );
 
-	go =  CreateLine3D(p2);
-	EGWithMaskChangeAttributes(WIDTH_MASK | STYLE_MASK | COLOR_MASK | LAYER_MASK, go);
-	EGAttachObject(go, ( EObjectP ) this);
-	EMAddGraphicsToModel(ESIModel(), go);
- 
+    go =  CreateLine3D(p2);
+    EGWithMaskChangeAttributes(WIDTH_MASK | STYLE_MASK | COLOR_MASK | LAYER_MASK, go);
+    EGAttachObject(go, ( EObjectP ) this);
+    EMAddGraphicsToModel(ESIModel(), go);
 }
 
 
 void
-NURBSBeam3dElementDsg::drawRawGeometry(oofegGraphicContext &gc, TimeStep *tStep)
+NURBSBeam3dElementDsg :: drawRawGeometry(oofegGraphicContext &gc, TimeStep *tStep)
 {
     WCRec p [ 2 ];
     GraphicObj *go;
@@ -1608,36 +1597,35 @@ NURBSBeam3dElementDsg::drawRawGeometry(oofegGraphicContext &gc, TimeStep *tStep)
 
     c [ 0 ].resize(3);
     c [ 1 ].resize(3);
-    cg[ 0 ].resize(3);
-    cg[ 1 ].resize(3);
+    cg [ 0 ].resize(3);
+    cg [ 1 ].resize(3);
 
     // loop over individual integration rules (i.e., knot spans)
-    for ( auto &iRule: integrationRulesArray ) {
-      int i, k, nseg = 20;
+    for ( auto &iRule : integrationRulesArray ) {
+        int i, k, nseg = 20;
         span = iRule->giveKnotSpan();
-	double du = ( knotVector [ 0 ] [ span->at(1) + 1 ] - knotVector [ 0 ] [ span->at(1) ] ) / nseg;
-	for ( i = 1; i <= nseg; i++ ) {
-	  c [ 0 ].at(1) = knotVector [ 0 ] [ span->at(1) ] + du * ( i - 1 );
-	  c [ 1 ].at(1) = knotVector [ 0 ] [ span->at(1) ] + du * i;
-	  for ( k = 0; k < 2; k++ ) {
-	    interp->local2global( cg [ k ], c [ k ], FEIIGAElementGeometryWrapper( this, iRule->giveKnotSpan() ) );
-	    p [ k ].x = ( FPNum ) cg [ k ].at(1);
-	    p [ k ].y = ( FPNum ) cg [ k ].at(2);
-	    p [ k ].z = ( FPNum ) cg [ k ].at(3);
-	  }
-	  go = CreateLine3D(p);
-	  EGWithMaskChangeAttributes(WIDTH_MASK | COLOR_MASK | LAYER_MASK, go);
-	  EGAttachObject(go, ( EObjectP ) this);
-	  EMAddGraphicsToModel(ESIModel(), go);
-	}
+        double du = ( knotVector [ 0 ] [ span->at(1) + 1 ] - knotVector [ 0 ] [ span->at(1) ] ) / nseg;
+        for ( i = 1; i <= nseg; i++ ) {
+            c [ 0 ].at(1) = knotVector [ 0 ] [ span->at(1) ] + du * ( i - 1 );
+            c [ 1 ].at(1) = knotVector [ 0 ] [ span->at(1) ] + du * i;
+            for ( k = 0; k < 2; k++ ) {
+                interp->local2global( cg [ k ], c [ k ], FEIIGAElementGeometryWrapper( this, iRule->giveKnotSpan() ) );
+                p [ k ].x = ( FPNum ) cg [ k ].at(1);
+                p [ k ].y = ( FPNum ) cg [ k ].at(2);
+                p [ k ].z = ( FPNum ) cg [ k ].at(3);
+            }
+            go = CreateLine3D(p);
+            EGWithMaskChangeAttributes(WIDTH_MASK | COLOR_MASK | LAYER_MASK, go);
+            EGAttachObject(go, ( EObjectP ) this);
+            EMAddGraphicsToModel(ESIModel(), go);
+        }
     }
 }
 
 
-void 
-NURBSBeam3dElementDsg::drawDeformedGeometry(oofegGraphicContext &gc, TimeStep *tStep, UnknownType ut) 
+void
+NURBSBeam3dElementDsg :: drawDeformedGeometry(oofegGraphicContext &gc, TimeStep *tStep, UnknownType ut)
 {
-
     WCRec p [ 2 ];
     GraphicObj *go;
     int i, j, k, n, nseg;
@@ -1667,75 +1655,75 @@ NURBSBeam3dElementDsg::drawDeformedGeometry(oofegGraphicContext &gc, TimeStep *t
     const double *const *knotVector = interp->giveKnotVector();
     const IntArray *span;
 
-    this->StructuralElementEvaluator::computeVectorOf(VM_Total, tStep, u);
+    this->StructuralElementEvaluator :: computeVectorOf(VM_Total, tStep, u);
 
     FloatArray c [ 2 ], cg [ 2 ], d, dg;
     dg.resize(3);
     double du;
 
     for ( j = 0; j < 2; j++ ) {
-      c [ j ].resize(3);
-      cg [ j ].resize(3);
+        c [ j ].resize(3);
+        cg [ j ].resize(3);
     }
 
     // loop over individual integration rules (i.e., knot spans)
     for ( int ir = 0; ir < this->giveNumberOfIntegrationRules(); ir++ ) {
-      IntegrationRule *iRule = this->giveIntegrationRule(ir);
-      span = iRule->giveKnotSpan();
-      // divide span locally to get finer geometry rep.
-      du = ( knotVector [ 0 ] [ span->at(1) + 1 ] - knotVector [ 0 ] [ span->at(1) ] ) / nseg;
-      for ( i = 1; i <= nseg; i++ ) {
-	c [ 0 ].at(1) = knotVector [ 0 ] [ span->at(1) ] + du * ( i - 1 );
-	c [ 1 ].at(1) = knotVector [ 0 ] [ span->at(1) ] + du * i;
+        IntegrationRule *iRule = this->giveIntegrationRule(ir);
+        span = iRule->giveKnotSpan();
+        // divide span locally to get finer geometry rep.
+        du = ( knotVector [ 0 ] [ span->at(1) + 1 ] - knotVector [ 0 ] [ span->at(1) ] ) / nseg;
+        for ( i = 1; i <= nseg; i++ ) {
+            c [ 0 ].at(1) = knotVector [ 0 ] [ span->at(1) ] + du * ( i - 1 );
+            c [ 1 ].at(1) = knotVector [ 0 ] [ span->at(1) ] + du * i;
 
-	for ( k = 0; k < 2; k++ ) {
-	  // create a dummy ip's
-	  GaussPoint gp(iRule, 999, c [ k ], 1.0, _3dBeam);
+            for ( k = 0; k < 2; k++ ) {
+                // create a dummy ip's
+                GaussPoint gp(iRule, 999, c [ k ], 1.0, _3dBeam);
 
-	  // compute displacements at gp
-	  this->computeNMatrixAt(N, & gp);
+                // compute displacements at gp
+                this->computeNMatrixAt(N, & gp);
 
-	  // get local code numbers corresponding to ir
-	  this->giveIntegrationElementLocalCodeNumbers(lc, this, gp.giveIntegrationRule());
-	  ur.resize( N.giveNumberOfColumns() );
-	  for ( n = 1; n <= lc.giveSize(); n++ ) {
-	    ur.at(n) = u.at( lc.at(n) );
-	  }
+                // get local code numbers corresponding to ir
+                this->giveIntegrationElementLocalCodeNumbers( lc, this, gp.giveIntegrationRule() );
+                ur.resize( N.giveNumberOfColumns() );
+                for ( n = 1; n <= lc.giveSize(); n++ ) {
+                    ur.at(n) = u.at( lc.at(n) );
+                }
 
-	  // interpolate displacements
-	  d.beProductOf(N, ur);
+                // interpolate displacements
+                d.beProductOf(N, ur);
 
-	  interp->local2global( cg [ k ], c [ k ], FEIIGAElementGeometryWrapper( this, iRule->giveKnotSpan() ) );
+                interp->local2global( cg [ k ], c [ k ], FEIIGAElementGeometryWrapper( this, iRule->giveKnotSpan() ) );
 
-	  this->computeNormal (normal, c[k], iRule->giveKnotSpan()->at(1)  );
+                this->computeNormal( normal, c [ k ], iRule->giveKnotSpan()->at(1) );
 
-	  // edita : todo - transformation of dipls to global  
-	  dg = d;
-	  // dg.at(1) = d.at(1) * normal.at(2) + d.at(2) * normal.at(1);
-	  // dg.at(2) = d.at(1) * normal.at(1) + d.at(2) * normal.at(2);
-	  // interp->local2global( dg , d , FEIIGAElementGeometryWrapper( this, iRule->giveKnotSpan() ) );
-	  // dg.beVectorProductOf(normal, d);
+                // edita : todo - transformation of dipls to global
+                dg = d;
+                // dg.at(1) = d.at(1) * normal.at(2) + d.at(2) * normal.at(1);
+                // dg.at(2) = d.at(1) * normal.at(1) + d.at(2) * normal.at(2);
+                // interp->local2global( dg , d , FEIIGAElementGeometryWrapper( this, iRule->giveKnotSpan() ) );
+                // dg.beVectorProductOf(normal, d);
 
-	  p [ k ].x = ( FPNum ) ( cg [ k ].at(1) + dg.at(1) * defScale );
-	  p [ k ].y = ( FPNum ) ( cg [ k ].at(2) + dg.at(2) * defScale );
-	  p [ k ].z = ( FPNum ) ( cg [ k ].at(3) + dg.at(3) * defScale );
-	}
+                p [ k ].x = ( FPNum ) ( cg [ k ].at(1) + dg.at(1) * defScale );
+                p [ k ].y = ( FPNum ) ( cg [ k ].at(2) + dg.at(2) * defScale );
+                p [ k ].z = ( FPNum ) ( cg [ k ].at(3) + dg.at(3) * defScale );
+            }
 
-	go =  CreateLine3D(p);
-	EGWithMaskChangeAttributes(WIDTH_MASK | STYLE_MASK | COLOR_MASK | LAYER_MASK, go);
-	EGAttachObject(go, ( EObjectP ) this);
-	EMAddGraphicsToModel(ESIModel(), go);
-      }
+            go =  CreateLine3D(p);
+            EGWithMaskChangeAttributes(WIDTH_MASK | STYLE_MASK | COLOR_MASK | LAYER_MASK, go);
+            EGAttachObject(go, ( EObjectP ) this);
+            EMAddGraphicsToModel(ESIModel(), go);
+        }
     }                 // end loop over knot spans (irules)
 }
-  
 
-void 
-NURBSBeam3dElementDsg::drawScalar(oofegGraphicContext &gc, TimeStep *tStep)
+
+void
+NURBSBeam3dElementDsg :: drawScalar(oofegGraphicContext &gc, TimeStep *tStep)
 {
-  WCRec p [ 2 ];
-  WCRec p2 [ 2 ];
-  int indx;
+    WCRec p [ 2 ];
+    WCRec p2 [ 2 ];
+    int indx;
     GraphicObj *go;
     int i, j, k, nseg;
     FloatArray u;
@@ -1765,7 +1753,7 @@ NURBSBeam3dElementDsg::drawScalar(oofegGraphicContext &gc, TimeStep *tStep)
     double scale = gc.getDefScale();
 
 
-    this->StructuralElementEvaluator::computeVectorOf(VM_Total, tStep, u);
+    this->StructuralElementEvaluator :: computeVectorOf(VM_Total, tStep, u);
 
     indx = gc.giveIntVarIndx();
 
@@ -1774,83 +1762,80 @@ NURBSBeam3dElementDsg::drawScalar(oofegGraphicContext &gc, TimeStep *tStep)
     double s [ 2 ];
 
     for ( j = 0; j < 2; j++ ) {
-      c [ j ].resize(3);
-      cg [ j ].resize(3);
+        c [ j ].resize(3);
+        cg [ j ].resize(3);
     }
 
     // loop over individual integration rules (i.e., knot spans)
     for ( int ir = 0; ir < this->giveNumberOfIntegrationRules(); ir++ ) {
-      IntegrationRule *iRule = this->giveIntegrationRule(ir);
-      span = iRule->giveKnotSpan();
-      // divide span locally to get finer geometry rep.
-      du = ( knotVector [ 0 ] [ span->at(1) + 1 ] - knotVector [ 0 ] [ span->at(1) ] ) / nseg;
-      for ( i = 1; i <= nseg; i++ ) {
-	c [ 0 ].at(1) = knotVector [ 0 ] [ span->at(1) ] + du * ( i - 1 );
-	c [ 1 ].at(1) = knotVector [ 0 ] [ span->at(1) ] + du * i;
+        IntegrationRule *iRule = this->giveIntegrationRule(ir);
+        span = iRule->giveKnotSpan();
+        // divide span locally to get finer geometry rep.
+        du = ( knotVector [ 0 ] [ span->at(1) + 1 ] - knotVector [ 0 ] [ span->at(1) ] ) / nseg;
+        for ( i = 1; i <= nseg; i++ ) {
+            c [ 0 ].at(1) = knotVector [ 0 ] [ span->at(1) ] + du * ( i - 1 );
+            c [ 1 ].at(1) = knotVector [ 0 ] [ span->at(1) ] + du * i;
 
-	for ( k = 0; k < 2; k++ ) {
-	  // create a dummy ip's
-	  GaussPoint gp(iRule, 999, c [ k ], 1.0, _3dBeam);
-	  FloatArray strain;
-	  if ((gc.giveIntVarType() == IST_StrainTensor)){
-	    // copy to array of size 1x6
-	    this->computeStrainVector(val, & gp, tStep, u);
-	  }
-	    else if (gc.giveIntVarType() == IST_StressTensor) {
-		// copy to array of size 1x6
-		this->computeStrainVector(strain, & gp, tStep, u);
-		this->computeStressVector(val, strain, & gp, tStep);
-	    } else{
-		OOFEM_ERROR ("Internal Variable Type not recognized");
-	    }
-	  s [ k ] = val.at(indx);
-	  fprintf (stderr, " %e",  s [ k ]);
-	  
-	  interp->local2global( cg [ k ], c [ k ], FEIIGAElementGeometryWrapper( this, iRule->giveKnotSpan() ) );
-	  this->computeNormal (n, c[k], iRule->giveKnotSpan()->at(1) );
-	  //n = {0, 1, 0};
-	  p [ k ].x = ( FPNum ) ( cg [ k ].at(1) + n.at(1) * s[k] * scale );
-	  p [ k ].y = ( FPNum ) ( cg [ k ].at(2) + n.at(2) * s[k] * scale );
-	  p [ k ].z = ( FPNum ) ( cg [ k ].at(3) + n.at(3) * s[k] * scale );
+            for ( k = 0; k < 2; k++ ) {
+                // create a dummy ip's
+                GaussPoint gp(iRule, 999, c [ k ], 1.0, _3dBeam);
+                FloatArray strain;
+                if ( ( gc.giveIntVarType() == IST_StrainTensor ) ) {
+                    // copy to array of size 1x6
+                    this->computeStrainVector(val, & gp, tStep, u);
+                } else if ( gc.giveIntVarType() == IST_StressTensor ) {
+                    // copy to array of size 1x6
+                    this->computeStrainVector(strain, & gp, tStep, u);
+                    this->computeStressVector(val, strain, & gp, tStep);
+                } else {
+                    OOFEM_ERROR("Internal Variable Type not recognized");
+                }
+                s [ k ] = val.at(indx);
+                fprintf(stderr, " %e",  s [ k ]);
 
-	  p2 [ k ].x = ( FPNum ) ( cg [ 0 ].at(1) + (1-k) * n.at(1) * s[k] * scale );
-	  p2 [ k ].y = ( FPNum ) ( cg [ 0 ].at(2) + (1-k) * n.at(2) * s[k] * scale );
-	  p2 [ k ].z = ( FPNum ) ( cg [ 0 ].at(3) + (1-k) * n.at(3) * s[k] * scale );
+                interp->local2global( cg [ k ], c [ k ], FEIIGAElementGeometryWrapper( this, iRule->giveKnotSpan() ) );
+                this->computeNormal( n, c [ k ], iRule->giveKnotSpan()->at(1) );
+                //n = {0, 1, 0};
+                p [ k ].x = ( FPNum ) ( cg [ k ].at(1) + n.at(1) * s [ k ] * scale );
+                p [ k ].y = ( FPNum ) ( cg [ k ].at(2) + n.at(2) * s [ k ] * scale );
+                p [ k ].z = ( FPNum ) ( cg [ k ].at(3) + n.at(3) * s [ k ] * scale );
 
-	}
+                p2 [ k ].x = ( FPNum ) ( cg [ 0 ].at(1) + ( 1 - k ) * n.at(1) * s [ k ] * scale );
+                p2 [ k ].y = ( FPNum ) ( cg [ 0 ].at(2) + ( 1 - k ) * n.at(2) * s [ k ] * scale );
+                p2 [ k ].z = ( FPNum ) ( cg [ 0 ].at(3) + ( 1 - k ) * n.at(3) * s [ k ] * scale );
+            }
 
-	go =  CreateLine3D(p);
-	EGWithMaskChangeAttributes(WIDTH_MASK | STYLE_MASK | COLOR_MASK | LAYER_MASK, go);
-	EGAttachObject(go, ( EObjectP ) this);
-	EMAddGraphicsToModel(ESIModel(), go);
+            go =  CreateLine3D(p);
+            EGWithMaskChangeAttributes(WIDTH_MASK | STYLE_MASK | COLOR_MASK | LAYER_MASK, go);
+            EGAttachObject(go, ( EObjectP ) this);
+            EMAddGraphicsToModel(ESIModel(), go);
 
-	go =  CreateLine3D(p2);
-	EGWithMaskChangeAttributes(WIDTH_MASK | STYLE_MASK | COLOR_MASK | LAYER_MASK, go);
-	EGAttachObject(go, ( EObjectP ) this);
-	EMAddGraphicsToModel(ESIModel(), go);
-      }
+            go =  CreateLine3D(p2);
+            EGWithMaskChangeAttributes(WIDTH_MASK | STYLE_MASK | COLOR_MASK | LAYER_MASK, go);
+            EGAttachObject(go, ( EObjectP ) this);
+            EMAddGraphicsToModel(ESIModel(), go);
+        }
     }                // end loop over knot spans (irules)
 
-	    this->computeNormal (n, c[1], this->giveNumberOfIntegrationRules()-1);
-	  p2 [ 0 ].x = ( FPNum ) ( cg [ 1 ].at(1) + n.at(1) * s[1] * scale );
-	  p2 [ 0 ].y = ( FPNum ) ( cg [ 1 ].at(2) + n.at(2) * s[1] * scale );
-	  p2 [ 0 ].z = ( FPNum ) ( cg [ 1 ].at(3) + n.at(3) * s[1] * scale );
+    this->computeNormal(n, c [ 1 ], this->giveNumberOfIntegrationRules() - 1);
+    p2 [ 0 ].x = ( FPNum ) ( cg [ 1 ].at(1) + n.at(1) * s [ 1 ] * scale );
+    p2 [ 0 ].y = ( FPNum ) ( cg [ 1 ].at(2) + n.at(2) * s [ 1 ] * scale );
+    p2 [ 0 ].z = ( FPNum ) ( cg [ 1 ].at(3) + n.at(3) * s [ 1 ] * scale );
 
-	  p2 [ 1 ].x = ( FPNum ) ( cg [ 1 ].at(1) );
-	  p2 [ 1 ].y = ( FPNum ) ( cg [ 1 ].at(2) );
-	  p2 [ 1 ].z = ( FPNum ) ( cg [ 1 ].at(3) );
+    p2 [ 1 ].x = ( FPNum ) ( cg [ 1 ].at(1) );
+    p2 [ 1 ].y = ( FPNum ) ( cg [ 1 ].at(2) );
+    p2 [ 1 ].z = ( FPNum ) ( cg [ 1 ].at(3) );
 
-	go =  CreateLine3D(p2);
-	EGWithMaskChangeAttributes(WIDTH_MASK | STYLE_MASK | COLOR_MASK | LAYER_MASK, go);
-	EGAttachObject(go, ( EObjectP ) this);
-	EMAddGraphicsToModel(ESIModel(), go);
- 
+    go =  CreateLine3D(p2);
+    EGWithMaskChangeAttributes(WIDTH_MASK | STYLE_MASK | COLOR_MASK | LAYER_MASK, go);
+    EGAttachObject(go, ( EObjectP ) this);
+    EMAddGraphicsToModel(ESIModel(), go);
 }
 
 
 
 void
-NURBSBeam3dElementBbar::drawRawGeometry(oofegGraphicContext &gc, TimeStep *tStep)
+NURBSBeam3dElementBbar :: drawRawGeometry(oofegGraphicContext &gc, TimeStep *tStep)
 {
     WCRec p [ 2 ];
     GraphicObj *go;
@@ -1870,36 +1855,35 @@ NURBSBeam3dElementBbar::drawRawGeometry(oofegGraphicContext &gc, TimeStep *tStep
 
     c [ 0 ].resize(3);
     c [ 1 ].resize(3);
-    cg[ 0 ].resize(3);
-    cg[ 1 ].resize(3);
+    cg [ 0 ].resize(3);
+    cg [ 1 ].resize(3);
 
     // loop over individual integration rules (i.e., knot spans)
-    for ( auto &iRule: integrationRulesArray ) {
-      int i, k, nseg = 20;
+    for ( auto &iRule : integrationRulesArray ) {
+        int i, k, nseg = 20;
         span = iRule->giveKnotSpan();
-	double du = ( knotVector [ 0 ] [ span->at(1) + 1 ] - knotVector [ 0 ] [ span->at(1) ] ) / nseg;
-	for ( i = 1; i <= nseg; i++ ) {
-	  c [ 0 ].at(1) = knotVector [ 0 ] [ span->at(1) ] + du * ( i - 1 );
-	  c [ 1 ].at(1) = knotVector [ 0 ] [ span->at(1) ] + du * i;
-	  for ( k = 0; k < 2; k++ ) {
-	    interp->local2global( cg [ k ], c [ k ], FEIIGAElementGeometryWrapper( this, iRule->giveKnotSpan() ) );
-	    p [ k ].x = ( FPNum ) cg [ k ].at(1);
-	    p [ k ].y = ( FPNum ) cg [ k ].at(2);
-	    p [ k ].z = ( FPNum ) cg [ k ].at(3);
-	  }
-	  go = CreateLine3D(p);
-	  EGWithMaskChangeAttributes(WIDTH_MASK | COLOR_MASK | LAYER_MASK, go);
-	  EGAttachObject(go, ( EObjectP ) this);
-	  EMAddGraphicsToModel(ESIModel(), go);
-	}
+        double du = ( knotVector [ 0 ] [ span->at(1) + 1 ] - knotVector [ 0 ] [ span->at(1) ] ) / nseg;
+        for ( i = 1; i <= nseg; i++ ) {
+            c [ 0 ].at(1) = knotVector [ 0 ] [ span->at(1) ] + du * ( i - 1 );
+            c [ 1 ].at(1) = knotVector [ 0 ] [ span->at(1) ] + du * i;
+            for ( k = 0; k < 2; k++ ) {
+                interp->local2global( cg [ k ], c [ k ], FEIIGAElementGeometryWrapper( this, iRule->giveKnotSpan() ) );
+                p [ k ].x = ( FPNum ) cg [ k ].at(1);
+                p [ k ].y = ( FPNum ) cg [ k ].at(2);
+                p [ k ].z = ( FPNum ) cg [ k ].at(3);
+            }
+            go = CreateLine3D(p);
+            EGWithMaskChangeAttributes(WIDTH_MASK | COLOR_MASK | LAYER_MASK, go);
+            EGAttachObject(go, ( EObjectP ) this);
+            EMAddGraphicsToModel(ESIModel(), go);
+        }
     }
 }
 
 
-void 
-NURBSBeam3dElementBbar::drawDeformedGeometry(oofegGraphicContext &gc, TimeStep *tStep, UnknownType ut) 
+void
+NURBSBeam3dElementBbar :: drawDeformedGeometry(oofegGraphicContext &gc, TimeStep *tStep, UnknownType ut)
 {
-
     WCRec p [ 2 ];
     GraphicObj *go;
     int i, j, k, n, nseg;
@@ -1929,75 +1913,75 @@ NURBSBeam3dElementBbar::drawDeformedGeometry(oofegGraphicContext &gc, TimeStep *
     const double *const *knotVector = interp->giveKnotVector();
     const IntArray *span;
 
-    this->StructuralElementEvaluator::computeVectorOf(VM_Total, tStep, u);
+    this->StructuralElementEvaluator :: computeVectorOf(VM_Total, tStep, u);
 
     FloatArray c [ 2 ], cg [ 2 ], d, dg;
     dg.resize(3);
     double du;
 
     for ( j = 0; j < 2; j++ ) {
-      c [ j ].resize(3);
-      cg [ j ].resize(3);
+        c [ j ].resize(3);
+        cg [ j ].resize(3);
     }
 
     // loop over individual integration rules (i.e., knot spans)
     for ( int ir = 0; ir < this->giveNumberOfIntegrationRules(); ir++ ) {
-      IntegrationRule *iRule = this->giveIntegrationRule(ir);
-      span = iRule->giveKnotSpan();
-      // divide span locally to get finer geometry rep.
-      du = ( knotVector [ 0 ] [ span->at(1) + 1 ] - knotVector [ 0 ] [ span->at(1) ] ) / nseg;
-      for ( i = 1; i <= nseg; i++ ) {
-	c [ 0 ].at(1) = knotVector [ 0 ] [ span->at(1) ] + du * ( i - 1 );
-	c [ 1 ].at(1) = knotVector [ 0 ] [ span->at(1) ] + du * i;
+        IntegrationRule *iRule = this->giveIntegrationRule(ir);
+        span = iRule->giveKnotSpan();
+        // divide span locally to get finer geometry rep.
+        du = ( knotVector [ 0 ] [ span->at(1) + 1 ] - knotVector [ 0 ] [ span->at(1) ] ) / nseg;
+        for ( i = 1; i <= nseg; i++ ) {
+            c [ 0 ].at(1) = knotVector [ 0 ] [ span->at(1) ] + du * ( i - 1 );
+            c [ 1 ].at(1) = knotVector [ 0 ] [ span->at(1) ] + du * i;
 
-	for ( k = 0; k < 2; k++ ) {
-	  // create a dummy ip's
-	  GaussPoint gp(iRule, 999, c [ k ], 1.0, _3dBeam);
+            for ( k = 0; k < 2; k++ ) {
+                // create a dummy ip's
+                GaussPoint gp(iRule, 999, c [ k ], 1.0, _3dBeam);
 
-	  // compute displacements at gp
-	  this->computeNMatrixAt(N, & gp);
+                // compute displacements at gp
+                this->computeNMatrixAt(N, & gp);
 
-	  // get local code numbers corresponding to ir
-	  this->giveIntegrationElementLocalCodeNumbers(lc, this, gp.giveIntegrationRule());
-	  ur.resize( N.giveNumberOfColumns() );
-	  for ( n = 1; n <= lc.giveSize(); n++ ) {
-	    ur.at(n) = u.at( lc.at(n) );
-	  }
+                // get local code numbers corresponding to ir
+                this->giveIntegrationElementLocalCodeNumbers( lc, this, gp.giveIntegrationRule() );
+                ur.resize( N.giveNumberOfColumns() );
+                for ( n = 1; n <= lc.giveSize(); n++ ) {
+                    ur.at(n) = u.at( lc.at(n) );
+                }
 
-	  // interpolate displacements
-	  d.beProductOf(N, ur);
+                // interpolate displacements
+                d.beProductOf(N, ur);
 
-	  interp->local2global( cg [ k ], c [ k ], FEIIGAElementGeometryWrapper( this, iRule->giveKnotSpan() ) );
+                interp->local2global( cg [ k ], c [ k ], FEIIGAElementGeometryWrapper( this, iRule->giveKnotSpan() ) );
 
-	  this->computeNormal (normal, c[k], iRule->giveKnotSpan()->at(1)  );
+                this->computeNormal( normal, c [ k ], iRule->giveKnotSpan()->at(1) );
 
-	  // edita : todo - transformation of dipls to global  
-	  dg = d;
-	  // dg.at(1) = d.at(1) * normal.at(2) + d.at(2) * normal.at(1);
-	  // dg.at(2) = d.at(1) * normal.at(1) + d.at(2) * normal.at(2);
-	  // interp->local2global( dg , d , FEIIGAElementGeometryWrapper( this, iRule->giveKnotSpan() ) );
-	  // dg.beVectorProductOf(normal, d);
+                // edita : todo - transformation of dipls to global
+                dg = d;
+                // dg.at(1) = d.at(1) * normal.at(2) + d.at(2) * normal.at(1);
+                // dg.at(2) = d.at(1) * normal.at(1) + d.at(2) * normal.at(2);
+                // interp->local2global( dg , d , FEIIGAElementGeometryWrapper( this, iRule->giveKnotSpan() ) );
+                // dg.beVectorProductOf(normal, d);
 
-	  p [ k ].x = ( FPNum ) ( cg [ k ].at(1) + dg.at(1) * defScale );
-	  p [ k ].y = ( FPNum ) ( cg [ k ].at(2) + dg.at(2) * defScale );
-	  p [ k ].z = ( FPNum ) ( cg [ k ].at(3) + dg.at(3) * defScale );
-	}
+                p [ k ].x = ( FPNum ) ( cg [ k ].at(1) + dg.at(1) * defScale );
+                p [ k ].y = ( FPNum ) ( cg [ k ].at(2) + dg.at(2) * defScale );
+                p [ k ].z = ( FPNum ) ( cg [ k ].at(3) + dg.at(3) * defScale );
+            }
 
-	go =  CreateLine3D(p);
-	EGWithMaskChangeAttributes(WIDTH_MASK | STYLE_MASK | COLOR_MASK | LAYER_MASK, go);
-	EGAttachObject(go, ( EObjectP ) this);
-	EMAddGraphicsToModel(ESIModel(), go);
-      }
+            go =  CreateLine3D(p);
+            EGWithMaskChangeAttributes(WIDTH_MASK | STYLE_MASK | COLOR_MASK | LAYER_MASK, go);
+            EGAttachObject(go, ( EObjectP ) this);
+            EMAddGraphicsToModel(ESIModel(), go);
+        }
     }                 // end loop over knot spans (irules)
 }
-  
 
-void 
-NURBSBeam3dElementBbar::drawScalar(oofegGraphicContext &gc, TimeStep *tStep)
+
+void
+NURBSBeam3dElementBbar :: drawScalar(oofegGraphicContext &gc, TimeStep *tStep)
 {
-  WCRec p [ 2 ];
-  WCRec p2 [ 2 ];
-  int indx;
+    WCRec p [ 2 ];
+    WCRec p2 [ 2 ];
+    int indx;
     GraphicObj *go;
     int i, j, k, nseg;
     FloatArray u;
@@ -2027,7 +2011,7 @@ NURBSBeam3dElementBbar::drawScalar(oofegGraphicContext &gc, TimeStep *tStep)
     double scale = gc.getDefScale();
 
 
-    this->StructuralElementEvaluator::computeVectorOf(VM_Total, tStep, u);
+    this->StructuralElementEvaluator :: computeVectorOf(VM_Total, tStep, u);
 
     indx = gc.giveIntVarIndx();
 
@@ -2036,77 +2020,74 @@ NURBSBeam3dElementBbar::drawScalar(oofegGraphicContext &gc, TimeStep *tStep)
     double s [ 2 ];
 
     for ( j = 0; j < 2; j++ ) {
-      c [ j ].resize(3);
-      cg [ j ].resize(3);
+        c [ j ].resize(3);
+        cg [ j ].resize(3);
     }
 
     // loop over individual integration rules (i.e., knot spans)
     for ( int ir = 0; ir < this->giveNumberOfIntegrationRules(); ir++ ) {
-      IntegrationRule *iRule = this->giveIntegrationRule(ir);
-      span = iRule->giveKnotSpan();
-      // divide span locally to get finer geometry rep.
-      du = ( knotVector [ 0 ] [ span->at(1) + 1 ] - knotVector [ 0 ] [ span->at(1) ] ) / nseg;
-      for ( i = 1; i <= nseg; i++ ) {
-	c [ 0 ].at(1) = knotVector [ 0 ] [ span->at(1) ] + du * ( i - 1 );
-	c [ 1 ].at(1) = knotVector [ 0 ] [ span->at(1) ] + du * i;
+        IntegrationRule *iRule = this->giveIntegrationRule(ir);
+        span = iRule->giveKnotSpan();
+        // divide span locally to get finer geometry rep.
+        du = ( knotVector [ 0 ] [ span->at(1) + 1 ] - knotVector [ 0 ] [ span->at(1) ] ) / nseg;
+        for ( i = 1; i <= nseg; i++ ) {
+            c [ 0 ].at(1) = knotVector [ 0 ] [ span->at(1) ] + du * ( i - 1 );
+            c [ 1 ].at(1) = knotVector [ 0 ] [ span->at(1) ] + du * i;
 
-	for ( k = 0; k < 2; k++ ) {
-	  // create a dummy ip's
-	  GaussPoint gp(iRule, 999, c [ k ], 1.0, _3dBeam);
-	  FloatArray strain;
-	  if ((gc.giveIntVarType() == IST_StrainTensor)){
-	    // copy to array of size 1x6
-	    this->computeStrainVector(val, & gp, tStep, u);
-	  }
-	    else if (gc.giveIntVarType() == IST_StressTensor) {
-		// copy to array of size 1x6
-		this->computeStrainVector(strain, & gp, tStep, u);
-		this->computeStressVector(val, strain, & gp, tStep);
-	    } else{
-		OOFEM_ERROR ("Internal Variable Type not recognized");
-	    }
-	  s [ k ] = val.at(indx);
-	  fprintf (stderr, " %e",  s [ k ]);
-	  
-	  interp->local2global( cg [ k ], c [ k ], FEIIGAElementGeometryWrapper( this, iRule->giveKnotSpan() ) );
-	  this->computeNormal (n, c[k], iRule->giveKnotSpan()->at(1) );
-	  //n = {0, 1, 0};
-	  p [ k ].x = ( FPNum ) ( cg [ k ].at(1) + n.at(1) * s[k] * scale );
-	  p [ k ].y = ( FPNum ) ( cg [ k ].at(2) + n.at(2) * s[k] * scale );
-	  p [ k ].z = ( FPNum ) ( cg [ k ].at(3) + n.at(3) * s[k] * scale );
+            for ( k = 0; k < 2; k++ ) {
+                // create a dummy ip's
+                GaussPoint gp(iRule, 999, c [ k ], 1.0, _3dBeam);
+                FloatArray strain;
+                if ( ( gc.giveIntVarType() == IST_StrainTensor ) ) {
+                    // copy to array of size 1x6
+                    this->computeStrainVector(val, & gp, tStep, u);
+                } else if ( gc.giveIntVarType() == IST_StressTensor ) {
+                    // copy to array of size 1x6
+                    this->computeStrainVector(strain, & gp, tStep, u);
+                    this->computeStressVector(val, strain, & gp, tStep);
+                } else {
+                    OOFEM_ERROR("Internal Variable Type not recognized");
+                }
+                s [ k ] = val.at(indx);
+                fprintf(stderr, " %e",  s [ k ]);
 
-	  p2 [ k ].x = ( FPNum ) ( cg [ 0 ].at(1) + (1-k) * n.at(1) * s[k] * scale );
-	  p2 [ k ].y = ( FPNum ) ( cg [ 0 ].at(2) + (1-k) * n.at(2) * s[k] * scale );
-	  p2 [ k ].z = ( FPNum ) ( cg [ 0 ].at(3) + (1-k) * n.at(3) * s[k] * scale );
+                interp->local2global( cg [ k ], c [ k ], FEIIGAElementGeometryWrapper( this, iRule->giveKnotSpan() ) );
+                this->computeNormal( n, c [ k ], iRule->giveKnotSpan()->at(1) );
+                //n = {0, 1, 0};
+                p [ k ].x = ( FPNum ) ( cg [ k ].at(1) + n.at(1) * s [ k ] * scale );
+                p [ k ].y = ( FPNum ) ( cg [ k ].at(2) + n.at(2) * s [ k ] * scale );
+                p [ k ].z = ( FPNum ) ( cg [ k ].at(3) + n.at(3) * s [ k ] * scale );
 
-	}
+                p2 [ k ].x = ( FPNum ) ( cg [ 0 ].at(1) + ( 1 - k ) * n.at(1) * s [ k ] * scale );
+                p2 [ k ].y = ( FPNum ) ( cg [ 0 ].at(2) + ( 1 - k ) * n.at(2) * s [ k ] * scale );
+                p2 [ k ].z = ( FPNum ) ( cg [ 0 ].at(3) + ( 1 - k ) * n.at(3) * s [ k ] * scale );
+            }
 
-	go =  CreateLine3D(p);
-	EGWithMaskChangeAttributes(WIDTH_MASK | STYLE_MASK | COLOR_MASK | LAYER_MASK, go);
-	EGAttachObject(go, ( EObjectP ) this);
-	EMAddGraphicsToModel(ESIModel(), go);
+            go =  CreateLine3D(p);
+            EGWithMaskChangeAttributes(WIDTH_MASK | STYLE_MASK | COLOR_MASK | LAYER_MASK, go);
+            EGAttachObject(go, ( EObjectP ) this);
+            EMAddGraphicsToModel(ESIModel(), go);
 
-	go =  CreateLine3D(p2);
-	EGWithMaskChangeAttributes(WIDTH_MASK | STYLE_MASK | COLOR_MASK | LAYER_MASK, go);
-	EGAttachObject(go, ( EObjectP ) this);
-	EMAddGraphicsToModel(ESIModel(), go);
-      }
+            go =  CreateLine3D(p2);
+            EGWithMaskChangeAttributes(WIDTH_MASK | STYLE_MASK | COLOR_MASK | LAYER_MASK, go);
+            EGAttachObject(go, ( EObjectP ) this);
+            EMAddGraphicsToModel(ESIModel(), go);
+        }
     }                // end loop over knot spans (irules)
 
-	    this->computeNormal (n, c[1], this->giveNumberOfIntegrationRules()-1);
-	  p2 [ 0 ].x = ( FPNum ) ( cg [ 1 ].at(1) + n.at(1) * s[1] * scale );
-	  p2 [ 0 ].y = ( FPNum ) ( cg [ 1 ].at(2) + n.at(2) * s[1] * scale );
-	  p2 [ 0 ].z = ( FPNum ) ( cg [ 1 ].at(3) + n.at(3) * s[1] * scale );
+    this->computeNormal(n, c [ 1 ], this->giveNumberOfIntegrationRules() - 1);
+    p2 [ 0 ].x = ( FPNum ) ( cg [ 1 ].at(1) + n.at(1) * s [ 1 ] * scale );
+    p2 [ 0 ].y = ( FPNum ) ( cg [ 1 ].at(2) + n.at(2) * s [ 1 ] * scale );
+    p2 [ 0 ].z = ( FPNum ) ( cg [ 1 ].at(3) + n.at(3) * s [ 1 ] * scale );
 
-	  p2 [ 1 ].x = ( FPNum ) ( cg [ 1 ].at(1) );
-	  p2 [ 1 ].y = ( FPNum ) ( cg [ 1 ].at(2) );
-	  p2 [ 1 ].z = ( FPNum ) ( cg [ 1 ].at(3) );
+    p2 [ 1 ].x = ( FPNum ) ( cg [ 1 ].at(1) );
+    p2 [ 1 ].y = ( FPNum ) ( cg [ 1 ].at(2) );
+    p2 [ 1 ].z = ( FPNum ) ( cg [ 1 ].at(3) );
 
-	go =  CreateLine3D(p2);
-	EGWithMaskChangeAttributes(WIDTH_MASK | STYLE_MASK | COLOR_MASK | LAYER_MASK, go);
-	EGAttachObject(go, ( EObjectP ) this);
-	EMAddGraphicsToModel(ESIModel(), go);
- 
+    go =  CreateLine3D(p2);
+    EGWithMaskChangeAttributes(WIDTH_MASK | STYLE_MASK | COLOR_MASK | LAYER_MASK, go);
+    EGAttachObject(go, ( EObjectP ) this);
+    EMAddGraphicsToModel(ESIModel(), go);
 }
 
 #endif

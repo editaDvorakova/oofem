@@ -76,7 +76,7 @@ void NURBSInterpolationLine2d :: evalN(FloatArray &answer, const FloatArray &lco
         uind = span(0) - degree [ 0 ];
         ind = uind + 1;
         for ( k = 0; k <= degree [ 0 ]; k++ ) {
-            answer.at(c++) = val = N [ 0 ](k) * cellgeo.giveVertexCoordinates(ind + k)->at(nsd+1);       // Nu*w
+            answer.at(c++) = val = N [ 0 ](k) * cellgeo.giveVertexCoordinates(ind + k)->at(nsd + 1);       // Nu*w
             sum += val;
         }
     } else {
@@ -93,7 +93,7 @@ void NURBSInterpolationLine2d :: evalN(FloatArray &answer, const FloatArray &lco
 }
 
 
-     
+
 
 double NURBSInterpolationLine2d :: giveTransformationJacobian(const FloatArray &lcoords, const FEICellGeometry &cellgeo)
 {
@@ -143,9 +143,9 @@ double NURBSInterpolationLine2d :: giveTransformationJacobian(const FloatArray &
         ind = uind + 1;
         for ( k = 0; k <= degree [ 0 ]; k++ ) {
             vertexCoordsPtr = cellgeo.giveVertexCoordinates(ind + k);
-            w = vertexCoordsPtr->at(nsd+1);
+            w = vertexCoordsPtr->at(nsd + 1);
             Aders [ 0 ](0) += ders [ 0 ](0, k) * vertexCoordsPtr->at(1) * w;   // xw=sum(Nu*x*w)
-	    Aders [ 1 ](0) += ders [ 0 ](0, k) * vertexCoordsPtr->at(2) * w;   // yw=sum(Nu*y*w)
+            Aders [ 1 ](0) += ders [ 0 ](0, k) * vertexCoordsPtr->at(2) * w;   // yw=sum(Nu*y*w)
             wders(0)    += ders [ 0 ](0, k) * w;                               // w=sum(Nu*w)
 
             Aders [ 0 ](1) += ders [ 0 ](1, k) * vertexCoordsPtr->at(1) * w;   // dxw/du=sum(dNu/du*x*w)
@@ -159,14 +159,14 @@ double NURBSInterpolationLine2d :: giveTransformationJacobian(const FloatArray &
         jacobian(0, 0) = ( Aders [ 0 ](1) - wders(1) * Aders [ 0 ](0) / weight ) / weight; // dx/du
         jacobian(1, 1) = ( Aders [ 1 ](1) - wders(1) * Aders [ 1 ](0) / weight ) / weight; // dy/du
     }  else {
-      OOFEM_ERROR("giveTransformationJacobianMatrix not implemented for fsd = %d", fsd);
+        OOFEM_ERROR("giveTransformationJacobianMatrix not implemented for fsd = %d", fsd);
     }
 
     delete [] ders;
     delete [] Aders;
 
 
-    Jacob = sqrt(jacobian(0,0)*jacobian(0,0) + jacobian(1,1)*jacobian(1,1));
+    Jacob = sqrt( jacobian(0, 0) * jacobian(0, 0) + jacobian(1, 1) * jacobian(1, 1) );
 
     if ( fabs(Jacob) < 1.0e-10 ) {
         OOFEM_ERROR("giveTransformationJacobianMatrix - zero Jacobian");
@@ -215,7 +215,7 @@ void NURBSInterpolationLine2d :: local2global(FloatArray &answer, const FloatArr
         ind = uind + 1;
         for ( k = 0; k <= degree [ 0 ]; k++ ) {
             vertexCoordsPtr = cellgeo.giveVertexCoordinates(ind + k);
-            w = vertexCoordsPtr->at(nsd+1);
+            w = vertexCoordsPtr->at(nsd + 1);
             answer(0) += N [ 0 ](k) * vertexCoordsPtr->at(1) * w;       // xw=sum(Nu*x*w)
             answer(1) += N [ 0 ](k) * vertexCoordsPtr->at(2) * w;       // xw=sum(Nu*x*w)
             weight    += N [ 0 ](k) * w;                                // w=sum(Nu*w)
@@ -260,7 +260,7 @@ double NURBSInterpolationLine2d :: evaldNdx(FloatMatrix &answer, const FloatArra
     }
 
     count = giveNumberOfKnotSpanBasisFunctions(span);
-    answer.resize(count, fsd+1);
+    answer.resize(count, fsd + 1);
 
 
     FloatArray *Aders = new FloatArray [ 3 ];
@@ -279,7 +279,7 @@ double NURBSInterpolationLine2d :: evaldNdx(FloatMatrix &answer, const FloatArra
         ind = uind + 1;
         for ( k = 0; k <= degree [ 0 ]; k++ ) {
             vertexCoordsPtr = cellgeo.giveVertexCoordinates(ind + k);
-            w = vertexCoordsPtr->at(nsd+1);
+            w = vertexCoordsPtr->at(nsd + 1);
 
             Aders [ 0 ](0) += ders [ 0 ](0, k) * vertexCoordsPtr->at(1) * w;   // xw=sum(Nu*x*w)
             Aders [ 1 ](0) += ders [ 0 ](0, k) * vertexCoordsPtr->at(2) * w;   // yw=sum(Nu*y*w)
@@ -298,42 +298,42 @@ double NURBSInterpolationLine2d :: evaldNdx(FloatMatrix &answer, const FloatArra
 
         // calculation of jacobian matrix according to Eq 4.7
         jacobian(0, 0) = ( Aders [ 0 ](1) - wders(1) * Aders [ 0 ](0) / weight ) / weight; // dx/du
-	jacobian(1,1) =  ( Aders [ 1 ](1) - wders(1) * Aders [ 1 ](0) / weight ) / weight; // dx/du
+        jacobian(1, 1) =  ( Aders [ 1 ](1) - wders(1) * Aders [ 1 ](0) / weight ) / weight; // dx/du
 
-	Jacob = sqrt(jacobian(0,0)*jacobian(0,0) + jacobian(1,1)*jacobian(1,1));
+        Jacob = sqrt( jacobian(0, 0) * jacobian(0, 0) + jacobian(1, 1) * jacobian(1, 1) );
         //Jacob = jacobian.giveDeterminant();
 
         //calculation of derivatives of NURBS basis functions with respect to local parameters is not covered by NURBS book
         product = weight * weight;
         ind = uind + 1;
         /*
-	cnt = 0;
+         * cnt = 0;
+         * ind = uind + 1;
+         * for ( k = 0; k <= degree [ 0 ]; k++ ) {
+         *  w = cellgeo.giveVertexCoordinates(ind + k)->at(nsd+1);
+         *  // [dNu/du*w*sum(Nu*w) - Nu*w*sum(dNu/du*w)] / [J*sum(Nu*w)^2]
+         *  answer(cnt, 0) = (ders [ 0 ](1, k) * w * weight - ders [ 0 ](0, k) * w * wders(1)) / product;
+         *  answer(cnt, 1) = (ders [ 0 ](2, k) * w * weight - ( 2 * ders [ 0 ](1, k) * w * wders(1) + ders [ 0 ](1, k) * w * wders(2) )) / product;
+         *  // edita: matlab
+         *  // Rdkk(i) = (((Ndkk(i)*We(i)*w + Ndk(i)*We(i)*wdk)*w^2 - Ndk(i)*We(i)*w*2*w*wdk) - ((Ndk(i)*We(i)*wdk + N(i)*We(i)*wdkk)*w^2 - N(i)*We(i)*wdk*2*w*wdk))/w^4;
+         *  cnt++;
+         *  }*/
+        cnt = 0;
         ind = uind + 1;
         for ( k = 0; k <= degree [ 0 ]; k++ ) {
-            w = cellgeo.giveVertexCoordinates(ind + k)->at(nsd+1);
+            w = cellgeo.giveVertexCoordinates(ind + k)->at(nsd + 1);
             // [dNu/du*w*sum(Nu*w) - Nu*w*sum(dNu/du*w)] / [J*sum(Nu*w)^2]
-            answer(cnt, 0) = (ders [ 0 ](1, k) * w * weight - ders [ 0 ](0, k) * w * wders(1)) / product; 
-            answer(cnt, 1) = (ders [ 0 ](2, k) * w * weight - ( 2 * ders [ 0 ](1, k) * w * wders(1) + ders [ 0 ](1, k) * w * wders(2) )) / product; 
-	    // edita: matlab 
-	    // Rdkk(i) = (((Ndkk(i)*We(i)*w + Ndk(i)*We(i)*wdk)*w^2 - Ndk(i)*We(i)*w*2*w*wdk) - ((Ndk(i)*We(i)*wdk + N(i)*We(i)*wdkk)*w^2 - N(i)*We(i)*wdk*2*w*wdk))/w^4;
+            answer(cnt, 0) = ( ders [ 0 ](1, k) * w * weight - ders [ 0 ](0, k) * w * wders(1) ) / product;
+            answer(cnt, 1) = ( ders [ 0 ](2, k) * w * weight - ( 2 * answer(cnt, 0) * weight * wders(1) + ders [ 0 ](0, k) * w * wders(2) ) ) / product;
             cnt++;
-	    }*/
-	cnt = 0;
-        ind = uind + 1;
-        for ( k = 0; k <= degree [ 0 ]; k++ ) {
-            w = cellgeo.giveVertexCoordinates(ind + k)->at(nsd+1);
-            // [dNu/du*w*sum(Nu*w) - Nu*w*sum(dNu/du*w)] / [J*sum(Nu*w)^2]
-            answer(cnt, 0) = (ders [ 0 ](1, k) * w * weight - ders [ 0 ](0, k) * w * wders(1)) / product; 
-            answer(cnt, 1) = (ders [ 0 ](2, k) * w * weight - ( 2 * answer(cnt, 0) * weight * wders(1) + ders [ 0 ](0, k) * w * wders(2) )) / product; 
-	    cnt++;
-	    }
+        }
     } else {
         OOFEM_ERROR("evaldNdx not implemented for fsd = %d", fsd);
     }
 
- #ifndef HAVE_VARIABLE_ARRAY_SIZE
+#ifndef HAVE_VARIABLE_ARRAY_SIZE
     delete [] Aders;
- #endif
+#endif
 
 #ifndef HAVE_VARIABLE_ARRAY_SIZE
     delete [] ders;
@@ -342,62 +342,59 @@ double NURBSInterpolationLine2d :: evaldNdx(FloatMatrix &answer, const FloatArra
 }
 
 
-    /*
-  double NURBSInterpolationLine2d :: givedR(FloatMatrix &answer, const FloatArray &lcoords, const FEICellGeometry &cellgeo)
-  {
-      // calculates dxdk, dxdkk, dydk, dydkk
-      //   findSpan cannot be used at evaluator level (numberOfControlPoints, degree, knotVector are private)	
-	 // span(i) = this->findSpan(numberOfControlPoints [ i ], degree [ i ], lcoords(i), knotVector [ i ]);
-	// returns curvature (1/radius)
-    
-    answer.resize(2, 2);
-    
-    FEIIGAElementGeometryWrapper *gw = ( FEIIGAElementGeometryWrapper * ) & cellgeo;
-    double x, y, J, dR;
-    FloatMatrix d;
-    int i, k, ind, uind;
-    J = this->evaldNdx(d, lcoords, cellgeo);
-    dR= 0.;
-    double dxdk=0,dxdkk=0,dydk=0,dydkk=0;
-    IntArray span(fsd);
-    const FloatArray *vertexCoordsPtr;
-    if ( gw->knotSpan ) {
-      span = * gw->knotSpan;
-    } else {
-      for ( i = 0; i < fsd; i++ ) {
-	span(i) = this->findSpan(numberOfControlPoints [ i ], degree [ i ], lcoords(i), knotVector [ i ]);
-      }
-    }
-
-    if ( fsd == 1 ) {
-      // calculate values and derivatives of nonrational Bspline curve with weights at first (Aders, wders)
-      uind = span(0) - degree [ 0 ];
-      ind = uind + 1;
-
-      for ( k = 0; k <= degree [ 0 ]; k++ ) {
-	vertexCoordsPtr = cellgeo.giveVertexCoordinates(ind + k);
-	x = vertexCoordsPtr->at(1);
-	y = vertexCoordsPtr->at(2);
-	dxdk += x*d.at(k+1,1);
-	dydkk += y*d.at(k+1,2);
-	dydk += y*d.at(k+1,1);
-	dxdkk += x*d.at(k+1,2);
-	  
-	//cnt++;
-      }
-      answer.at(1,1) = dxdk;
-      answer.at(1,2) = dxdkk;
-      answer.at(2,1) = dydk;
-      answer.at(2,2) = dydkk;
-      dR = (dxdk*dydkk-dydk*dxdkk)/(J*J*J); 
-    } else {
-      OOFEM_ERROR("evaldNdx not implemented for fsd = %d", fsd);
-    }
-    return dR;
-
-
-  }*/
-
-
-
+/*
+ * double NURBSInterpolationLine2d :: givedR(FloatMatrix &answer, const FloatArray &lcoords, const FEICellGeometry &cellgeo)
+ * {
+ * // calculates dxdk, dxdkk, dydk, dydkk
+ * //   findSpan cannot be used at evaluator level (numberOfControlPoints, degree, knotVector are private)
+ *   // span(i) = this->findSpan(numberOfControlPoints [ i ], degree [ i ], lcoords(i), knotVector [ i ]);
+ *  // returns curvature (1/radius)
+ *
+ * answer.resize(2, 2);
+ *
+ * FEIIGAElementGeometryWrapper *gw = ( FEIIGAElementGeometryWrapper * ) & cellgeo;
+ * double x, y, J, dR;
+ * FloatMatrix d;
+ * int i, k, ind, uind;
+ * J = this->evaldNdx(d, lcoords, cellgeo);
+ * dR= 0.;
+ * double dxdk=0,dxdkk=0,dydk=0,dydkk=0;
+ * IntArray span(fsd);
+ * const FloatArray *vertexCoordsPtr;
+ * if ( gw->knotSpan ) {
+ * span = * gw->knotSpan;
+ * } else {
+ * for ( i = 0; i < fsd; i++ ) {
+ *  span(i) = this->findSpan(numberOfControlPoints [ i ], degree [ i ], lcoords(i), knotVector [ i ]);
+ * }
+ * }
+ *
+ * if ( fsd == 1 ) {
+ * // calculate values and derivatives of nonrational Bspline curve with weights at first (Aders, wders)
+ * uind = span(0) - degree [ 0 ];
+ * ind = uind + 1;
+ *
+ * for ( k = 0; k <= degree [ 0 ]; k++ ) {
+ *  vertexCoordsPtr = cellgeo.giveVertexCoordinates(ind + k);
+ *  x = vertexCoordsPtr->at(1);
+ *  y = vertexCoordsPtr->at(2);
+ *  dxdk += x*d.at(k+1,1);
+ *  dydkk += y*d.at(k+1,2);
+ *  dydk += y*d.at(k+1,1);
+ *  dxdkk += x*d.at(k+1,2);
+ *
+ *  //cnt++;
+ * }
+ * answer.at(1,1) = dxdk;
+ * answer.at(1,2) = dxdkk;
+ * answer.at(2,1) = dydk;
+ * answer.at(2,2) = dydkk;
+ * dR = (dxdk*dydkk-dydk*dxdkk)/(J*J*J);
+ * } else {
+ * OOFEM_ERROR("evaldNdx not implemented for fsd = %d", fsd);
+ * }
+ * return dR;
+ *
+ *
+ * }*/
 } // end namespace oofem

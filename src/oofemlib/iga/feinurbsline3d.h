@@ -47,23 +47,22 @@ namespace oofem {
 class NURBSInterpolationLine3d : public BSplineInterpolation
 {
 public:
- NURBSInterpolationLine3d(int nsd, int fsd) : BSplineInterpolation(nsd, fsd) { }
+    NURBSInterpolationLine3d(int nsd, int fsd) : BSplineInterpolation(nsd, fsd) { }
     virtual ~NURBSInterpolationLine3d();
 
     virtual void evalN(FloatArray &answer, const FloatArray &lcoords, const FEICellGeometry &cellgeo);
     virtual double evaldNdx(FloatMatrix &answer, const FloatArray &lcoords, const FEICellGeometry &cellgeo);
     virtual void local2global(FloatArray &answer, const FloatArray &lcoords, const FEICellGeometry &cellgeo);
-    virtual int  global2local(FloatArray &answer, const FloatArray &lcoords, const FEICellGeometry &cellgeo) 
-      {
+    virtual int  global2local(FloatArray &answer, const FloatArray &lcoords, const FEICellGeometry &cellgeo)
+    {
         OOFEM_ERROR("NURBSInterpolation :: global2local - Not yet implemented.");
         return 0;
-      }
+    }
     virtual void giveJacobianMatrixAt(FloatMatrix &jacobianMatrix, const FloatArray &lcoords, const FEICellGeometry &cellgeo);
     virtual double giveTransformationJacobian(const FloatArray &lcoords, const FEICellGeometry &cellgeo);
     virtual const char *giveClassName() const { return "NURBSInterpolationLine3d"; }
 
     virtual void lowerDegree();
-
 };
 } // end namespace oofem
 #endif // feinurbs_h

@@ -56,17 +56,17 @@ protected:
      * Assembles the strain-displacement matrix of the receiver at given integration point.
      * In case of IGAElements, B is assumed to contain only contribution from nonzero interpolation functions.
      */
-    virtual void computeBMatrixAt( FloatMatrix &answer, GaussPoint *gp);
+    virtual void computeBMatrixAt(FloatMatrix &answer, GaussPoint *gp);
     //virtual void computeBMatrixAt(GaussPoint *gp, FloatMatrix &answer, int lowerIndx, int upperIndx);
     virtual double computeVolumeAround(GaussPoint *gp);
     virtual void computeStressVector(FloatArray &answer, const FloatArray &strain, GaussPoint *gp, TimeStep *tStep);
     virtual void computeConstitutiveMatrixAt(FloatMatrix &answer, MatResponseMode rMode, GaussPoint *gp, TimeStep *tStep);
     void giveDofManDofIDMask(int inode, IntArray &answer) const {
-      answer = {D_u, D_w, R_v};
+        answer = { D_u, D_w, R_v };
     }
 
-  //TO DO: edita
-    
+    //TO DO: edita
+
     // transformation
     // virtual void giveLocalCoordinates( FloatArray &lcoords, FloatArray &gcoords );
     virtual bool computeGtoLRotationMatrix(FloatMatrix &answer);
@@ -76,14 +76,14 @@ protected:
     int computeLoadGToLRotationMtrx(FloatMatrix &answer, GaussPoint *gp);
     //void computeLToDirectorRotationMatrix(FloatMatrix &answer1, FloatMatrix &answer2, FloatMatrix &answer3, FloatMatrix &answer4);
     //int computeLoadLEToLRotationMatrix(FloatMatrix &answer, int iEdge, GaussPoint *gp);
-    
-    
+
+
     void givedxds(FloatMatrix &answer, const FloatArray &lcoords, const FEICellGeometry &cellgeo);
     double giveCurvature(const FloatArray &lcoords, const FEICellGeometry &cellgeo);
 
     //loading
     virtual void  computeBoundaryEdgeLoadVector(FloatArray &answer, BoundaryLoad *load, int edge, CharType type, ValueModeType mode, TimeStep *tStep, bool global);
-    virtual void boundaryEdgeGiveNodes(IntArray& bNodes, int boundary);
+    virtual void boundaryEdgeGiveNodes(IntArray &bNodes, int boundary);
 
     void computeBodyLoadVectorAt(FloatArray &answer, Load *load, TimeStep *tStep, ValueModeType mode);
 
@@ -91,7 +91,7 @@ protected:
     void computeInternalForces(FloatMatrix &internalForces, int divisions, TimeStep *tStep);
 
     // draw
-    void computeNormal (FloatArray &n, FloatArray c, int knotSpan);
+    void computeNormal(FloatArray &n, FloatArray c, int knotSpan);
 }; // end of Beam2dElementEvaluator definition
 } // end namespace oofem
 #endif //beam2delementevaluator_h
