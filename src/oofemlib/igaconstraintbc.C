@@ -180,7 +180,6 @@ void IGAConstraintBC :: assemble(SparseMtrx &answer, TimeStep *tStep,
 	    if (locArray.at(i) == 1)
 	      knotSpan.at(1)--;
 	    // end todo 
-
 	    IntArray mask;
 	    bspInterp->giveKnotSpanBasisFuncMask(knotSpan, mask);
 	    int ir = mask.at(1) - 1;
