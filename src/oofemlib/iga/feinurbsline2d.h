@@ -39,7 +39,7 @@
 #include "feibspline.h"
 #include "floatarray.h"
 #include "floatmatrix.h"
-//#include "mathfem.h"
+#include "mathfem.h"
 
 namespace oofem {
 /**
