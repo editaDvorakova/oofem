@@ -41,6 +41,7 @@
 #include "SUPERLU_MT/include/slu_mt_ddefs.h"
 
 #define _IFT_SuperLUSolver_Name "superlu"
+#define _IFT_SuperLUSolver_Permcspec "permcspec"
 
 namespace oofem {
 class Domain;
@@ -57,7 +58,14 @@ class FloatMatrix;
 class OOFEM_EXPORT SuperLUSolver : public SparseLinearSystemNM
 {
 private:
-
+    SparseMtrx::SparseMtrxVersionType lhsVersion; // timestamp of existing decomposition
+    SuperMatrix A, L, U;
+    bool AAllocated=false, LAllocated=false, UAllocated=false;
+    bool permAllocated = false;
+    int_t *perm_c;
+    int_t *perm_r;
+    int_t permc_spec;
+    
 public:
     SuperLUSolver(Domain * d, EngngModel * m);
     /// Destructor
@@ -69,16 +77,13 @@ public:
      * @param x Solution array.
      * @return Status value.
      */
-
-    virtual NM_Status solve(SparseMtrx &A, FloatArray &b, FloatArray &x);
-    virtual SparseMtrxType giveRecommendedMatrix(bool symmetric) const {
-        return SMT_CompCol;
-    }
+    NM_Status solve(SparseMtrx &A, FloatArray &b, FloatArray &x) override;
+    SparseMtrxType giveRecommendedMatrix(bool symmetric) const override { return SMT_CompCol; }
 
 
-    virtual IRResultType initializeFrom(InputRecord *ir);
-    virtual const char *giveClassName() const { return "SuperLUSolver"; }
-    virtual LinSystSolverType giveLinSystSolverType() const { return ST_SuperLU_MT; }
+    void initializeFrom(InputRecord &ir) override;
+    const char *giveClassName() const override { return "SuperLUSolver"; }
+    LinSystSolverType giveLinSystSolverType() const override { return ST_SuperLU_MT; }
 
 private:
 

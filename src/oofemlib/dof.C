@@ -78,7 +78,7 @@ void Dof :: printSingleOutputAt(FILE *File, TimeStep *tStep, char ch, ValueModeT
 // 'd') of the receiver, at tStep.
 {
     double x = scale * this->giveUnknown(mode, tStep);
-    fprintf(File, "  dof %d   %c % .8e\n", dofID, ch, x);
+    fprintf(File, "  dof %-3d %c % .8e\n", dofID, ch, x);
 }
 
 void Dof :: printSingleOutputWithAdditionAt(FILE *File, TimeStep *tStep, char ch, ValueModeType mode, double addend)
@@ -86,7 +86,7 @@ void Dof :: printSingleOutputWithAdditionAt(FILE *File, TimeStep *tStep, char ch
 // 'd') of the receiver, at tStep.
 {
     double x = addend + this->giveUnknown(mode, tStep);
-    fprintf(File, "  dof %d   %c % .8e\n", dofID, ch, x);
+    fprintf(File, "  dof %-3d %c % .8e\n", dofID, ch, x);
 }
 
 void Dof :: printMultipleOutputAt(FILE *File, TimeStep *tStep, char *ch,
@@ -132,20 +132,18 @@ Dof :: giveBcValue(ValueModeType mode, TimeStep *tStep)
     }
 }
 
-contextIOResultType
-Dof :: saveContext(DataStream &stream, ContextMode mode, void *obj)
+void
+Dof :: saveContext(DataStream &stream, ContextMode mode)
 {
     int _val = dofID;
     if ( !stream.write(_val) ) {
         THROW_CIOERR(CIO_IOERR);
     }
-
-    return CIO_OK;
 }
 
 
-contextIOResultType
-Dof :: restoreContext(DataStream &stream, ContextMode mode, void *obj)
+void
+Dof :: restoreContext(DataStream &stream, ContextMode mode)
 {
     // restore dofid
     int _val;
@@ -154,8 +152,6 @@ Dof :: restoreContext(DataStream &stream, ContextMode mode, void *obj)
     }
 
     dofID = ( DofIDItem ) _val;
-
-    return CIO_OK;
 }
 
 void

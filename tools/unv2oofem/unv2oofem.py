@@ -1,10 +1,12 @@
-#!/usr/bin/python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 from __future__ import print_function
 from unv2x import *
 from abaqus2x import *
 from oofemctrlreader import *
 import time
+import sys
+import json
 from numpy.core.defchararray import splitlines
 
 
@@ -50,15 +52,16 @@ Enjoy.
     welcomeMsg = """
 UNV2OOFEM: Converts UNV file from Salome to OOFEM native file format
                     (C) 2009 Borek Patzak
-"""
+                    Running python version %s.%s
+""" % (sys.version_info.major, sys.version_info.minor)
     print (welcomeMsg)
     t1 = time.time()
-    if len(sys.argv)==4:
+    if (len(sys.argv)==4):
         unvfile=sys.argv[1]
         ctrlfile=sys.argv[2]
         oofemfile=sys.argv[3]
         of=open(oofemfile,'w')
-         
+        
         # read file in FEM object structure
         fileExtension = unvfile.split('.')
         if (fileExtension[-1].lower()=='unv'): # Salome output file
@@ -69,18 +72,18 @@ UNV2OOFEM: Converts UNV file from Salome to OOFEM native file format
             print ("Unknown extension of input file %s" % fileExtension[-1].lower())
             exit(0)
         
-        print ('Parsing mesh file %s' % sys.argv[1], end='')
+        print ('Parsing mesh file %s' % sys.argv[1], end=' ')
         FEM=Parser.parse()
         print ("done")
 
-        print ("Detected node groups:", end='')
+        print ("Detected node groups:", end=' ')
         for i in FEM.nodesets:
-            print (i.name.strip(), end='')
+            print (i.name.strip(), end=' ')
         print ()
 
-        print ("Detected element groups:", end='')
+        print ("Detected element groups:", end=' ')
         for i in FEM.elemsets:
-            print (i.name.strip(), end='')
+            print (i.name.strip(), end=' ')
         print ()
 
         # read oofem ctrl file
@@ -108,6 +111,7 @@ UNV2OOFEM: Converts UNV file from Salome to OOFEM native file format
             for igroup in elem.oofem_groups:
                 #print igroup.name
                 properties+=igroup.oofem_properties
+                #print('Properties', properties)
             #Do output if oofem_elemtype resolved and not BoundaryLoads
             if ( elem.oofem_elemtype):
                 if(CTRL.oofem_elemProp[elem.oofem_elemtype].name != 'RepresentsBoundaryLoad'):
@@ -192,12 +196,19 @@ UNV2OOFEM: Converts UNV file from Salome to OOFEM native file format
 
         #write component record
         of.write('ndofman %d nelem %d ncrosssect %d nmat %d nbc %d nic %d nltf %d nset %d nxfemman %d\n' % (FEM.nnodes, len(elemNotBoundary), CTRL.ncrosssect, CTRL.nmat, CTRL.nbc, CTRL.nic, CTRL.nltf, CTRL.nset, CTRL.nxfemman))
+        
         #write nodes
         for node in FEM.nodes:
-            #resolve nodal properties
-            outputLine="node %-5d coords %-2d" % (node.id, len(node.coords))
+            hanging = False
+            for igroup in node.oofem_groups:
+                if (igroup.oofem_hangingNode):
+                    hanging = True  
+            
+            outputLine="%s %-5d coords %-2d" % ('hangingNode' if hanging else 'node', node.id, len(node.coords))
+            
             for coord in node.coords:
                 outputLine+= "% -8g " % coord
+            
             properties=""
            
             for igroup in node.oofem_groups:

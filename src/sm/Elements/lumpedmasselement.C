@@ -32,7 +32,7 @@
  *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#include "../sm/Elements/lumpedmasselement.h"
+#include "sm/Elements/lumpedmasselement.h"
 #include "dofmanager.h"
 #include "dof.h"
 #include "floatmatrix.h"
@@ -64,15 +64,13 @@ LumpedMassElement :: computeLumpedMassMatrix(FloatMatrix &answer, TimeStep *tSte
 }
 
 
-IRResultType
-LumpedMassElement :: initializeFrom(InputRecord *ir)
+void
+LumpedMassElement :: initializeFrom(InputRecord &ir)
 {
-    IRResultType result;                   // Required by IR_GIVE_FIELD macro
+    StructuralElement :: initializeFrom(ir);
 
     IR_GIVE_FIELD(ir, dofs, _IFT_LumpedMassElement_dofs);
     IR_GIVE_FIELD(ir, components, _IFT_LumpedMassElement_components);
-
-    return StructuralElement :: initializeFrom(ir);
 }
 
 

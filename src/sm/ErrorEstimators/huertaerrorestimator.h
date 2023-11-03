@@ -35,8 +35,8 @@
 #ifndef huertaerrorestimator_h
 #define huertaerrorestimator_h
 
-#include "../sm/refinedelement.h"
-#include "../sm/refinedmesh.h"
+#include "sm/refinedelement.h"
+#include "sm/refinedmesh.h"
 #include "errorestimator.h"
 #include "interface.h"
 #include "floatarray.h"
@@ -156,23 +156,23 @@ public:
      */
     int giveRefinementLevel() { return this->refineLevel; }
 
-    virtual double giveElementError(EE_ErrorType type, Element *elem, TimeStep *tStep);
+    double giveElementError(EE_ErrorType type, Element *elem, TimeStep *tStep) override;
 
-    virtual double giveValue(EE_ValueType type, TimeStep *tStep);
+    double giveValue(EE_ValueType type, TimeStep *tStep) override;
 
-    virtual int estimateError(EE_ErrorMode err_mode, TimeStep *tStep);
+    int estimateError(EE_ErrorMode err_mode, TimeStep *tStep) override;
 
-    virtual RemeshingCriteria *giveRemeshingCrit();
+    RemeshingCriteria *giveRemeshingCrit() override;
 
-    virtual IRResultType initializeFrom(InputRecord *ir);
+    void initializeFrom(InputRecord &ir) override;
 
-    virtual const char *giveInputRecordName() const { return NULL; }
-    virtual const char *giveClassName() const { return "HuertaErrorEstimator"; }
+    const char *giveInputRecordName() const override { return nullptr; }
+    const char *giveClassName() const override { return "HuertaErrorEstimator"; }
 
     AnalysisMode giveAnalysisMode() { return mode; }
 
-    virtual contextIOResultType saveContext(DataStream &stream, ContextMode mode, void *obj = NULL);
-    virtual contextIOResultType restoreContext(DataStream &stream, ContextMode mode, void *obj = NULL);
+    void saveContext(DataStream &stream, ContextMode mode) override;
+    void restoreContext(DataStream &stream, ContextMode mode) override;
 
 private:
     /**
@@ -250,7 +250,7 @@ protected:
     void setupRefinedElementProblem1D(Element *element, RefinedElement *refinedElement,
                                       int level, int nodeId, IntArray &localNodeIdArray, IntArray &globalNodeIdArray,
                                       HuertaErrorEstimatorInterface :: SetupMode mode, TimeStep *tStep, int nodes,
-                                      FloatArray **corner, FloatArray &midNode,
+                                      FloatArray *corner, FloatArray &midNode,
                                       int &localNodeId, int &localElemId, int &localBcId,
                                       IntArray &controlNode, IntArray &controlDof,
                                       HuertaErrorEstimator :: AnalysisMode aMode, const char *edgetype);
@@ -258,7 +258,7 @@ protected:
     void setupRefinedElementProblem2D(Element *element, RefinedElement *refinedElement,
                                       int level, int nodeId, IntArray &localNodeIdArray, IntArray &globalNodeIdArray,
                                       HuertaErrorEstimatorInterface :: SetupMode mode, TimeStep *tStep, int nodes,
-                                      FloatArray **corner, FloatArray *midSide, FloatArray &midNode,
+                                      FloatArray *corner, FloatArray *midSide, FloatArray &midNode,
                                       int &localNodeId, int &localElemId, int &localBcId,
                                       IntArray &controlNode, IntArray &controlDof,
                                       HuertaErrorEstimator :: AnalysisMode aMode, const char *quadtype);
@@ -266,7 +266,7 @@ protected:
     void setupRefinedElementProblem3D(Element *element, RefinedElement *refinedElement,
                                       int level, int nodeId, IntArray &localNodeIdArray, IntArray &globalNodeIdArray,
                                       HuertaErrorEstimatorInterface :: SetupMode mode, TimeStep *tStep, int nodes,
-                                      FloatArray **corner, FloatArray *midSide, FloatArray *midFace, FloatArray &midNode,
+                                      FloatArray *corner, FloatArray *midSide, FloatArray *midFace, FloatArray &midNode,
                                       int &localNodeId, int &localElemId, int &localBcId,
                                       int hexaSideNode [ 1 ] [ 3 ], int hexaFaceNode [ 1 ] [ 3 ],
                                       IntArray &controlNode, IntArray &controlDof,
@@ -314,14 +314,14 @@ public:
     /// Destructor
     virtual ~HuertaRemeshingCriteria() { }
 
-    virtual double giveRequiredDofManDensity(int num, TimeStep *tStep, int relative = 0);
-    virtual double giveDofManDensity(int num);
-    virtual RemeshingStrategy giveRemeshingStrategy(TimeStep *tStep);
-    virtual int estimateMeshDensities(TimeStep *tStep);
-    virtual IRResultType initializeFrom(InputRecord *ir);
+    double giveRequiredDofManDensity(int num, TimeStep *tStep, int relative = 0) override;
+    double giveDofManDensity(int num) override;
+    RemeshingStrategy giveRemeshingStrategy(TimeStep *tStep) override;
+    int estimateMeshDensities(TimeStep *tStep) override;
+    void initializeFrom(InputRecord &ir) override;
 
-    virtual const char *giveInputRecordName() const { return NULL; }
-    virtual const char *giveClassName() const { return "HuertaErrorEstimator"; }
+    const char *giveInputRecordName() const override { return nullptr; }
+    const char *giveClassName() const override { return "HuertaErrorEstimator"; }
 };
 
 } // end namespace oofem

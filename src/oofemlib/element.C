@@ -634,11 +634,9 @@ Element :: giveCharacteristicValue(CharType mtrx, TimeStep *tStep)
 }
 
 
-IRResultType
-Element :: initializeFrom(InputRecord *ir)
+void
+Element :: initializeFrom(InputRecord &ir)
 {
-    IRResultType result;                          // Required by IR_GIVE_FIELD macro
-
 #  ifdef VERBOSE
     // VERBOSE_PRINT1("Instanciating element ",number);
 #  endif
@@ -660,7 +658,7 @@ Element :: initializeFrom(InputRecord *ir)
 
     elemLocalCS.clear();
 
-    if ( ir->hasField(_IFT_Element_lcs) ) { //local coordinate system
+    if ( ir.hasField(_IFT_Element_lcs) ) { //local coordinate system
         double n1 = 0.0, n2 = 0.0;
         FloatArray triplets;
         IR_GIVE_OPTIONAL_FIELD(ir, triplets, _IFT_Element_lcs);
@@ -687,7 +685,7 @@ Element :: initializeFrom(InputRecord *ir)
 
     partitions.clear();
     IR_GIVE_OPTIONAL_FIELD(ir, partitions, _IFT_Element_partitions);
-    if ( ir->hasField(_IFT_Element_remote) ) {
+    if ( ir.hasField(_IFT_Element_remote) ) {
         parallel_mode = Element_remote;
     } else {
         parallel_mode = Element_local;
@@ -697,8 +695,6 @@ Element :: initializeFrom(InputRecord *ir)
     IR_GIVE_OPTIONAL_FIELD(ir, activityTimeFunction, _IFT_Element_activityTimeFunction);
 
     IR_GIVE_OPTIONAL_FIELD(ir, numberOfGaussPoints, _IFT_Element_nip);
-
-    return IRRT_OK;
 }
 
 
@@ -766,11 +762,11 @@ Element :: printOutputAt(FILE *file, TimeStep *tStep)
     }
 
     if (this->isActivated(tStep) ) {
-      for ( auto &iRule: integrationRulesArray ) {
-	iRule->printOutputAt(file, tStep);
-      }
+        for ( auto &iRule: integrationRulesArray ) {
+            iRule->printOutputAt(file, tStep);
+        }
     } else {
-      fprintf(file, "is not active in current time step\n");
+        fprintf(file, "is not active in current time step\n");
     }
 }
 
@@ -788,58 +784,46 @@ Element :: updateYourself(TimeStep *tStep)
     }
 }
 
-    
+
 bool
 Element :: isActivated(TimeStep *tStep)
 {
     if ( activityTimeFunction ) {
-	if ( tStep ) {
-	    return ( domain->giveFunction(activityTimeFunction)->evaluateAtTime( tStep->giveIntrinsicTime() ) > 1.e-3 );
-	} else {
-	    return false;
-	}
+        if ( tStep ) {
+            return ( domain->giveFunction(activityTimeFunction)->evaluateAtTime( tStep->giveIntrinsicTime() ) > 1.e-3 );
+        } else {
+            return false;
+        }
     } else {
-	return true;
+        return true;
     }
 }
-    
 
 
 bool
 Element :: isCast(TimeStep *tStep)
 {
+    // this approach used to work when material was assigned to element
+    //    if ( tStep->giveIntrinsicTime() >= this->giveMaterial()->giveCastingTime() )  
+    if ( tStep ) {
 
-         // this approach used to work when material was assigned to element
-          //    if ( tStep->giveIntrinsicTime() >= this->giveMaterial()->giveCastingTime() )  
+        double castingTime;
+        double tNow = tStep->giveIntrinsicTime();
 
-  
-  if ( tStep ) {
+        for ( auto &iRule : integrationRulesArray ) {
+            for ( auto &gp: *iRule ) {
+                castingTime = this->giveCrossSection()->giveMaterial(gp)->giveCastingTime();
 
-    double castingTime;    
-    double tNow = tStep->giveIntrinsicTime();
-    
-    if ( integrationRulesArray.size() > 0 ) {
-      
-      for ( int i = 0; i < (int)integrationRulesArray.size(); i++ ) {
-        IntegrationRule *iRule;
-        iRule = integrationRulesArray [ i ].get();
-        
-        for ( GaussPoint *gp: *iRule ) {
-          castingTime =  this->giveCrossSection()->giveMaterial(gp)->giveCastingTime();
-
-          if (tNow < castingTime ) {
-            return false;
-          }          
+                if ( tNow < castingTime ) {
+                    return false;
+                }
+            }
         }
-      }
+        return true;
+
+    } else {
+        return false;
     }
-    
-    return true;
-    
-  } else {
-    return false;
-  }
-  
 }
 
 void
@@ -855,44 +839,37 @@ Element :: initForNewStep()
 }
 
 
-
-void
-Element::giveBoundaryEdgeNodes (IntArray& bNodes, int boundary)
+IntArray
+Element::giveBoundaryEdgeNodes(int boundary) const
 {
-  this->giveInterpolation()->boundaryEdgeGiveNodes(bNodes, boundary);
+    return this->giveInterpolation()->boundaryEdgeGiveNodes(boundary);
 }
 
-void
-Element::giveBoundarySurfaceNodes (IntArray& bNodes, int boundary)
+IntArray
+Element::giveBoundarySurfaceNodes(int boundary) const
 {
-  this->giveInterpolation()->boundarySurfaceGiveNodes(bNodes, boundary);
+    return this->giveInterpolation()->boundarySurfaceGiveNodes(boundary);
 }
 
-IntegrationRule*
-Element::giveBoundaryEdgeIntegrationRule (int order, int boundary)
+std::unique_ptr<IntegrationRule>
+Element::giveBoundaryEdgeIntegrationRule(int order, int boundary)
 {
-  return this->giveInterpolation()->giveBoundaryEdgeIntegrationRule(order, boundary);
+    return this->giveInterpolation()->giveBoundaryEdgeIntegrationRule(order, boundary);
 }
 
-IntegrationRule*
-Element::giveBoundarySurfaceIntegrationRule (int order, int boundary)
+std::unique_ptr<IntegrationRule>
+Element::giveBoundarySurfaceIntegrationRule(int order, int boundary)
 {
-  return this->giveInterpolation()->giveBoundarySurfaceIntegrationRule(order, boundary);
+    return this->giveInterpolation()->giveBoundarySurfaceIntegrationRule(order, boundary);
 }
 
-  
 
-contextIOResultType Element :: saveContext(DataStream &stream, ContextMode mode, void *obj)
-// saves full element context (saves state variables, that completely describe current state)
+void Element :: saveContext(DataStream &stream, ContextMode mode)
 {
-    contextIOResultType iores;
-    int _val;
-
-    if ( ( iores = FEMComponent :: saveContext(stream, mode, obj) ) != CIO_OK ) {
-        THROW_CIOERR(iores);
-    }
+    FEMComponent :: saveContext(stream, mode);
 
     if ( ( mode & CM_Definition ) ) {
+        contextIOResultType iores;
         if ( !stream.write(numberOfDofMans) ) {
             THROW_CIOERR(CIO_IOERR);
         }
@@ -936,7 +913,7 @@ contextIOResultType Element :: saveContext(DataStream &stream, ContextMode mode,
         }
 
         for ( auto &iRule: integrationRulesArray ) {
-            _val = iRule->giveIntegrationRuleType();
+            int _val = iRule->giveIntegrationRuleType();
             if ( !stream.write(_val) ) {
                 THROW_CIOERR(CIO_IOERR);
             }
@@ -958,24 +935,17 @@ contextIOResultType Element :: saveContext(DataStream &stream, ContextMode mode,
     }
 
     for ( auto &iRule: integrationRulesArray ) {
-        if ( ( iores = iRule->saveContext(stream, mode, obj) ) != CIO_OK ) {
-            THROW_CIOERR(iores);
-        }
+        iRule->saveContext(stream, mode);
     }
-
-    return CIO_OK;
 }
 
 
-contextIOResultType Element :: restoreContext(DataStream &stream, ContextMode mode, void *obj)
-// restores full element context (saves state variables, that completely describe current state)
+void Element :: restoreContext(DataStream &stream, ContextMode mode)
 {
     contextIOResultType iores;
     int _nrules;
 
-    if ( ( iores = FEMComponent :: restoreContext(stream, mode, obj) ) != CIO_OK ) {
-        THROW_CIOERR(iores);
-    }
+    FEMComponent :: restoreContext(stream, mode);
 
     if ( mode & CM_Definition ) {
         if ( !stream.read(numberOfDofMans) ) {
@@ -1019,12 +989,12 @@ contextIOResultType Element :: restoreContext(DataStream &stream, ContextMode mo
             // AND ALLOCATE NEW ONE
             integrationRulesArray.resize( _nrules );
             for ( int i = 0; i < _nrules; i++ ) {
-                integrationRulesArray [ i ].reset( classFactory.createIRule( ( IntegrationRuleType ) dtypes(i), i + 1, this ) );
+                integrationRulesArray [ i ] = classFactory.createIRule( ( IntegrationRuleType ) dtypes[i], i + 1, this );
             }
         } else {
             for ( int i = 0; i < _nrules; i++ ) {
-                if ( integrationRulesArray [ i ]->giveIntegrationRuleType() != dtypes(i) ) {
-                    integrationRulesArray [ i ].reset( classFactory.createIRule( ( IntegrationRuleType ) dtypes(i), i + 1, this ) );
+                if ( integrationRulesArray [ i ]->giveIntegrationRuleType() != dtypes[i] ) {
+                    integrationRulesArray [ i ] = classFactory.createIRule( ( IntegrationRuleType ) dtypes[i], i + 1, this );
                 }
             }
         }
@@ -1046,12 +1016,8 @@ contextIOResultType Element :: restoreContext(DataStream &stream, ContextMode mo
 
 
     for ( auto &iRule: integrationRulesArray ) {
-        if ( ( iores = iRule->restoreContext(stream, mode, this) ) != CIO_OK ) {
-            THROW_CIOERR(iores);
-        }
+        iRule->restoreContext(stream, mode);
     }
-
-    return CIO_OK;
 }
 
 
@@ -1063,7 +1029,7 @@ Element :: computeVolumeAreaOrLength()
     double answer = 0.;
     IntegrationRule *iRule = this->giveDefaultIntegrationRulePtr();
     if ( iRule ) {
-        for ( GaussPoint *gp: *iRule ) {
+        for ( auto &gp: *iRule ) {
             answer += this->computeVolumeAround(gp);
         }
 
@@ -1146,16 +1112,15 @@ Element :: giveLengthInDir(const FloatArray &normalToCrackPlane)
 // (exploited by the crack band approach)
 //
 {
-    FloatArray *coords;
-    double maxDis, minDis, dis;
+    double maxDis, minDis;
     int nnode = giveNumberOfNodes();
 
-    coords = this->giveNode(1)->giveCoordinates();
-    minDis = maxDis = normalToCrackPlane.dotProduct( * coords, coords->giveSize() );
+    const auto &coords = this->giveNode(1)->giveCoordinates();
+    minDis = maxDis = normalToCrackPlane.dotProduct( coords, coords.giveSize() );
 
     for ( int i = 2; i <= nnode; i++ ) {
-        coords = this->giveNode(i)->giveCoordinates();
-        dis = normalToCrackPlane.dotProduct( * coords, coords->giveSize() );
+        const auto &coords = this->giveNode(i)->giveCoordinates();
+        double dis = normalToCrackPlane.dotProduct( coords, coords.giveSize() );
         if ( dis > maxDis ) {
             maxDis = dis;
         } else if ( dis < minDis ) {

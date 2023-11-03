@@ -39,48 +39,35 @@
 #include "datastream.h"
 #include "contextioerr.h"
 #include "dynamicinputrecord.h"
+#include "gausspoint.h"
 
 namespace oofem {
 IsotropicDamageMaterial :: IsotropicDamageMaterial(int n, Domain *d) : StructuralMaterial(n, d)
-    //
-    // constructor
-    //
 {
-    linearElasticMaterial = NULL;
-    llcriteria = idm_strainLevelCR;
-    maxOmega = 0.999999;
-    permStrain = 0;
 }
 
 
 IsotropicDamageMaterial :: ~IsotropicDamageMaterial()
-//
-// destructor
-//
 {
     delete linearElasticMaterial;
 }
 
-int
-IsotropicDamageMaterial :: hasMaterialModeCapability(MaterialMode mode)
-//
-// returns whether receiver supports given mode
-//
+bool
+IsotropicDamageMaterial :: hasMaterialModeCapability(MaterialMode mode) const
 {
     return mode == _3dMat || mode == _PlaneStress || mode == _PlaneStrain || mode == _1dMat;
 }
 
 
-void
-IsotropicDamageMaterial :: give3dMaterialStiffnessMatrix(FloatMatrix &answer,
-                                                         MatResponseMode mode,
+FloatMatrixF<6,6>
+IsotropicDamageMaterial :: give3dMaterialStiffnessMatrix(MatResponseMode mode,
                                                          GaussPoint *gp,
-                                                         TimeStep *tStep)
+                                                         TimeStep *tStep) const
 //
 // computes full constitutive matrix for case of gp stress-strain state.
 //
 {
-    IsotropicDamageMaterialStatus *status = static_cast< IsotropicDamageMaterialStatus * >( this->giveStatus(gp) );
+    auto status = static_cast< IsotropicDamageMaterialStatus * >( this->giveStatus(gp) );
     double tempDamage;
     if ( mode == ElasticStiffness ) {
         tempDamage = 0.0;
@@ -89,8 +76,8 @@ IsotropicDamageMaterial :: give3dMaterialStiffnessMatrix(FloatMatrix &answer,
         tempDamage = min(tempDamage, maxOmega);
     }
 
-    this->giveLinearElasticMaterial()->give3dMaterialStiffnessMatrix(answer, mode, gp, tStep);
-    answer.times(1.0 - tempDamage);
+    auto d = this->linearElasticMaterial->give3dMaterialStiffnessMatrix(mode, gp, tStep);
+    return d * (1.0 - tempDamage);
     //TODO - correction for tangent mode
 }
 
@@ -122,8 +109,8 @@ IsotropicDamageMaterial :: giveRealStressVector(FloatArray &answer, GaussPoint *
     //crossSection->giveFullCharacteristicVector(totalStrainVector, gp, reducedTotalStrainVector);
 
     // compute equivalent strain
-    this->computeEquivalentStrain(equivStrain, reducedTotalStrainVector, gp, tStep);
-
+    equivStrain = this->computeEquivalentStrain(reducedTotalStrainVector, gp, tStep);
+    
     if ( llcriteria == idm_strainLevelCR ) {
         // compute value of loading function if strainLevel crit apply
         f = equivStrain - status->giveKappa();
@@ -137,13 +124,13 @@ IsotropicDamageMaterial :: giveRealStressVector(FloatArray &answer, GaussPoint *
             tempKappa = equivStrain;
             this->initDamaged(tempKappa, reducedTotalStrainVector, gp);
             // evaluate damage parameter
-            this->computeDamageParam(omega, tempKappa, reducedTotalStrainVector, gp);
+            omega = this->computeDamageParam(tempKappa, reducedTotalStrainVector, gp);
         }
     } else if ( llcriteria == idm_damageLevelCR ) {
         // evaluate damage parameter first
         tempKappa = equivStrain;
         this->initDamaged(tempKappa, reducedTotalStrainVector, gp);
-        this->computeDamageParam(omega, tempKappa, reducedTotalStrainVector, gp);
+        omega = this->computeDamageParam(tempKappa, reducedTotalStrainVector, gp);
         if ( omega < status->giveDamage() ) {
             // unloading takes place
             omega = status->giveDamage();
@@ -179,10 +166,10 @@ IsotropicDamageMaterial :: giveRealStressVector(FloatArray &answer, GaussPoint *
 }
 
 
-void IsotropicDamageMaterial :: givePlaneStressStiffMtrx(FloatMatrix &answer, MatResponseMode mode,
-                                                         GaussPoint *gp, TimeStep *tStep)
+FloatMatrixF<3,3>
+IsotropicDamageMaterial :: givePlaneStressStiffMtrx(MatResponseMode mode, GaussPoint *gp, TimeStep *tStep) const
 {
-    IsotropicDamageMaterialStatus *status = static_cast< IsotropicDamageMaterialStatus * >( this->giveStatus(gp) );
+    auto status = static_cast< IsotropicDamageMaterialStatus * >( this->giveStatus(gp) );
     double tempDamage;
     if ( mode == ElasticStiffness ) {
         tempDamage = 0.0;
@@ -191,8 +178,8 @@ void IsotropicDamageMaterial :: givePlaneStressStiffMtrx(FloatMatrix &answer, Ma
         tempDamage = min(tempDamage, maxOmega);
     }
 
-    this->giveLinearElasticMaterial()->giveStiffnessMatrix(answer, mode, gp, tStep);
-    answer.times(1.0 - tempDamage);
+    auto d = this->linearElasticMaterial->givePlaneStressStiffMtrx(mode, gp, tStep);
+    d *= 1.0 - tempDamage;
     if ( mode == TangentStiffness ) {
         double damage = status->giveDamage();
         if ( tempDamage > damage ) {
@@ -213,16 +200,17 @@ void IsotropicDamageMaterial :: givePlaneStressStiffMtrx(FloatMatrix &answer, Ma
             // times minus derivative of damage function
             correctionTerm.times(-damagePrime);
             // add to secant stiffness
-            answer.add(correctionTerm);
+            d += FloatMatrixF<3,3>(correctionTerm);
         }
     }
+    return d;
 }
 
 
-void IsotropicDamageMaterial :: givePlaneStrainStiffMtrx(FloatMatrix &answer, MatResponseMode mode,
-                                                         GaussPoint *gp, TimeStep *tStep)
+FloatMatrixF<4,4>
+IsotropicDamageMaterial :: givePlaneStrainStiffMtrx(MatResponseMode mode, GaussPoint *gp, TimeStep *tStep) const
 {
-    IsotropicDamageMaterialStatus *status = static_cast< IsotropicDamageMaterialStatus * >( this->giveStatus(gp) );
+    auto status = static_cast< IsotropicDamageMaterialStatus * >( this->giveStatus(gp) );
     double tempDamage;
     if ( mode == ElasticStiffness ) {
         tempDamage = 0.0;
@@ -231,16 +219,15 @@ void IsotropicDamageMaterial :: givePlaneStrainStiffMtrx(FloatMatrix &answer, Ma
         tempDamage = min(tempDamage, maxOmega);
     }
 
-    this->giveLinearElasticMaterial()->giveStiffnessMatrix(answer, mode, gp, tStep);
-    answer.times(1.0 - tempDamage);
+    return (1.0 - tempDamage) * this->linearElasticMaterial->givePlaneStrainStiffMtrx(mode, gp, tStep);
     //TODO - correction for tangent mode
 }
 
 
-void IsotropicDamageMaterial :: give1dStressStiffMtrx(FloatMatrix &answer, MatResponseMode mode,
-                                                      GaussPoint *gp, TimeStep *tStep)
+FloatMatrixF<1,1>
+IsotropicDamageMaterial :: give1dStressStiffMtrx(MatResponseMode mode, GaussPoint *gp, TimeStep *tStep) const
 {
-    IsotropicDamageMaterialStatus *status = static_cast< IsotropicDamageMaterialStatus * >( this->giveStatus(gp) );
+    auto status = static_cast< IsotropicDamageMaterialStatus * >( this->giveStatus(gp) );
     double tempDamage;
     if ( mode == ElasticStiffness ) {
         tempDamage = 0.0;
@@ -249,8 +236,33 @@ void IsotropicDamageMaterial :: give1dStressStiffMtrx(FloatMatrix &answer, MatRe
         tempDamage = min(tempDamage, maxOmega);
     }
 
-    this->giveLinearElasticMaterial()->giveStiffnessMatrix(answer, mode, gp, tStep);
-    answer.times(1.0 - tempDamage);
+    auto answer = this->linearElasticMaterial->give1dStressStiffMtrx(mode, gp, tStep);
+    answer *= 1.0 - tempDamage;
+
+    if ( mode == TangentStiffness ) {
+        double damage = status->giveDamage();
+        if ( tempDamage > damage ) {
+            double tempKappa;
+            FloatArray stress, strain, eta;
+            FloatMatrix correctionTerm;
+            stress = status->giveTempStressVector();
+            strain = status->giveTempStrainVector();
+            tempKappa = status->giveTempKappa();
+            // effective stress
+            stress.times( 1. / ( 1 - tempDamage ) );
+            //Computes derivative of the equivalent strain with regards to strain
+            this->computeEta(eta, strain, gp, tStep);
+            //compute derivative of damage function
+            double damagePrime = damageFunctionPrime(tempKappa, gp);
+            // dyadic product of eff stress and eta
+            correctionTerm.beDyadicProductOf(stress, eta);
+            // times minus derivative of damage function
+            correctionTerm.times(-damagePrime);
+            // add to secant stiffness
+            answer += FloatMatrixF<1,1>(correctionTerm);
+        }
+    }
+    return answer;
     //TODO - correction for tangent mode
 }
 
@@ -295,7 +307,7 @@ IsotropicDamageMaterial :: giveIPValue(FloatArray &answer, GaussPoint *gp, Inter
         answer.resize(1);
         answer.at(1) = status->giveLe();
         return 1;
-    } else if (type == IST_CrackWidth) {
+    } else if ( type == IST_CrackWidth ) {
         answer.resize(1);
         FloatArray reducedTotalStrainVector;
         this->giveStressDependentPartOfStrainVector(reducedTotalStrainVector, gp, status->giveStrainVector(), tStep, VM_Total);
@@ -306,9 +318,13 @@ IsotropicDamageMaterial :: giveIPValue(FloatArray &answer, GaussPoint *gp, Inter
         answer.at(1) = status->giveCrackAngle();
         return 1;
     } else if ( type == IST_CrackVector ) {
-        status->giveCrackVector(answer);
+        answer = status->giveCrackVector();
         return 1;
-
+    } else if ( type == IST_CumPlasticStrain ) {
+        if ( permStrain ) {
+            answer.at(1) = evaluatePermanentStrain(status->giveKappa(), status->giveDamage());
+        }
+        return 1;
 #ifdef keep_track_of_dissipated_energy
     } else if ( type == IST_StressWorkDensity ) {
         answer.resize(1);
@@ -331,9 +347,8 @@ IsotropicDamageMaterial :: giveIPValue(FloatArray &answer, GaussPoint *gp, Inter
 }
 
 
-void
-IsotropicDamageMaterial :: giveThermalDilatationVector(FloatArray &answer,
-                                                       GaussPoint *gp,  TimeStep *tStep)
+FloatArrayF<6>
+IsotropicDamageMaterial :: giveThermalDilatationVector(GaussPoint *gp, TimeStep *tStep) const
 //
 // returns a FloatArray(6) of initial strain vector
 // eps_0 = {exx_0, eyy_0, ezz_0, gyz_0, gxz_0, gxy_0}^T
@@ -341,22 +356,23 @@ IsotropicDamageMaterial :: giveThermalDilatationVector(FloatArray &answer,
 // gp (element) local axes
 //
 {
-    answer.resize(6);
-    answer.zero();
-    answer.at(1) = this->tempDillatCoeff;
-    answer.at(2) = this->tempDillatCoeff;
-    answer.at(3) = this->tempDillatCoeff;
+    return {
+        this->tempDillatCoeff,
+        this->tempDillatCoeff,
+        this->tempDillatCoeff,
+        0., 0., 0.,
+    };
 }
 
-double IsotropicDamageMaterial :: give(int aProperty, GaussPoint *gp)
+double IsotropicDamageMaterial :: give(int aProperty, GaussPoint *gp) const
 {
     return linearElasticMaterial->give(aProperty, gp);
 }
 
-IRResultType
-IsotropicDamageMaterial :: initializeFrom(InputRecord *ir)
+void
+IsotropicDamageMaterial :: initializeFrom(InputRecord &ir)
 {
-    IRResultType result;                // Required by IR_GIVE_FIELD macro
+    StructuralMaterial :: initializeFrom(ir);
 
     //Set limit on the maximum isotropic damage parameter if needed
     IR_GIVE_OPTIONAL_FIELD(ir, maxOmega, _IFT_IsotropicDamageMaterial_maxOmega);
@@ -367,7 +383,6 @@ IsotropicDamageMaterial :: initializeFrom(InputRecord *ir)
     IR_GIVE_OPTIONAL_FIELD(ir, permStrain, _IFT_IsotropicDamageMaterial_permstrain);
 
     IR_GIVE_FIELD(ir, tempDillatCoeff, _IFT_IsotropicDamageMaterial_talpha);
-    return StructuralMaterial :: initializeFrom(ir);
 }
 
 
@@ -380,28 +395,33 @@ IsotropicDamageMaterial :: giveInputRecord(DynamicInputRecord &input)
 }
 
 
-
-IsotropicDamageMaterialStatus :: IsotropicDamageMaterialStatus(int n, Domain *d, GaussPoint *g) : StructuralMaterialStatus(n, d, g)
+void
+IsotropicDamageMaterial::saveContext(DataStream &stream, ContextMode mode)
 {
-    kappa = tempKappa = 0.0;
-    damage = tempDamage = 0.0;
-    le = 0.0;
-    crack_angle = -1000.0;
-    crackVector.resize(3);
-    crackVector.zero();
-#ifdef keep_track_of_dissipated_energy
-    stressWork = tempStressWork = 0.0;
-    dissWork = tempDissWork = 0.0;
-#endif
+    StructuralMaterial::saveContext(stream, mode);
+    if ( ( mode & CM_Definition ) ) {
+        linearElasticMaterial->saveContext(stream, mode);
+    }
 }
 
 
-IsotropicDamageMaterialStatus :: ~IsotropicDamageMaterialStatus()
-{ }
+void
+IsotropicDamageMaterial::restoreContext(DataStream &stream, ContextMode mode)
+{
+    StructuralMaterial::restoreContext(stream, mode);
+    if ( ( mode & CM_Definition ) ) {
+        linearElasticMaterial->saveContext(stream, mode);
+    }
+}
+
+
+IsotropicDamageMaterialStatus :: IsotropicDamageMaterialStatus(GaussPoint *g) : StructuralMaterialStatus(g)
+{
+}
 
 
 void
-IsotropicDamageMaterialStatus :: printOutputAt(FILE *file, TimeStep *tStep)
+IsotropicDamageMaterialStatus :: printOutputAt(FILE *file, TimeStep *tStep) const
 {
     StructuralMaterialStatus :: printOutputAt(file, tStep);
     fprintf(file, "status { ");
@@ -427,7 +447,7 @@ IsotropicDamageMaterialStatus :: initTempStatus()
     StructuralMaterialStatus :: initTempStatus();
     this->tempKappa = this->kappa;
     //mj 14 July 2010 - should be discussed with Borek !!!
-    //this->tempDamage = this->damage;
+    this->tempDamage = this->damage;
 #ifdef keep_track_of_dissipated_energy
     this->tempStressWork = this->stressWork;
     this->tempDissWork = this->dissWork;
@@ -447,25 +467,12 @@ IsotropicDamageMaterialStatus :: updateYourself(TimeStep *tStep)
 #endif
 }
 
+
 void
-IsotropicDamageMaterialStatus :: giveCrackVector(FloatArray &answer)
+IsotropicDamageMaterialStatus :: saveContext(DataStream &stream, ContextMode mode)
 {
-    answer = crackVector;
-    answer.times(damage);
-}
+    StructuralMaterialStatus :: saveContext(stream, mode);
 
-
-contextIOResultType
-IsotropicDamageMaterialStatus :: saveContext(DataStream &stream, ContextMode mode, void *obj)
-{
-    contextIOResultType iores;
-
-    // save parent class status
-    if ( ( iores = StructuralMaterialStatus :: saveContext(stream, mode, obj) ) != CIO_OK ) {
-        THROW_CIOERR(iores);
-    }
-
-    // write raw data
     if ( !stream.write(kappa) ) {
         THROW_CIOERR(CIO_IOERR);
     }
@@ -484,21 +491,13 @@ IsotropicDamageMaterialStatus :: saveContext(DataStream &stream, ContextMode mod
     }
 
 #endif
-
-    return CIO_OK;
 }
 
-contextIOResultType
-IsotropicDamageMaterialStatus :: restoreContext(DataStream &stream, ContextMode mode, void *obj)
+void
+IsotropicDamageMaterialStatus :: restoreContext(DataStream &stream, ContextMode mode)
 {
-    contextIOResultType iores;
+    StructuralMaterialStatus :: restoreContext(stream, mode);
 
-    // read parent class status
-    if ( ( iores = StructuralMaterialStatus :: restoreContext(stream, mode, obj) ) != CIO_OK ) {
-        THROW_CIOERR(iores);
-    }
-
-    // read raw data
     if ( !stream.read(kappa) ) {
         THROW_CIOERR(CIO_IOERR);
     }
@@ -517,8 +516,6 @@ IsotropicDamageMaterialStatus :: restoreContext(DataStream &stream, ContextMode 
     }
 
 #endif
-
-    return CIO_OK;
 }
 
 #ifdef keep_track_of_dissipated_energy

@@ -40,11 +40,9 @@ REGISTER_CrossSection(EmptyCS);
 
 EmptyCS :: EmptyCS(int n, Domain *d) : CrossSection(n, d) { }
 
-EmptyCS :: ~EmptyCS() { }
-
-Material* EmptyCS::giveMaterial(IntegrationPoint* ip)
+Material* EmptyCS::giveMaterial(IntegrationPoint* ip) const
 {
-    return NULL;
+    return nullptr;
 }
 
 } // end namespace oofem

@@ -61,22 +61,22 @@ protected:
     /// Flag controlling wether the numbering has been initialized or not
     bool isInitialized;
     /// map form dofid to equation number
-    std::map<int, std::map<int,int>> *equationMap;
+    std::map<int, std::map<int,int>> equationMap;
 
 
 public:
     /// Constructor
     QuasicontinuumNumberingscheme();
     /// Destructor
-    virtual ~QuasicontinuumNumberingscheme();
+    virtual ~QuasicontinuumNumberingscheme() {}
 
     /**
      * Initializes the receiver
      */
-    virtual void init(Domain *domain, std::vector<bool> activatedNodeList, TimeStep *tStep);
-    virtual bool isDefault() const { return true; }
-    virtual int giveDofEquationNumber(Dof *dof) const;
-    virtual int giveRequiredNumberOfDomainEquation() const;
+    void init(Domain *domain, std::vector<bool> activatedNodeList, TimeStep *tStep);
+    bool isDefault() const override { return true; }
+    int giveDofEquationNumber(Dof *dof) const override;
+    int giveRequiredNumberOfDomainEquation() const override;
 
     /// Returns total number of equations
     virtual int giveTotalNumberOfEquations() const;

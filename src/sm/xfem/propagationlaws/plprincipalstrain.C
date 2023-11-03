@@ -45,8 +45,8 @@
 #include "feinterpol.h"
 #include "xfem/xfemmanager.h"
 
-#include "Materials/structuralms.h"
-#include "Materials/structuralmaterial.h"
+#include "sm/Materials/structuralms.h"
+#include "sm/Materials/structuralmaterial.h"
 
 #include "xfem/XFEMDebugTools.h"
 
@@ -63,10 +63,8 @@ PLPrincipalStrain::~PLPrincipalStrain() {
 
 }
 
-IRResultType PLPrincipalStrain :: initializeFrom(InputRecord *ir)
+void PLPrincipalStrain :: initializeFrom(InputRecord &ir)
 {
-    IRResultType result;
-
     IR_GIVE_FIELD(ir, mRadius,                          _IFT_PLPrincipalStrain_Radius);
     IR_GIVE_FIELD(ir, mIncrementLength,         _IFT_PLPrincipalStrain_IncLength);
     IR_GIVE_FIELD(ir, mStrainThreshold, _IFT_PLPrincipalStrain_StrainThreshold);
@@ -76,8 +74,6 @@ IRResultType PLPrincipalStrain :: initializeFrom(InputRecord *ir)
     if ( useRadialBasisFunc == 1 ) {
         mUseRadialBasisFunc = true;
     }
-
-    return IRRT_OK;
 }
 
 void PLPrincipalStrain :: giveInputRecord(DynamicInputRecord &input)
@@ -113,7 +109,7 @@ bool PLPrincipalStrain :: propagateInterface(Domain &iDomain, EnrichmentFront &i
 
     // It is meaningless to propagate a tip that is not inside any element
     Element *el = localizer->giveElementContainingPoint(tipInfo.mGlobalCoord);
-    if ( el != NULL ) {
+    if ( el != nullptr ) {
 
 
 
@@ -134,9 +130,9 @@ bool PLPrincipalStrain :: propagateInterface(Domain &iDomain, EnrichmentFront &i
         	// crack tip multiplied by a constant factor.
         	// ( This choice implies that we hope that the element has reasonable
         	// aspect ratio.)
-        	const FloatArray &x1 = * ( el->giveDofManager(1)->giveCoordinates() );
-        	const FloatArray &x2 = * ( el->giveDofManager(2)->giveCoordinates() );
-        	const double l = 1.0 * x1.distance(x2);
+        	const auto &x1 = el->giveDofManager(1)->giveCoordinates();
+        	const auto &x2 = el->giveDofManager(2)->giveCoordinates();
+            const double l = 1.0 * distance(x1, x2);
 
         	// Use the octree to get all elements that have
         	// at least one Gauss point in a certain region around the tip.
@@ -152,7 +148,7 @@ bool PLPrincipalStrain :: propagateInterface(Domain &iDomain, EnrichmentFront &i
         	for ( int elIndex: elIndices ) {
         		Element *gpEl = iDomain.giveElement(elIndex);
 
-        		for ( GaussPoint *gp_i: *gpEl->giveDefaultIntegrationRulePtr() ) {
+        		for ( auto &gp_i: *gpEl->giveDefaultIntegrationRulePtr() ) {
         			////////////////////////////////////////
         			// Compute global gp coordinates
         			FloatArray N;
@@ -181,7 +177,7 @@ bool PLPrincipalStrain :: propagateInterface(Domain &iDomain, EnrichmentFront &i
         				inFrontOfCrack = false;
         			}
 
-        			double r = x.distance(globalCoord);
+        			double r = distance(x, globalCoord);
 
         			if ( r < l && inFrontOfCrack ) {
         				double w = ( ( l - r ) / ( pow(2.0 * M_PI, 1.5) * pow(l, 3) ) ) * exp( -0.5 * pow(r, 2) / pow(l, 2) );
@@ -191,7 +187,7 @@ bool PLPrincipalStrain :: propagateInterface(Domain &iDomain, EnrichmentFront &i
 
         				// Get stress
         				StructuralMaterialStatus *ms = dynamic_cast< StructuralMaterialStatus * >( gp_i->giveMaterialStatus() );
-        				if ( ms == NULL ) {
+        				if ( ms == nullptr ) {
         					OOFEM_ERROR("failed to fetch MaterialStatus.");
         				}
 
@@ -223,7 +219,7 @@ bool PLPrincipalStrain :: propagateInterface(Domain &iDomain, EnrichmentFront &i
 
         		// Compute strain
         		StructuralMaterialStatus *ms = dynamic_cast< StructuralMaterialStatus * >( gp.giveMaterialStatus() );
-        		if ( ms == NULL ) {
+        		if ( ms == nullptr ) {
         			OOFEM_ERROR("failed to fetch MaterialStatus.");
         		}
 
@@ -238,7 +234,7 @@ bool PLPrincipalStrain :: propagateInterface(Domain &iDomain, EnrichmentFront &i
 
         	// Compute stresses
         	StructuralMaterialStatus *ms = dynamic_cast< StructuralMaterialStatus * >( gp.giveMaterialStatus() );
-        	if ( ms == NULL ) {
+        	if ( ms == nullptr ) {
         		OOFEM_ERROR("failed to fetch MaterialStatus.");
         	}
 

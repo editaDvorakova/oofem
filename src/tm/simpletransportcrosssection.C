@@ -33,7 +33,7 @@
  */
 
 #include "simpletransportcrosssection.h"
-#include "transportmaterial.h"
+#include "tm/Materials/transportmaterial.h"
 #include "dynamicinputrecord.h"
 #include "classfactory.h"
 
@@ -42,23 +42,24 @@ REGISTER_CrossSection(SimpleTransportCrossSection);
 
 SimpleTransportCrossSection :: SimpleTransportCrossSection(int n, Domain *d) : TransportCrossSection(n, d) { }
 
-SimpleTransportCrossSection :: ~SimpleTransportCrossSection() { }
 
-
-IRResultType
-SimpleTransportCrossSection :: initializeFrom(InputRecord *ir)
+void
+SimpleTransportCrossSection :: initializeFrom(InputRecord &ir)
 {
-    IRResultType result;                // Required by IR_GIVE_FIELD macro
+    TransportCrossSection :: initializeFrom(ir);
 
     IR_GIVE_FIELD(ir, this->matNumber, _IFT_SimpleTransportCrossSection_material);
     this->propertyDictionary.clear();
-    if ( ir->hasField(_IFT_SimpleTransportCrossSection_thickness) ) {
+    if ( ir.hasField(_IFT_SimpleTransportCrossSection_thickness) ) {
         double thickness;
         IR_GIVE_FIELD(ir, thickness, _IFT_SimpleTransportCrossSection_thickness);
         this->propertyDictionary.add(CS_Thickness, thickness);
     }
-
-    return TransportCrossSection :: initializeFrom(ir);
+    double area = 0.0;
+    if ( ir.hasField(_IFT_SimpleTransportCrossSection_area) ) {
+        IR_GIVE_FIELD(ir, area, _IFT_SimpleTransportCrossSection_area);
+    }
+    propertyDictionary.add(CS_Area, area);
 }
 
 
@@ -83,13 +84,13 @@ SimpleTransportCrossSection :: checkConsistency()
 
 
 TransportMaterial *
-SimpleTransportCrossSection :: giveMaterial()
+SimpleTransportCrossSection :: giveMaterial() const
 {
     return dynamic_cast< TransportMaterial * >( this->domain->giveMaterial(this->matNumber) );
 }
 
 Material *
-SimpleTransportCrossSection :: giveMaterial(IntegrationPoint *ip)
+SimpleTransportCrossSection :: giveMaterial(IntegrationPoint *ip) const
 {
     return this->domain->giveMaterial(this->matNumber);
 }
@@ -103,7 +104,7 @@ SimpleTransportCrossSection :: giveIPValue(FloatArray &answer, GaussPoint *ip, I
 
 
 bool
-SimpleTransportCrossSection :: isCharacteristicMtrxSymmetric(MatResponseMode rMode)
+SimpleTransportCrossSection :: isCharacteristicMtrxSymmetric(MatResponseMode rMode) const
 {
     return this->domain->giveMaterial(this->matNumber)->isCharacteristicMtrxSymmetric(rMode);
 }

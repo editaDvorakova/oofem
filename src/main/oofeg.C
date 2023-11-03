@@ -123,7 +123,7 @@ static XtActionsRec oofeg_remap_return[] = {
 static int oofeg_box_setup = 0;
 static int oofeg_axes      = 1;
 
-EngngModel *problem;
+std::unique_ptr<EngngModel> problem;
 
 
 
@@ -365,6 +365,7 @@ main(int argc, char *argv[])
     problem = InstanciateProblem(dr, _postProcessor, 0, NULL, parallelFlag);
     dr.finish();
     problem->checkProblemConsistency();
+    problem->init();
 
 #ifdef OOFEG_DEVEL
     mask = ESI_GRAPHIC_EDITOR_MASK;
@@ -387,7 +388,7 @@ main(int argc, char *argv[])
                              const_cast< char * >(OOFEG_DEFAULTDRAW_COLOR), 500, 400);
     EVSetRenderMode(myview, WIRE_RENDERING);
     EMAttachView(age_model, myview);
-    gc [ 0 ].init(problem); // init all gcs
+    gc [ 0 ].init(problem.get()); // init all gcs
 
     // AugmentCommandTable();
 
@@ -888,7 +889,7 @@ void ESICustomize(Widget parent_pane)
     oofeg_add_palette("< Filters >", parent_pane, & filters_palette);
     oofeg_add_palette("< Material Region Filter >", filters_palette, & matregfilter_palette);
     for ( int id = 1; id <= problem->giveNumberOfDomains(); id++ ) {
-        nmat = problem->giveDomain(id)->giveNumberOfMaterialModels();
+        nmat = problem->giveDomain(id)->giveNumberOfRegions();
 
         for ( i = 1; i <= nmat; i++ ) {
             sprintf(ltname, "region %2d.%2d", id, i);
@@ -2763,7 +2764,7 @@ void debug_run(Widget w, XtPointer ptr, XtPointer call_data)
         gc [ 0 ].setActiveStep(0);
         problem->solveYourself();
     } catch(OOFEM_Terminate & c) {
-        delete problem;
+        problem = nullptr;
  #ifdef __PETSC_MODULE
         PetscFinalize();
  #endif

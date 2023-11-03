@@ -61,6 +61,8 @@ protected:
     IntArray vartypes;
     /// Number of coordinates to be exported (at each Gauss point)
     int ncoords;
+    /// List of elements
+    IntArray elements;
 
 public:
     /// Constructor. Creates empty Output Manager. By default all components are selected.
@@ -68,12 +70,12 @@ public:
     /// Destructor
     virtual ~GPExportModule();
 
-    virtual IRResultType initializeFrom(InputRecord *ir);
-    virtual void doOutput(TimeStep *tStep, bool forcedOutput = false);
-    virtual void initialize();
-    virtual void terminate();
-    virtual const char *giveClassName() const { return "GPExportModule"; }
-    virtual const char *giveInputRecordName() const { return _IFT_GPExportModule_Name; }
+    void initializeFrom(InputRecord &ir) override;
+    void doOutput(TimeStep *tStep, bool forcedOutput = false) override;
+    void initialize() override;
+    void terminate() override;
+    const char *giveClassName() const override { return "GPExportModule"; }
+    const char *giveInputRecordName() const { return _IFT_GPExportModule_Name; }
 
 protected:
     /// Returns the output stream for given solution step

@@ -32,9 +32,9 @@
  *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#include "../sm/EngineeringModels/diidynamic.h"
-#include "../sm/Elements/structuralelement.h"
-#include "../sm/Elements/structuralelementevaluator.h"
+#include "sm/EngineeringModels/diidynamic.h"
+#include "sm/Elements/structuralelement.h"
+#include "sm/Elements/structuralelementevaluator.h"
 #include "timestep.h"
 #include "element.h"
 #include "dofmanager.h"
@@ -70,7 +70,7 @@ NumericalMethod *DIIDynamic :: giveNumericalMethod(MetaStep *mStep)
         return nMethod.get();
     }
 
-    nMethod.reset( classFactory.createSparseLinSolver(solverType, this->giveDomain(1), this) );
+    nMethod = classFactory.createSparseLinSolver(solverType, this->giveDomain(1), this);
     if ( !nMethod ) {
         OOFEM_ERROR("linear solver creation failed for lstype %d", solverType);
     }
@@ -79,15 +79,10 @@ NumericalMethod *DIIDynamic :: giveNumericalMethod(MetaStep *mStep)
 }
 
 
-IRResultType
-DIIDynamic :: initializeFrom(InputRecord *ir)
+void
+DIIDynamic :: initializeFrom(InputRecord &ir)
 {
-    IRResultType result;                // Required by IR_GIVE_FIELD macro
-
-    result = StructuralEngngModel :: initializeFrom(ir);
-    if ( result != IRRT_OK ) {
-        return result;
-    }
+    StructuralEngngModel :: initializeFrom(ir);
 
     int val = 0;
     IR_GIVE_OPTIONAL_FIELD(ir, val, _IFT_EngngModel_lstype);
@@ -127,13 +122,10 @@ DIIDynamic :: initializeFrom(InputRecord *ir)
             theta = 1.37;
         }
     } else {
-        OOFEM_WARNING("Time-stepping scheme not found!");
-        return IRRT_BAD_FORMAT;
+        throw ValueInputException(ir, _IFT_DIIDynamic_ddtScheme, "Time-stepping scheme not found!");
     }
 
     IR_GIVE_FIELD(ir, deltaT, _IFT_DIIDynamic_deltat);
-
-    return IRRT_OK;
 }
 
 
@@ -191,7 +183,7 @@ TimeStep *DIIDynamic :: giveNextStep()
 
     previousStep = std :: move(currentStep);
 
-    currentStep.reset( new TimeStep(istep, this, 1, totalTime, deltaT, counter, td) );
+    currentStep = std::make_unique<TimeStep>(istep, this, 1, totalTime, deltaT, counter, td);
 
     return currentStep.get();
 }
@@ -258,7 +250,7 @@ void DIIDynamic :: solveYourselfAt(TimeStep *tStep)
 #ifdef VERBOSE
         OOFEM_LOG_DEBUG("Assembling stiffness matrix\n");
 #endif
-        stiffnessMatrix.reset( classFactory.createSparseMtrx(sparseMtrxType) );
+        stiffnessMatrix = classFactory.createSparseMtrx(sparseMtrxType);
         if ( !stiffnessMatrix ) {
             OOFEM_ERROR("sparse matrix creation failed");
         }
@@ -446,27 +438,28 @@ DIIDynamic :: timesMtrx(FloatArray &vec, FloatArray &answer, CharType type, Doma
         element->giveLocationArray(loc, en);
         element->giveCharacteristicMatrix(charMtrx, type, tStep);
         if ( charMtrx.isNotEmpty() ) {
-          ///@todo This rotation matrix is not flexible enough.. it can only work with full size matrices and doesn't allow for flexibility in the matrixassembler.
-          if ( element->giveRotationMatrix(R) ) {
-            charMtrx.rotatedWith(R);
-          }
-        }
+            ///@todo This rotation matrix is not flexible enough.. it can only work with full size matrices and doesn't allow for flexibility in the matrixassembler.
+            if ( element->giveRotationMatrix(R) ) {
+                charMtrx.rotatedWith(R);
+            }
+        
 
 #ifdef DEBUG
-        if ( loc.giveSize() != charMtrx.giveNumberOfRows() ) {
-            OOFEM_ERROR("dimension mismatch");
-        }
+            if ( loc.giveSize() != charMtrx.giveNumberOfRows() ) {
+                OOFEM_ERROR("dimension mismatch");
+            }
 
 #endif
 
-        n = loc.giveSize();
-        for ( j = 1; j <= n; j++ ) {
-            jj = loc.at(j);
-            if ( jj ) {
-                for ( k = 1; k <= n; k++ ) {
-                    kk = loc.at(k);
-                    if ( kk ) {
-                        answer.at(jj) += charMtrx.at(j, k) * vec.at(kk);
+            n = loc.giveSize();
+            for ( j = 1; j <= n; j++ ) {
+                jj = loc.at(j);
+                if ( jj ) {
+                    for ( k = 1; k <= n; k++ ) {
+                        kk = loc.at(k);
+                        if ( kk ) {
+                            answer.at(jj) += charMtrx.at(j, k) * vec.at(kk);
+                        }
                     }
                 }
             }
@@ -621,13 +614,11 @@ DIIDynamic :: determineConstants(TimeStep *tStep)
 }
 
 
-contextIOResultType DIIDynamic :: saveContext(DataStream &stream, ContextMode mode)
+void DIIDynamic :: saveContext(DataStream &stream, ContextMode mode)
 {
     contextIOResultType iores;
 
-    if ( ( iores = EngngModel :: saveContext(stream, mode) ) != CIO_OK ) {
-        THROW_CIOERR(iores);
-    }
+    EngngModel :: saveContext(stream, mode);
 
     if ( ( iores = displacementVector.storeYourself(stream) ) != CIO_OK ) {
         THROW_CIOERR(iores);
@@ -648,17 +639,13 @@ contextIOResultType DIIDynamic :: saveContext(DataStream &stream, ContextMode mo
     if ( ( iores = previousIncrementOfDisplacement.storeYourself(stream) ) != CIO_OK ) {
         THROW_CIOERR(iores);
     }
-
-    return CIO_OK;
 }
 
-contextIOResultType DIIDynamic :: restoreContext(DataStream &stream, ContextMode mode)
+void DIIDynamic :: restoreContext(DataStream &stream, ContextMode mode)
 {
     contextIOResultType iores;
 
-    if ( ( iores = EngngModel :: restoreContext(stream, mode) ) != CIO_OK ) {
-        THROW_CIOERR(iores);
-    }
+    EngngModel :: restoreContext(stream, mode);
 
     if ( ( iores = displacementVector.restoreYourself(stream) ) != CIO_OK ) {
         THROW_CIOERR(iores);
@@ -679,7 +666,5 @@ contextIOResultType DIIDynamic :: restoreContext(DataStream &stream, ContextMode
     if ( ( iores = previousIncrementOfDisplacement.restoreYourself(stream) ) != CIO_OK ) {
         THROW_CIOERR(iores);
     }
-
-    return CIO_OK;
 }
 } // end namespace oofem

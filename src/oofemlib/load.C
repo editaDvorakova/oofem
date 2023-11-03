@@ -37,6 +37,8 @@
 #include "timestep.h"
 #include "function.h"
 #include "dynamicinputrecord.h"
+#include "datastream.h"
+#include "contextioerr.h"
 
 namespace oofem {
 Load :: Load(int i, Domain *aDomain) :
@@ -94,14 +96,10 @@ Load :: computeComponentArrayAt(FloatArray &answer, TimeStep *tStep, ValueModeTy
 }
 
 
-IRResultType
-Load :: initializeFrom(InputRecord *ir)
+void
+Load :: initializeFrom(InputRecord &ir)
 {
-    IRResultType result;                // Required by IR_GIVE_FIELD macro
-
-#  ifdef VERBOSE
-    // VERBOSE_PRINT1 ("Instanciating load ",number)
-#  endif
+    GeneralBoundaryCondition :: initializeFrom(ir);
 
     IR_GIVE_FIELD(ir, componentArray, _IFT_Load_components);
 
@@ -110,8 +108,7 @@ Load :: initializeFrom(InputRecord *ir)
     dofExcludeMask.zero();
     IR_GIVE_OPTIONAL_FIELD(ir, dofExcludeMask, _IFT_Load_dofexcludemask);
     if ( dofExcludeMask.giveSize() != size ) {
-        OOFEM_WARNING("dofExcludeMask and componentArray size mismatch");
-        return IRRT_BAD_FORMAT;
+        throw ValueInputException(ir, _IFT_Load_dofexcludemask, "dofExcludeMask and componentArray size mismatch");
     } else {
         for ( int i = 1; i <= size; i++ ) {
             if ( dofExcludeMask.at(i) ) {
@@ -120,9 +117,7 @@ Load :: initializeFrom(InputRecord *ir)
         }
     }
 
-    this->reference = ir->hasField(_IFT_Load_reference);
-
-    return GeneralBoundaryCondition :: initializeFrom(ir);
+    this->reference = ir.hasField(_IFT_Load_reference);
 }
 
 
@@ -157,4 +152,45 @@ Load :: scale(double s)
     this->reference = false;
 }
 
+
+void
+Load :: saveContext(DataStream &stream, ContextMode mode)
+{
+    GeneralBoundaryCondition :: saveContext(stream, mode);
+
+    if ( mode & CM_Definition ) {
+        contextIOResultType iores;
+        if ( ( iores = componentArray.storeYourself(stream) ) != CIO_OK ) {
+            THROW_CIOERR(iores);
+        }
+        if ( ( iores = dofExcludeMask.storeYourself(stream) ) != CIO_OK ) {
+            THROW_CIOERR(iores);
+        }
+        if ( !stream.write(reference) ) {
+          THROW_CIOERR(CIO_IOERR);
+        }
+    }
+}
+
+
+void
+Load :: restoreContext(DataStream &stream, ContextMode mode)
+{
+    GeneralBoundaryCondition :: restoreContext(stream, mode);
+
+    if ( mode & CM_Definition ) {
+        contextIOResultType iores;
+        if ( ( iores = componentArray.restoreYourself(stream) ) != CIO_OK ) {
+            THROW_CIOERR(iores);
+        }
+        if ( ( iores = dofExcludeMask.restoreYourself(stream) ) != CIO_OK ) {
+            THROW_CIOERR(iores);
+        }
+        if ( !stream.read(reference) ) {
+          THROW_CIOERR(CIO_IOERR);
+        }
+    }
+}
+
+  
 } // end namespace oofem

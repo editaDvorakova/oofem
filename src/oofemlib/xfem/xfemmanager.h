@@ -158,7 +158,7 @@ protected:
 
     // IDs of all potential enriched dofs
     IntArray mXFEMPotentialDofIDs;
-    
+
 public:
 
     /**
@@ -192,12 +192,14 @@ public:
     IntArray giveEnrichedDofIDs(const DofManager &iDMan) const;
 
     /// Initializes receiver according to object description stored in input record.
-    virtual IRResultType initializeFrom(InputRecord *ir);
+    virtual void initializeFrom(InputRecord &ir);
     virtual void giveInputRecord(DynamicInputRecord &input);
 
     virtual int instanciateYourself(DataReader &dr);
     virtual const char *giveClassName() const { return "XfemManager"; }
     virtual const char *giveInputRecordName() const { return _IFT_XfemManager_Name; }
+
+    virtual void postInitialize();
 
     Domain *giveDomain() { return this->domain; }
     void setDomain(Domain *ipDomain);
@@ -206,20 +208,16 @@ public:
      * Stores the state of receiver to output stream.
      * @param stream Context stream.
      * @param mode Determines amount of info in stream.
-     * @param obj Special parameter, used to pass optional parameters.
-     * @return contextIOResultType.
      * @exception ContextIOERR If error encountered.
      */
-    contextIOResultType saveContext(DataStream &stream, ContextMode mode, void *obj = NULL);
+    void saveContext(DataStream &stream, ContextMode mode);
     /**
      * Restores the state of receiver from output stream.
      * @param stream Context file.
      * @param mode Determines amount of info in stream.
-     * @param obj Special parameter for sending extra information.
-     * @return contextIOResultType.
      * @exception ContextIOERR exception if error encountered.
      */
-    contextIOResultType restoreContext(DataStream &stream, ContextMode mode, void *obj = NULL);
+    void restoreContext(DataStream &stream, ContextMode mode);
 
 
     /**

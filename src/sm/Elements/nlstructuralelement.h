@@ -35,7 +35,7 @@
 #ifndef nlstructuralelement_h
 #define nlstructuralelement_h
 
-#include "../sm/Elements/structuralelement.h"
+#include "sm/Elements/structuralelement.h"
 
 ///@name Input fields for NLStructuralElement
 //@{
@@ -95,7 +95,7 @@ public:
      * @param n Element number.
      * @param d Domain to which new material will belong.
      */
-    NLStructuralElement(int n, Domain * d);
+    NLStructuralElement(int n, Domain *d);
     /// Destructor.
     virtual ~NLStructuralElement() { }
 
@@ -141,7 +141,8 @@ public:
      * @param rMode Response mode.
      * @param tStep Time step.
      */
-    virtual void computeStiffnessMatrix(FloatMatrix &answer, MatResponseMode rMode, TimeStep *tStep);
+    void computeStiffnessMatrix(FloatMatrix &answer, MatResponseMode rMode, TimeStep *tStep) override;
+
 
 
     /**
@@ -152,7 +153,8 @@ public:
      * @param answer Computed initial stiffness matrix.
      * @param tStep Time step.
      */
-    virtual void computeInitialStressMatrix(FloatMatrix &answer, TimeStep *tStep);
+    void computeInitialStressMatrix(FloatMatrix &answer, TimeStep *tStep) override
+    { OOFEM_ERROR("Method computeInitialStressMatrix is not implemented"); }
 
     /**
      * Computes the stiffness matrix of receiver.
@@ -179,7 +181,20 @@ public:
      * @param useUpdatedGpRecord If equal to zero, the stresses in integration points are computed (slow but safe).
      */
 
-    virtual void giveInternalForcesVector(FloatArray &answer, TimeStep *tStep, int useUpdatedGpRecord = 0);
+    void giveInternalForcesVector(FloatArray &answer, TimeStep *tStep, int useUpdatedGpRecord = 0) override;
+
+    /**
+     * Computes large strain constitutive matrix of receiver. Default implementation uses element cross section
+     * giveCharMaterialStiffnessMatrix service.
+     * @param answer Constitutive matrix.
+     * @param rMode Material response mode of answer.
+     * @param gp Integration point for which constitutive matrix is computed.
+     * @param tStep Time step.
+     */
+    virtual void computeConstitutiveMatrix_dPdF_At(FloatMatrix &answer,
+                                                   MatResponseMode rMode, GaussPoint *gp,
+                                                   TimeStep *tStep) = 0;
+
 
     /**
      * Evaluates nodal representation of real internal forces.
@@ -193,7 +208,7 @@ public:
      * @param tStep Time step.
      * @param useUpdatedGpRecord If equal to zero, the stresses in the integration points are computed (slow but safe).
      */
-    void giveInternalForcesVector_withIRulesAsSubcells(FloatArray &answer, TimeStep *tStep, int useUpdatedGpRecord = 0);
+    void giveInternalForcesVector_withIRulesAsSubcells(FloatArray &answer, TimeStep *tStep, int useUpdatedGpRecord = 0) override;
 
     /**
      * Computes the deformation gradient in Voigt form at integration point ip and at time
@@ -206,19 +221,19 @@ public:
     virtual void computeDeformationGradientVector(FloatArray &answer, GaussPoint *gp, TimeStep *tStep);
 
     /**
-      * Computes the current volume of element
-      */
+     * Computes the current volume of element
+     */
     double computeCurrentVolume(TimeStep *tStep);
 
     // data management
-    virtual IRResultType initializeFrom(InputRecord *ir);
-    virtual void giveInputRecord(DynamicInputRecord &input);
+    void initializeFrom(InputRecord &ir) override;
+    void giveInputRecord(DynamicInputRecord &input) override;
 
     // definition
-    virtual const char *giveClassName() const { return "NLStructuralElement"; }
+    const char *giveClassName() const override { return "NLStructuralElement"; }
 
 protected:
-    virtual int checkConsistency();
+    int checkConsistency() override;
     /**
      * Computes a matrix which, multiplied by the column matrix of nodal displacements,
      * gives the displacement gradient stored by columns.
@@ -227,12 +242,11 @@ protected:
      * @param gp Integration point.
      * @param answer BF matrix at this point.
      */
-
     virtual void computeBHmatrixAt(GaussPoint *gp, FloatMatrix &answer) {
         OOFEM_ERROR("method not implemented for this element");
         return;
     }
-    friend class GradDpElement;
+    friend class GradientDamageElement;
     friend class PhaseFieldElement;
     friend class XfemStructuralElementInterface;
 };

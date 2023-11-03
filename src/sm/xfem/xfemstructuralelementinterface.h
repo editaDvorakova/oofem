@@ -51,10 +51,9 @@ class OOFEM_EXPORT XfemStructuralElementInterface : public XfemElementInterface
 {
 public:
     XfemStructuralElementInterface(Element *e);
-    virtual ~XfemStructuralElementInterface();
 
     /// Updates integration rule based on the triangulation.
-    virtual bool XfemElementInterface_updateIntegrationRule();
+    bool XfemElementInterface_updateIntegrationRule() override;
 
     MaterialStatus *giveClosestGP_MatStat(double &oClosestDist, std :: vector< std :: unique_ptr< IntegrationRule > > &iRules, const FloatArray &iCoord);
 
@@ -63,7 +62,7 @@ public:
     virtual void XfemElementInterface_computeConstitutiveMatrixAt(FloatMatrix &answer, MatResponseMode rMode, GaussPoint *, TimeStep *tStep);
     virtual void XfemElementInterface_computeStressVector(FloatArray &answer, const FloatArray &strain, GaussPoint *gp, TimeStep *tStep);
 
-    virtual bool hasCohesiveZone() const { return ( mpCZMat != NULL && mpCZIntegrationRules.size() > 0 ); }
+    virtual bool hasCohesiveZone() const { return ( mpCZMat != nullptr && mpCZIntegrationRules.size() > 0 ); }
 
     virtual void computeCohesiveForces(FloatArray &answer, TimeStep *tStep);
     virtual void computeGlobalCohesiveTractionVector(FloatArray &oT, const FloatArray &iJump, const FloatArray &iCrackNormal, const FloatMatrix &iNMatrix, GaussPoint &iGP, TimeStep *tStep);
@@ -73,7 +72,7 @@ public:
 
     virtual void XfemElementInterface_computeConsistentMassMatrix(FloatMatrix &answer, TimeStep *tStep, double &mass, const double *ipDensity = NULL);
 
-    virtual IRResultType initializeCZFrom(InputRecord *ir);
+    virtual void initializeCZFrom(InputRecord &ir);
     virtual void giveCZInputRecord(DynamicInputRecord &input);
 
     virtual void initializeCZMaterial();
@@ -90,13 +89,13 @@ public:
     void giveIntersectionsTouchingCrack(std :: vector< int > &oTouchingEnrItemIndices, const std :: vector< int > &iCandidateIndices, int iEnrItemIndex, XfemManager &iXMan);
 
     // Cohesive Zone variables
-    Material *mpCZMat;
-    int mCZMaterialNum;
-    int mCSNumGaussPoints;
+    Material *mpCZMat = nullptr;
+    int mCZMaterialNum = -1;
+    int mCSNumGaussPoints = 4;
 
     // Options for nonstandard cohesive zone model
-    bool mIncludeBulkJump;
-    bool mIncludeBulkCorr;
+    bool mIncludeBulkJump = true;
+    bool mIncludeBulkCorr = true;
 
     // Store element subdivision for postprocessing
     std :: vector< Triangle >mSubTri;

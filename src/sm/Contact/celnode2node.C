@@ -32,7 +32,7 @@
  *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#include "Contact/celnode2node.h"
+#include "sm/Contact/celnode2node.h"
 #include "floatmatrix.h"
 #include "masterdof.h"
 #include "unknownnumberingscheme.h"
@@ -53,11 +53,10 @@ int
 Node2NodeContact :: instanciateYourself(DataReader &dr)
 {
     // compute normal as direction vector from master node to slave node
-    FloatArray xs, xm, _normal;
-    xs = *this->slaveNode->giveCoordinates();
-    xm = *this->masterNode->giveCoordinates();
+    const auto &xs = this->slaveNode->giveCoordinates();
+    const auto &xm = this->masterNode->giveCoordinates();
 
-    _normal = xs-xm;
+    auto _normal = xs - xm;
     double norm = _normal.computeNorm();
     if ( norm < 1.0e-8 ) {
         OOFEM_ERROR("Couldn't compute normal between master node (num %d) and slave node (num %d), nodes are too close to each other.", 
@@ -72,9 +71,9 @@ Node2NodeContact :: instanciateYourself(DataReader &dr)
 void
 Node2NodeContact :: computeGap(FloatArray &answer, TimeStep *tStep)
 {
-    FloatArray xs, xm, uS, uM;
-    xs = *this->slaveNode->giveCoordinates();
-    xm = *this->masterNode->giveCoordinates();
+    FloatArray uS, uM;
+    auto xs = this->slaveNode->giveCoordinates();
+    auto xm = this->masterNode->giveCoordinates();
     this->slaveNode->giveUnknownVector(uS, {D_u, D_v, D_w}, VM_Total, tStep, true);
     this->masterNode->giveUnknownVector(uM, {D_u, D_v, D_w}, VM_Total, tStep, true);
     xs.add(uS);
@@ -173,7 +172,7 @@ Node2NodeContact :: giveLocationArray(IntArray &answer, const UnknownNumberingSc
     // master node
     for ( int i = 1; i <= dofIdArray.giveSize(); i++ ) {
         if ( this->masterNode->hasDofID( (DofIDItem)dofIdArray.at(i) ) ) { // add corresponding number
-            Dof *dof= this->masterNode->giveDofWithID( (DofIDItem)dofIdArray.at(i) );
+            Dof *dof = this->masterNode->giveDofWithID( (DofIDItem)dofIdArray.at(i) );
             answer.at(i) = s.giveDofEquationNumber( dof );
         } 
     }
@@ -181,7 +180,7 @@ Node2NodeContact :: giveLocationArray(IntArray &answer, const UnknownNumberingSc
     // slave node
     for ( int i = 1; i <= dofIdArray.giveSize(); i++ ) {
         if ( this->slaveNode->hasDofID( (DofIDItem)dofIdArray.at(i) ) ) { // add corresponding number
-            Dof *dof= this->slaveNode->giveDofWithID( (DofIDItem)dofIdArray.at(i) );
+            Dof *dof = this->slaveNode->giveDofWithID( (DofIDItem)dofIdArray.at(i) );
             answer.at(3 + i) = s.giveDofEquationNumber( dof );
         }
     }
@@ -192,9 +191,9 @@ void
 Node2NodeContact :: setupIntegrationPoints()
 {
     // Sets up the integration rule array which contains all the necessary integration points
-    if ( this->integrationRule == NULL ) {
+    if ( !this->integrationRule ) {
         //TODO sets a null pointer for the element in the iRule 
-        this->integrationRule = new GaussIntegrationRule(1, NULL) ;
+        this->integrationRule = std::make_unique<GaussIntegrationRule>(1, nullptr);
         this->integrationRule->SetUpPoint(_Unknown);
     }
 }

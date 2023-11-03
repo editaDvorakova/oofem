@@ -95,9 +95,7 @@ Domain :: Domain(int n, int serNum, EngngModel *e) : defaultNodeDofIDArry(),
     // Constructor. Creates a new domain.
 {
     if ( !e->giveSuppressOutput() ) {
-        outputManager = std::unique_ptr<OutputManager> (new OutputManager(this) );
-    } else {
-        outputManager = NULL;
+        outputManager = std::make_unique<OutputManager>(this);
     }
 
     this->engineeringModel = e;
@@ -125,8 +123,8 @@ Domain :: clear()
 // Clear receiver
 {
     elementList.clear();
-    mElementPlaceInArray.clear();
-    mDofManPlaceInArray.clear();
+    elementGlobal2LocalMap.clear();
+    dofmanGlobal2LocalMap.clear();
     dofManagerList.clear();
     materialList.clear();
     bcList.clear();
@@ -135,23 +133,23 @@ Domain :: clear()
     crossSectionList.clear();
     nonlocalBarrierList.clear();
     setList.clear();
-    xfemManager.reset(NULL);
-    contactManager.reset(NULL);
+    xfemManager = nullptr;
+    contactManager = nullptr;
     if ( connectivityTable ) {
         connectivityTable->reset();
     }
 
-    spatialLocalizer.reset(NULL);
+    spatialLocalizer = nullptr;
 
     if ( smoother ) {
         smoother->clear();
     }
 
     ///@todo bp: how to clear/reset topology data?
-    topology.reset(NULL);
+    topology = nullptr;
 
 #ifdef __PARALLEL_MODE
-    transactionManager.reset(NULL);
+    transactionManager = nullptr;
 #endif
 }
 
@@ -182,9 +180,9 @@ Domain :: giveGlobalElement(int n)
 int
 Domain :: giveElementPlaceInArray(int iGlobalElNum) const
 {
-    auto res = mElementPlaceInArray.find(iGlobalElNum);
+    auto res = elementGlobal2LocalMap.find(iGlobalElNum);
 
-    if ( res != mElementPlaceInArray.end() ) {
+    if ( res != elementGlobal2LocalMap.end() ) {
         return res->second;
     } else {
         OOFEM_ERROR("returning -1 for iGlobalElNum: %d.", iGlobalElNum );
@@ -195,9 +193,9 @@ Domain :: giveElementPlaceInArray(int iGlobalElNum) const
 int
 Domain :: giveDofManPlaceInArray(int iGlobalDofManNum) const
 {
-    auto res = mDofManPlaceInArray.find(iGlobalDofManNum);
+    auto res = dofmanGlobal2LocalMap.find(iGlobalDofManNum);
 
-    if ( res != mDofManPlaceInArray.end() ) {
+    if ( res != dofmanGlobal2LocalMap.end() ) {
         return res->second;
     } else {
         OOFEM_ERROR("returning -1 for iGlobalDofManNum: %d.", iGlobalDofManNum );
@@ -208,9 +206,9 @@ Domain :: giveDofManPlaceInArray(int iGlobalDofManNum) const
 const IntArray &
 Domain :: giveElementsWithMaterialNum(int iMaterialNum) const
 {
-    auto res = mMapMaterialNum2El.find(iMaterialNum);
+    auto res = materialNum2ElMap.find(iMaterialNum);
 
-    if ( res != mMapMaterialNum2El.end() ) {
+    if ( res != materialNum2ElMap.end() ) {
         return res->second;
     } else {
         OOFEM_ERROR("Material not found.")
@@ -451,16 +449,26 @@ void Domain :: resizeInitialConditions(int _newSize) { icList.resize(_newSize); 
 void Domain :: resizeFunctions(int _newSize) { functionList.resize(_newSize); }
 void Domain :: resizeSets(int _newSize) { setList.resize(_newSize); }
 
-void Domain :: setDofManager(int i, DofManager *obj) { dofManagerList[i-1].reset(obj); mDofManPlaceInArray[obj->giveGlobalNumber()] = i;}
-void Domain :: setElement(int i, Element *obj) { elementList[i-1].reset(obj); mElementPlaceInArray[obj->giveGlobalNumber()] = i;}
-void Domain :: setCrossSection(int i, CrossSection *obj) { crossSectionList[i-1].reset(obj); }
-void Domain :: setMaterial(int i, Material *obj) { materialList[i-1].reset(obj); }
-void Domain :: setNonlocalBarrier(int i, NonlocalBarrier *obj) { nonlocalBarrierList[i-1].reset(obj); }
-void Domain :: setBoundaryCondition(int i, GeneralBoundaryCondition *obj) { bcList[i-1].reset(obj); }
-void Domain :: setInitialCondition(int i, InitialCondition *obj) { icList[i-1].reset(obj); }
-void Domain :: setFunction(int i, Function *obj) { functionList[i-1].reset(obj); }
-void Domain :: setSet(int i, Set *obj) { setList[i-1].reset(obj); }
-void Domain :: setXfemManager(XfemManager *ipXfemManager) { xfemManager.reset(ipXfemManager); }
+void Domain :: py_setDofManager(int i, DofManager *obj) { dofManagerList[i-1].reset(obj); dofmanGlobal2LocalMap[obj->giveGlobalNumber()] = i;}
+void Domain :: py_setElement(int i, Element *obj) { elementList[i-1].reset(obj); elementGlobal2LocalMap[obj->giveGlobalNumber()] = i;}
+void Domain :: py_setCrossSection(int i, CrossSection *obj) { crossSectionList[i-1].reset(obj); }
+void Domain :: py_setMaterial(int i, Material *obj) { materialList[i-1].reset(obj); }
+void Domain :: py_setNonlocalBarrier(int i, NonlocalBarrier *obj) { nonlocalBarrierList[i-1].reset(obj); }
+void Domain :: py_setBoundaryCondition(int i, GeneralBoundaryCondition *obj) { bcList[i-1].reset(obj); }
+void Domain :: py_setInitialCondition(int i, InitialCondition *obj) { icList[i-1].reset(obj); }
+void Domain :: py_setFunction(int i, Function *obj) { functionList[i-1].reset(obj); }
+void Domain :: py_setSet(int i, Set *obj) { setList[i-1].reset(obj); }
+
+void Domain :: setDofManager(int i, std::unique_ptr<DofManager> obj) { dofmanGlobal2LocalMap[obj->giveGlobalNumber()] = i; dofManagerList[i-1] = std::move(obj); }
+void Domain :: setElement(int i, std::unique_ptr<Element> obj) { materialNum2ElMap[obj->giveGlobalNumber()] = i; elementList[i-1] = std::move(obj); }
+void Domain :: setCrossSection(int i, std::unique_ptr<CrossSection> obj) { crossSectionList[i-1] = std::move(obj); }
+void Domain :: setMaterial(int i, std::unique_ptr<Material> obj) { materialList[i-1] = std::move(obj); }
+void Domain :: setNonlocalBarrier(int i, std::unique_ptr<NonlocalBarrier> obj) { nonlocalBarrierList[i-1] = std::move(obj); }
+void Domain :: setBoundaryCondition(int i, std::unique_ptr<GeneralBoundaryCondition> obj) { bcList[i-1] = std::move(obj); }
+void Domain :: setInitialCondition(int i, std::unique_ptr<InitialCondition> obj) { icList[i-1] = std::move(obj); }
+void Domain :: setFunction(int i, std::unique_ptr<Function> obj) { functionList[i-1] = std::move(obj); }
+void Domain :: setSet(int i, std::unique_ptr<Set> obj) { setList[i-1] = std::move(obj); }
+void Domain :: setXfemManager(std::unique_ptr<XfemManager> obj) { xfemManager = std::move(obj); }
 
 void Domain :: clearBoundaryConditions() { bcList.clear(); }
 void Domain :: clearElements() { elementList.clear(); }
@@ -468,25 +476,22 @@ int
 Domain :: instanciateYourself(DataReader &dr)
 // Creates all objects mentioned in the data file.
 {
-    IRResultType result;                            // Required by IR_GIVE_FIELD macro
-
     int num;
     std :: string name, topologytype;
     int nnode, nelem, nmat, nload, nic, nloadtimefunc, ncrossSections, nbarrier = 0, nset = 0;
     bool nxfemman = false;
     bool ncontactman = false;
     bool nfracman = false;
-    //XfemManager *xMan;
-    // mapping from label to local numbers for dofmans and elements
-    std :: map< int, int >dofManLabelMap, elemLabelMap;
 
     // read type of Domain to be solved
-    InputRecord *ir = dr.giveInputRecord(DataReader :: IR_domainRec, 1);
-    IR_GIVE_FIELD(ir, name, _IFT_Domain_type); // This is inconsistent, "domain" isn't  exactly a field, but the actual record keyword.
+    {
+        auto &ir = dr.giveInputRecord(DataReader :: IR_domainRec, 1);
+        IR_GIVE_FIELD(ir, name, _IFT_Domain_type); // This is inconsistent, "domain" isn't  exactly a field, but the actual record keyword.
 
-    mDomainType = name;
+        mDomainType = name;
 
-    ir->finish();
+        ir.finish();
+    }
 
 #  ifdef VERBOSE
     VERBOSE_PRINT0("Instanciating domain ", this->number);
@@ -495,34 +500,37 @@ Domain :: instanciateYourself(DataReader &dr)
     resolveDomainDofsDefaults( name.c_str() );
 
     // read output manager record
-    std :: string tmp;
-    ir = dr.giveInputRecord(DataReader :: IR_outManRec, 1);
-    ir->giveRecordKeywordField(tmp);
+    {
+        std :: string tmp;
+        auto &ir = dr.giveInputRecord(DataReader :: IR_outManRec, 1);
+        ir.giveRecordKeywordField(tmp);
 
-    if(!giveEngngModel()->giveSuppressOutput()) {
-    	outputManager->initializeFrom(ir);
+        if ( !giveEngngModel()->giveSuppressOutput() ) {
+            outputManager->initializeFrom(ir);
+        }
+        ir.finish();
     }
 
-    ir->finish();
-
     // read domain description
-    ir = dr.giveInputRecord(DataReader :: IR_domainCompRec, 1);
-    IR_GIVE_FIELD(ir, nnode, _IFT_Domain_ndofman);
-    IR_GIVE_FIELD(ir, nelem, _IFT_Domain_nelem);
-    IR_GIVE_FIELD(ir, ncrossSections, _IFT_Domain_ncrosssect);
-    IR_GIVE_FIELD(ir, nmat, _IFT_Domain_nmat);
-    IR_GIVE_FIELD(ir, nload, _IFT_Domain_nbc);
-    IR_GIVE_FIELD(ir, nic, _IFT_Domain_nic);
-    IR_GIVE_FIELD(ir, nloadtimefunc, _IFT_Domain_nfunct);
-    IR_GIVE_OPTIONAL_FIELD(ir, nset, _IFT_Domain_nset);
-    IR_GIVE_OPTIONAL_FIELD(ir, nxfemman, _IFT_Domain_nxfemman);
-    IR_GIVE_OPTIONAL_FIELD(ir, ncontactman, _IFT_Domain_ncontactman);
-    IR_GIVE_OPTIONAL_FIELD(ir, topologytype, _IFT_Domain_topology);
-    this->nsd = -1; ///@todo Change this to default 0 when the domaintype record has been removed.
-    IR_GIVE_OPTIONAL_FIELD(ir, this->nsd, _IFT_Domain_numberOfSpatialDimensions);
-    this->axisymm = ir->hasField(_IFT_Domain_axisymmetric);
-    IR_GIVE_OPTIONAL_FIELD(ir, nfracman, _IFT_Domain_nfracman);
-    IR_GIVE_OPTIONAL_FIELD(ir, nbarrier,  _IFT_Domain_nbarrier);
+    {
+        auto &ir = dr.giveInputRecord(DataReader :: IR_domainCompRec, 1);
+        IR_GIVE_FIELD(ir, nnode, _IFT_Domain_ndofman);
+        IR_GIVE_FIELD(ir, nelem, _IFT_Domain_nelem);
+        IR_GIVE_FIELD(ir, ncrossSections, _IFT_Domain_ncrosssect);
+        IR_GIVE_FIELD(ir, nmat, _IFT_Domain_nmat);
+        IR_GIVE_FIELD(ir, nload, _IFT_Domain_nbc);
+        IR_GIVE_FIELD(ir, nic, _IFT_Domain_nic);
+        IR_GIVE_FIELD(ir, nloadtimefunc, _IFT_Domain_nfunct);
+        IR_GIVE_OPTIONAL_FIELD(ir, nset, _IFT_Domain_nset);
+        IR_GIVE_OPTIONAL_FIELD(ir, nxfemman, _IFT_Domain_nxfemman);
+        IR_GIVE_OPTIONAL_FIELD(ir, ncontactman, _IFT_Domain_ncontactman);
+        IR_GIVE_OPTIONAL_FIELD(ir, topologytype, _IFT_Domain_topology);
+        this->nsd = -1; ///@todo Change this to default 0 when the domaintype record has been removed.
+        IR_GIVE_OPTIONAL_FIELD(ir, this->nsd, _IFT_Domain_numberOfSpatialDimensions);
+        this->axisymm = ir.hasField(_IFT_Domain_axisymmetric);
+        IR_GIVE_OPTIONAL_FIELD(ir, nfracman, _IFT_Domain_nfracman);
+        IR_GIVE_OPTIONAL_FIELD(ir, nbarrier,  _IFT_Domain_nbarrier);
+    }
 
     ///@todo Eventually remove this backwards compatibility:
     //_HeatTransferMode _HeatMass1Mode // Are these deprecated?
@@ -542,7 +550,7 @@ Domain :: instanciateYourself(DataReader &dr)
     dofManagerList.clear();
     dofManagerList.resize(nnode);
     for ( int i = 1; i <= nnode; i++ ) {
-        ir = dr.giveInputRecord(DataReader :: IR_dofmanRec, i);
+        auto &ir = dr.giveInputRecord(DataReader :: IR_dofmanRec, i);
         // read type of dofManager
         IR_GIVE_RECORD_KEYWORD_FIELD(ir, name, num);
 
@@ -554,17 +562,10 @@ Domain :: instanciateYourself(DataReader &dr)
         }
 
         dman->initializeFrom(ir);
-        if ( dofManLabelMap.find(num) == dofManLabelMap.end() ) {
-            // label does not exist yet
-            dofManLabelMap [ num ] = i;
-        } else {
-            OOFEM_ERROR("iDofmanager entry already exist (label=%d)", num);
-        }
-
         dman->setGlobalNumber(num);    // set label
         dofManagerList[i - 1] = std :: move(dman);
 
-        ir->finish();
+        ir.finish();
     }
 
 #  ifdef VERBOSE
@@ -577,7 +578,7 @@ Domain :: instanciateYourself(DataReader &dr)
     elementList.clear();
     elementList.resize(nelem);
     for ( int i = 1; i <= nelem; i++ ) {
-        ir = dr.giveInputRecord(DataReader :: IR_elemRec, i);
+        auto &ir = dr.giveInputRecord(DataReader :: IR_elemRec, i);
         // read type of element
         IR_GIVE_RECORD_KEYWORD_FIELD(ir, name, num);
 
@@ -587,18 +588,10 @@ Domain :: instanciateYourself(DataReader &dr)
         }
 
         elem->initializeFrom(ir);
-
-        if ( elemLabelMap.find(num) == elemLabelMap.end() ) {
-            // label does not exist yet
-            elemLabelMap [ num ] = i;
-        } else {
-            OOFEM_ERROR("Element entry already exist (label=%d)", num);
-        }
-
         elem->setGlobalNumber(num);
         elementList[i - 1] = std :: move(elem);
 
-        ir->finish();
+        ir.finish();
     }
 
     BuildElementPlaceInArrayMap();
@@ -608,11 +601,11 @@ Domain :: instanciateYourself(DataReader &dr)
     if ( dr.peakNext("set") ) {
         setList.resize(nset);
         for ( int i = 1; i <= nset; i++ ) {
-            ir = dr.giveInputRecord(DataReader :: IR_setRec, i);
+            auto &ir = dr.giveInputRecord(DataReader :: IR_setRec, i);
             // read type of set
             IR_GIVE_RECORD_KEYWORD_FIELD(ir, name, num);
             // Only one set for now (i don't see any need to ever introduce any other version)
-            std :: unique_ptr< Set > set(new Set(num, this)); //classFactory.createSet(name.c_str(), num, this)
+            std::unique_ptr< Set > set = std::make_unique<Set>(num, this); //classFactory.createSet(name.c_str(), num, this)
             if ( !set ) {
                 OOFEM_ERROR("Couldn't create set: %s", name.c_str());
             }
@@ -630,7 +623,7 @@ Domain :: instanciateYourself(DataReader &dr)
                 OOFEM_ERROR("Set entry already exist (num=%d)", num);
             }
 
-            ir->finish();
+            ir.finish();
         }
     }
     
@@ -642,7 +635,7 @@ Domain :: instanciateYourself(DataReader &dr)
     crossSectionList.clear();
     crossSectionList.resize(ncrossSections);
     for ( int i = 1; i <= ncrossSections; i++ ) {
-        ir = dr.giveInputRecord(DataReader :: IR_crosssectRec, i);
+        auto &ir = dr.giveInputRecord(DataReader :: IR_crosssectRec, i);
         IR_GIVE_RECORD_KEYWORD_FIELD(ir, name, num);
 
         std :: unique_ptr< CrossSection >crossSection( classFactory.createCrossSection(name.c_str(), num, this) );
@@ -663,7 +656,7 @@ Domain :: instanciateYourself(DataReader &dr)
             OOFEM_ERROR("crossSection entry already exist (num=%d)", num);
         }
 
-        ir->finish();
+        ir.finish();
     }
 
 #  ifdef VERBOSE
@@ -674,7 +667,7 @@ Domain :: instanciateYourself(DataReader &dr)
     materialList.clear();
     materialList.resize(nmat);
     for ( int i = 1; i <= nmat; i++ ) {
-        ir = dr.giveInputRecord(DataReader :: IR_matRec, i);
+        auto &ir = dr.giveInputRecord(DataReader :: IR_matRec, i);
         // read type of material
         IR_GIVE_RECORD_KEYWORD_FIELD(ir, name, num);
 
@@ -696,7 +689,7 @@ Domain :: instanciateYourself(DataReader &dr)
             OOFEM_ERROR("material entry already exist (num=%d)", num);
         }
 
-        ir->finish();
+        ir.finish();
     }
 
 #  ifdef VERBOSE
@@ -707,7 +700,7 @@ Domain :: instanciateYourself(DataReader &dr)
     nonlocalBarrierList.clear();
     nonlocalBarrierList.resize(nbarrier);
     for ( int i = 1; i <= nbarrier; i++ ) {
-        ir = dr.giveInputRecord(DataReader :: IR_nlocBarRec, i);
+        auto &ir = dr.giveInputRecord(DataReader :: IR_nlocBarRec, i);
         // read type of load
         IR_GIVE_RECORD_KEYWORD_FIELD(ir, name, num);
 
@@ -729,7 +722,7 @@ Domain :: instanciateYourself(DataReader &dr)
             OOFEM_ERROR("barrier entry already exist (num=%d)", num);
         }
 
-        ir->finish();
+        ir.finish();
     }
 
 #  ifdef VERBOSE
@@ -742,7 +735,7 @@ Domain :: instanciateYourself(DataReader &dr)
     bcList.clear();
     bcList.resize(nload);
     for ( int i = 1; i <= nload; i++ ) {
-        ir = dr.giveInputRecord(DataReader :: IR_bcRec, i);
+        auto &ir = dr.giveInputRecord(DataReader :: IR_bcRec, i);
         // read type of bc
         IR_GIVE_RECORD_KEYWORD_FIELD(ir, name, num);
 
@@ -764,7 +757,7 @@ Domain :: instanciateYourself(DataReader &dr)
             OOFEM_ERROR("boundary condition entry already exist (num=%d)", num);
         }
 
-        ir->finish();
+        ir.finish();
     }
 
 #  ifdef VERBOSE
@@ -775,7 +768,7 @@ Domain :: instanciateYourself(DataReader &dr)
     icList.clear();
     icList.resize(nic);
     for ( int i = 1; i <= nic; i++ ) {
-        ir = dr.giveInputRecord(DataReader :: IR_icRec, i);
+        auto &ir = dr.giveInputRecord(DataReader :: IR_icRec, i);
         // read type of load
         IR_GIVE_RECORD_KEYWORD_FIELD(ir, name, num);
 
@@ -797,7 +790,7 @@ Domain :: instanciateYourself(DataReader &dr)
             OOFEM_ERROR("initial condition entry already exist (num=%d)", num);
         }
 
-        ir->finish();
+        ir.finish();
     }
 
 #  ifdef VERBOSE
@@ -809,7 +802,7 @@ Domain :: instanciateYourself(DataReader &dr)
     functionList.clear();
     functionList.resize(nloadtimefunc);
     for ( int i = 1; i <= nloadtimefunc; i++ ) {
-        ir = dr.giveInputRecord(DataReader :: IR_funcRec, i);
+        auto &ir = dr.giveInputRecord(DataReader :: IR_funcRec, i);
         // read type of func
         IR_GIVE_RECORD_KEYWORD_FIELD(ir, name, num);
 
@@ -831,7 +824,7 @@ Domain :: instanciateYourself(DataReader &dr)
             OOFEM_ERROR("Function entry already exist (num=%d)", num);
         }
 
-        ir->finish();
+        ir.finish();
     }
 
 #  ifdef VERBOSE
@@ -842,11 +835,11 @@ Domain :: instanciateYourself(DataReader &dr)
     if ( setList.size() == 0 ) {
         setList.resize(nset);
         for ( int i = 1; i <= nset; i++ ) {
-            ir = dr.giveInputRecord(DataReader :: IR_setRec, i);
+            auto &ir = dr.giveInputRecord(DataReader :: IR_setRec, i);
             // read type of set
             IR_GIVE_RECORD_KEYWORD_FIELD(ir, name, num);
             // Only one set for now (i don't see any need to ever introduce any other version)
-            std :: unique_ptr< Set > set(new Set(num, this)); //classFactory.createSet(name.c_str(), num, this)
+            std :: unique_ptr< Set > set = std::make_unique<Set>(num, this); //classFactory.createSet(name.c_str(), num, this)
             if ( !set ) {
                 OOFEM_ERROR("Couldn't create set: %s", name.c_str());
             }
@@ -864,7 +857,7 @@ Domain :: instanciateYourself(DataReader &dr)
                 OOFEM_ERROR("Set entry already exist (num=%d)", num);
             }
 
-            ir->finish();
+            ir.finish();
         }
     }
 
@@ -875,10 +868,10 @@ Domain :: instanciateYourself(DataReader &dr)
 #  endif
 
     if ( nxfemman ) {
-        ir = dr.giveInputRecord(DataReader :: IR_xfemManRec, 1);
+        auto &ir = dr.giveInputRecord(DataReader :: IR_xfemManRec, 1);
 
         IR_GIVE_RECORD_KEYWORD_FIELD(ir, name, num);
-        xfemManager.reset( classFactory.createXfemManager(name.c_str(), this) );
+        xfemManager = classFactory.createXfemManager(name.c_str(), this);
         if ( !xfemManager ) {
             OOFEM_ERROR("Couldn't create xfemmanager: %s", name.c_str());
         }
@@ -893,10 +886,10 @@ Domain :: instanciateYourself(DataReader &dr)
 
     if ( ncontactman ) {
         // don't read any input yet
-        ir = dr.giveInputRecord(DataReader :: IR_contactManRec, 1);
+        auto &ir = dr.giveInputRecord(DataReader :: IR_contactManRec, 1);
 
         IR_GIVE_RECORD_KEYWORD_FIELD(ir, name, num);
-        contactManager.reset( classFactory.createContactManager(name.c_str(), this) );
+        contactManager = classFactory.createContactManager(name.c_str(), this);
         if ( !contactManager ) {
             OOFEM_ERROR("Couldn't create contact manager: %s", name.c_str());
         }
@@ -913,7 +906,7 @@ Domain :: instanciateYourself(DataReader &dr)
 
     this->topology = NULL;
     if ( topologytype.length() > 0 ) {
-        this->topology.reset( classFactory.createTopology(topologytype.c_str(), this) );
+        this->topology = classFactory.createTopology(topologytype.c_str(), this);
         if ( !this->topology ) {
             OOFEM_ERROR("Couldn't create topology of type '%s'", topologytype.c_str());
         }
@@ -926,8 +919,8 @@ Domain :: instanciateYourself(DataReader &dr)
 
 
     if ( nfracman ) {
-        ir = dr.giveInputRecord(DataReader :: IR_fracManRec, 1);
-        fracManager.reset( new FractureManager(this) );
+        auto &ir = dr.giveInputRecord(DataReader :: IR_fracManRec, 1);
+        fracManager = std::make_unique<FractureManager>(this);
         fracManager->initializeFrom(ir);
         fracManager->instanciateYourself(dr);
 #  ifdef VERBOSE
@@ -936,7 +929,7 @@ Domain :: instanciateYourself(DataReader &dr)
     }
 
     // change internal component references from labels to assigned local numbers
-    MapBasedEntityRenumberingFunctor labelToLocNumFunctor(dofManLabelMap, elemLabelMap);
+    MapBasedEntityRenumberingFunctor labelToLocNumFunctor(dofmanGlobal2LocalMap, elementGlobal2LocalMap);
     for ( auto &dman: this->dofManagerList ) {
         dman->updateLocalNumbering(labelToLocNumFunctor);
     }
@@ -972,6 +965,17 @@ Domain :: postInitialize()
         }
     }
 
+    {
+        spatialLocalizer = std::make_unique<OctreeSpatialLocalizer>(this);
+        spatialLocalizer->init();
+        connectivityTable = std::make_unique<ConnectivityTable>(this);
+        OOFEM_LOG_INFO("Spatial localizer init done\n");
+    }
+
+    if ( this->hasXfemManager() ) {
+        this->giveXfemManager()->postInitialize();
+    }
+
     // Dofs must be created before dof managers due their post-initialization:
     this->createDofs();
 
@@ -979,9 +983,6 @@ Domain :: postInitialize()
         dman->postInitialize();
     }
 
-    if ( this->hasXfemManager() ) {
-        //this->giveXfemManager()->postInitialize();
-    }
 
     for ( auto &el: elementList ) {
         el->postInitialize();
@@ -990,6 +991,8 @@ Domain :: postInitialize()
     for ( auto &bc: bcList ) {
         bc->postInitialize();
     }
+
+
 }
 
 
@@ -1173,7 +1176,8 @@ Domain :: giveConnectivityTable()
 //
 {
     if ( !connectivityTable ) {
-        connectivityTable.reset( new ConnectivityTable(this) );
+        //connectivityTable = std::make_unique<ConnectivityTable>(this);
+        OOFEM_LOG_ERROR("Connectivity table init error");
     }
 
     return connectivityTable.get();
@@ -1186,13 +1190,17 @@ Domain :: giveSpatialLocalizer()
 // return connectivity Table - if no defined - creates new one
 //
 {
-    //  if (spatialLocalizer == NULL) spatialLocalizer = new DummySpatialLocalizer(1, this);
-    if ( !spatialLocalizer ) {
-        spatialLocalizer.reset( new OctreeSpatialLocalizer(this) );
+//     if (spatialLocalizer == NULL) spatialLocalizer = new DummySpatialLocalizer(1, this);
+    if ( spatialLocalizer ) {
+        return spatialLocalizer.get();
+    } else {
+        OOFEM_LOG_ERROR("Spatial localizer init failure");
+        return nullptr;      
     }
+}
 
-    spatialLocalizer->init();
-    return spatialLocalizer.get();
+void Domain :: setSpatialLocalizer(std::unique_ptr<SpatialLocalizer> sl){
+    spatialLocalizer = std::move(sl);
 }
 
 
@@ -1454,14 +1462,11 @@ void save_components(T &list, DataStream &stream, ContextMode mode)
     }
     for ( const auto &object: list ) {
         if ( ( mode & CM_Definition ) != 0 ) {
-            if ( stream.write( std :: string( object->giveInputRecordName() ) ) == 0 ) { \
+            if ( stream.write( std :: string( object->giveInputRecordName() ) ) == 0 ) {
                 THROW_CIOERR(CIO_IOERR);
             }
         }
-        auto iores = object->saveContext(stream, mode);
-        if ( iores != CIO_OK ) {
-            THROW_CIOERR(iores);
-        }
+        object->saveContext(stream, mode);
     }
 }
 
@@ -1483,18 +1488,14 @@ void restore_components(T &list, DataStream &stream, ContextMode mode, const C &
             if ( !stream.read(name) ) {
                 THROW_CIOERR(CIO_IOERR);
             }
-            auto object = creator(name, i);
-            list[i-1].reset(object);
+            list[i-1] = creator(name, i);
         }
-        auto iores = list[i-1]->restoreContext(stream, mode);
-        if ( iores != CIO_OK ) {
-            THROW_CIOERR(iores);
-        }
+        list[i-1]->restoreContext(stream, mode);
     }
 }
 
 
-contextIOResultType
+void
 Domain :: saveContext(DataStream &stream, ContextMode mode)
 {
     if ( !stream.write(this->giveSerialNumber()) ) {
@@ -1516,17 +1517,12 @@ Domain :: saveContext(DataStream &stream, ContextMode mode)
 
     auto ee = this->giveErrorEstimator();
     if ( ee ) {
-        contextIOResultType iores;
-        if ( ( iores = ee->saveContext(stream, mode) ) != CIO_OK ) {
-            THROW_CIOERR(iores);
-        }
+        ee->saveContext(stream, mode);
     }
-
-    return CIO_OK;
 }
 
 
-contextIOResultType
+void
 Domain :: restoreContext(DataStream &stream, ContextMode mode)
 {
     bool domainUpdated = false;
@@ -1538,14 +1534,14 @@ Domain :: restoreContext(DataStream &stream, ContextMode mode)
 
     if ( ( mode & CM_Definition ) ) {
         // clear cached data:
-        mElementPlaceInArray.clear();
-        mDofManPlaceInArray.clear();
+        elementGlobal2LocalMap.clear();
+        dofmanGlobal2LocalMap.clear();
  
         ///@todo Saving and restoring xfemmanagers.
-        xfemManager.reset(NULL);
+        xfemManager = nullptr;
 
         restore_components(this->setList, stream, mode,
-                           [this] (std::string &x, int i) { return new Set(i, this); });
+                           [this] (std::string &x, int i) { return std::make_unique<Set>(i, this); });
         restore_components(this->materialList, stream, mode,
                            [this] (std::string &x, int i) { return classFactory.createMaterial(x.c_str(), i, this); });
         restore_components(this->crossSectionList, stream, mode,
@@ -1585,10 +1581,7 @@ Domain :: restoreContext(DataStream &stream, ContextMode mode)
         if ( domainUpdated ) {
             ee->setDomain(this);
         }
-        contextIOResultType iores;
-        if ( ( iores = ee->restoreContext(stream, mode) ) != CIO_OK ) {
-            THROW_CIOERR(iores);
-        }
+        ee->restoreContext(stream, mode);
     }
 
     if ( domainUpdated ) {
@@ -1596,8 +1589,6 @@ Domain :: restoreContext(DataStream &stream, ContextMode mode)
             this->smoother->clear();
         }
     }
-
-    return CIO_OK;
 }
 
 #ifdef __PARALLEL_MODE
@@ -1606,7 +1597,7 @@ DomainTransactionManager *
 Domain :: giveTransactionManager()
 {
     if ( !transactionManager ) {
-        transactionManager.reset( new DomainTransactionManager(this) );
+        transactionManager = std::make_unique<DomainTransactionManager>(this);
         if ( !transactionManager ) {
             OOFEM_ERROR("allocation failed");
         }
@@ -1887,38 +1878,50 @@ Domain :: elementGlobal2Local(int _globnum)
 
 void Domain :: BuildElementPlaceInArrayMap()
 {
-    mElementPlaceInArray.clear();
+    elementGlobal2LocalMap.clear();
 
     int nelem = giveNumberOfElements();
 
     for ( int i = 1; i <= nelem; i++ ) {
         Element *elem = this->giveElement(i);
-        mElementPlaceInArray[ elem->giveGlobalNumber() ] = i;
+        int globnum = elem->giveGlobalNumber();
+        if ( elementGlobal2LocalMap.find(globnum) == elementGlobal2LocalMap.end() ) {
+            // label does not exist yet
+            elementGlobal2LocalMap [ globnum ] = i;
+        } else {
+            OOFEM_ERROR("Element with same global number already exist (label=%d)", globnum);
+        }
     }
 }
 
 void Domain :: BuildDofManPlaceInArrayMap()
 {
-    mDofManPlaceInArray.clear();
+    dofmanGlobal2LocalMap.clear();
 
     int ndman = giveNumberOfDofManagers();
 
     for ( int i = 1; i <= ndman; i++ ) {
         DofManager *dMan = this->giveDofManager(i);
-        mDofManPlaceInArray[ dMan->giveGlobalNumber() ] = i;
+        int globnum = dMan->giveGlobalNumber();
+        if ( dofmanGlobal2LocalMap.find(globnum) == dofmanGlobal2LocalMap.end() ) {
+            // label does not exist yet
+            dofmanGlobal2LocalMap [ globnum ] = i;
+        } else {
+            OOFEM_ERROR("DofManagaer with same global number already exist (label=%d)", globnum);
+        }
     }
 }
 
 void Domain :: BuildMaterialToElementMap()
 {
-    mMapMaterialNum2El.clear();
+    materialNum2ElMap.clear();
 
     int nelem = giveNumberOfElements();
 
     for ( int i = 1; i <= nelem; i++ ) {
         Element *elem = this->giveElement(i);
         int matNum = elem->giveMaterialNumber();
-        mMapMaterialNum2El[ matNum ].followedBy(i);
+        materialNum2ElMap[ matNum ].followedBy(i);
     }
 }
 

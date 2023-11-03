@@ -41,10 +41,10 @@
 namespace oofem {
 REGISTER_BoundaryCondition(LinearEdgeLoad);
 
-IRResultType
-LinearEdgeLoad :: initializeFrom(InputRecord *ir)
+void
+LinearEdgeLoad :: initializeFrom(InputRecord &ir)
 {
-    IRResultType result;                // Required by IR_GIVE_FIELD macro
+    BoundaryLoad :: initializeFrom(ir);
 
     int fType = 0;
     IR_GIVE_OPTIONAL_FIELD(ir, fType, _IFT_LinearEdgeLoad_formulation);
@@ -54,14 +54,11 @@ LinearEdgeLoad :: initializeFrom(InputRecord *ir)
         IR_GIVE_FIELD(ir, startCoords, _IFT_LinearEdgeLoad_startcoord);
         IR_GIVE_FIELD(ir, endCoords, _IFT_LinearEdgeLoad_endcoord);
         if ( startCoords.isEmpty() || endCoords.isEmpty() ) {
-            OOFEM_WARNING("coordinates not specified");
-            return IRRT_NOTFOUND;
+            throw ValueInputException(ir, "sc/ec", "coordinates not specified");
         }
     } else {
         this->formulation = FT_Entity;
     }
-
-    return BoundaryLoad :: initializeFrom(ir);
 }
 
 
@@ -83,9 +80,8 @@ LinearEdgeLoad :: computeNArray(FloatArray &answer, const FloatArray &coords) co
     double ksi;
 
     if ( formulation == FT_Global ) {
-        int i;
-        double length = endCoords.distance(startCoords);
-        double dl     = coords.distance(startCoords);
+        double length = distance(endCoords, startCoords);
+        double dl     = distance(coords, startCoords);
         double eta = dl / length;
         ksi    = ( dl - 0.5 * length ) / ( 0.5 * length );
         FloatArray dir = endCoords;
@@ -98,7 +94,7 @@ LinearEdgeLoad :: computeNArray(FloatArray &answer, const FloatArray &coords) co
             answer.zero();
         }
 
-        for ( i = 1; i <= dir.giveSize(); i++ ) {
+        for ( int i = 1; i <= dir.giveSize(); i++ ) {
             if ( fabs( startCoords.at(i) + dir.at(i) * eta - coords.at(i) ) > 1.e-6 ) {
                 OOFEM_WARNING("point out of receiver, skipped", 1);
                 answer.resize(2);
@@ -109,14 +105,9 @@ LinearEdgeLoad :: computeNArray(FloatArray &answer, const FloatArray &coords) co
         ksi = coords.at(1);
     }
 
-    double n1, n2;
-
-    n1  = ( 1. - ksi ) * 0.5;
-    n2  = ( 1. + ksi ) * 0.5;
-
     answer.resize(2);
 
-    answer.at(1) = n1;
-    answer.at(2) = n2;
+    answer.at(1) = ( 1. - ksi ) * 0.5;
+    answer.at(2) = ( 1. + ksi ) * 0.5;
 }
 } // end namespace oofem

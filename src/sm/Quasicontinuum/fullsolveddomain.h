@@ -66,7 +66,7 @@ public:
     QCFullsolveddomain();
     virtual ~QCFullsolveddomain();
 
-    virtual IRResultType initializeFrom(InputRecord *ir);
+    virtual void initializeFrom(InputRecord &ir);
 
     virtual void updateYourself();
 
@@ -75,7 +75,7 @@ public:
 
     // identification
     //virtual const char *giveInputRecordName() const { return _IFT_QCFullsolveddomain_Name; }
-        virtual const char *giveClassName() const { return "QCFullsolveddomain"; }
+    virtual const char *giveClassName() const { return "QCFullsolveddomain"; }
 
 
 

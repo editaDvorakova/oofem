@@ -49,6 +49,7 @@
 
 ///@name Input fields for TSplineInterpolation
 //@{
+#define _IFT_TSplineInterpolation_weights "weights"
 #define _IFT_TSplineInterpolation_localIndexKnotVectorU "localindexknotvectoru"
 #define _IFT_TSplineInterpolation_localIndexKnotVectorV "localindexknotvectorv"
 #define _IFT_TSplineInterpolation_localIndexKnotVectorW "localindexknotvectorw"
@@ -62,29 +63,29 @@ class OOFEM_EXPORT TSplineInterpolation : public BSplineInterpolation
 {
 protected:
     /// Local index knot vector of the dimensions [totalNumberOfControlPoints][nsd][degree+2].
-    int ***localIndexKnotVector;
-    int totalNumberOfControlPoints;
+    std::vector< std::array<IntArray, 3> > localIndexKnotVector;
+    int totalNumberOfControlPoints = 0;
+    FloatArray weights;
     /**
      * Temporary open local knot vector to enable use of BSpline algorithms (common for all directions) [3*max_degree+2].
      */
-    double *openLocalKnotVector;
+    //FloatArray openLocalKnotVector;
 public:
     TSplineInterpolation(int nsd) : BSplineInterpolation(nsd) { }
-    virtual ~TSplineInterpolation();
 
-    IRResultType initializeFrom(InputRecord *ir);
+    void initializeFrom(InputRecord &ir) override;
     void setNumberOfControlPoints(int num) { this->totalNumberOfControlPoints = num; }
-    virtual void evalN(FloatArray &answer, const FloatArray &lcoords, const FEICellGeometry &cellgeo);
-    virtual double evaldNdx(FloatMatrix &answer, const FloatArray &lcoords, const FEICellGeometry &cellgeo);
-    virtual void local2global(FloatArray &answer, const FloatArray &lcoords, const FEICellGeometry &cellgeo);
-    virtual int  global2local(FloatArray &answer, const FloatArray &lcoords, const FEICellGeometry &cellgeo) {
+    void evalN(FloatArray &answer, const FloatArray &lcoords, const FEICellGeometry &cellgeo) const override;
+    double evaldNdx(FloatMatrix &answer, const FloatArray &lcoords, const FEICellGeometry &cellgeo) const override;
+    void local2global(FloatArray &answer, const FloatArray &lcoords, const FEICellGeometry &cellgeo) const override;
+    int global2local(FloatArray &answer, const FloatArray &lcoords, const FEICellGeometry &cellgeo) const override {
         OOFEM_ERROR("Not yet implemented, contact lazy dr for implementation");
         return 0;
     }
-    virtual void giveJacobianMatrixAt(FloatMatrix &jacobianMatrix, const FloatArray &lcoords, const FEICellGeometry &cellgeo);
+    void giveJacobianMatrixAt(FloatMatrix &jacobianMatrix, const FloatArray &lcoords, const FEICellGeometry &cellgeo) const override;
 
-    virtual int giveKnotSpanBasisFuncMask(const IntArray &knotSpan, IntArray &mask);
-    virtual int giveNumberOfKnotSpanBasisFunctions(const IntArray &knotSpan);
+    int giveKnotSpanBasisFuncMask(const IntArray &knotSpan, IntArray &mask) const override;
+    int giveNumberOfKnotSpanBasisFunctions(const IntArray &knotSpan) const override;
 
     const char *giveClassName() const { return "TSplineInterpolation"; }
 
@@ -98,7 +99,7 @@ protected:
      * @return N Computed middle basis function.
      * @warning Parameter u must be in a valid range.
      */
-    double basisFunction(double u, int p, const FloatArray &U, const int *I);
+    double basisFunction(double u, int p, const FloatArray &U, const IntArray &I) const;
     /**
      * Computes the middle basis function and it derivatives on local knot vector at u.
      * The result is stored in the ders vector
@@ -116,7 +117,7 @@ protected:
      *
      * @warning Parameters n and u must be in a valid range.
      */
-    void dersBasisFunction(int n, double u, int p, const FloatArray &U, const int *I, FloatArray &ders);
+    void dersBasisFunction(int n, double u, int p, const FloatArray &U, const IntArray &I, FloatArray &ders) const;
     /**
      * Creates local open knot vector.
      * This is generally done extracting knot values from global knot vector using the local index knot vector
@@ -128,13 +129,13 @@ protected:
      * @param prepend Number of prepended entries
      * @param append Number of appended entries
      */
-    void createLocalKnotVector(int p, const FloatArray &U, const int *I, int *prepend, int *append);
+    void createLocalKnotVector(FloatArray& answer, int p, const FloatArray &U, const IntArray &I, int &prepend, int &append) const;
     /**
      * Returns indices (zero based) of nonzero basis functions for given knot span interval.
      */
-    int giveKnotSpanBasisFuncMask(const IntArray &startKnotSpan, const IntArray &endKnotSpan, IntArray &mask);
+    int giveKnotSpanBasisFuncMask(const IntArray &startKnotSpan, const IntArray &endKnotSpan, IntArray &mask) const;
     /** Returns the number of nonzero basis functions at given knot span interval. */
-    int  giveNumberOfKnotSpanBasisFunctions(const IntArray &startKnotSpan, const IntArray &endKnotSpan);
+    int  giveNumberOfKnotSpanBasisFunctions(const IntArray &startKnotSpan, const IntArray &endKnotSpan) const;
 }; // end of TSplineInterpolation class definition
 } // end namespace oofem
 #endif //feitspline_h

@@ -32,8 +32,8 @@
  *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#include "../sm/EngineeringModels/nlinearstatic.h"
-#include "../sm/Elements/structuralelement.h"
+#include "sm/EngineeringModels/nlinearstatic.h"
+#include "sm/Elements/structuralelement.h"
 #include "nummet.h"
 #include "timestep.h"
 #include "metastep.h"
@@ -53,6 +53,7 @@
 #include "dofmanager.h"
 #include "dof.h"
 #include "unknownnumberingscheme.h"
+#include "function.h"
 
 #ifdef __PARALLEL_MODE
  #include "problemcomm.h"
@@ -93,8 +94,6 @@ NonLinearStatic :: ~NonLinearStatic()
 
 NumericalMethod *NonLinearStatic :: giveNumericalMethod(MetaStep *mStep)
 {
-    IRResultType result;                     // Required by IR_GIVE_FIELD macro
-
     if ( mStep == NULL ) {
         OOFEM_ERROR("undefined meta step");
     }
@@ -135,10 +134,8 @@ NumericalMethod *NonLinearStatic :: giveNumericalMethod(MetaStep *mStep)
 void
 NonLinearStatic :: updateAttributes(MetaStep *mStep)
 {
-    IRResultType result;                  // Required by IR_GIVE_FIELD macro
-
     MetaStep *mStep1 = this->giveMetaStep( mStep->giveNumber() ); //this line ensures correct input file in staggered problem
-    InputRecord *ir = mStep1->giveAttributesRecord();
+    auto &ir = mStep1->giveAttributesRecord();
 
     LinearStatic :: updateAttributes(mStep1);
 
@@ -172,6 +169,9 @@ NonLinearStatic :: updateAttributes(MetaStep *mStep)
         OOFEM_ERROR("deltaT < 0");
     }
 
+    dtFunction = 0;
+    IR_GIVE_OPTIONAL_FIELD(ir, dtFunction, _IFT_NonLinearStatic_deltatfunction);
+
     _val = nls_tangentStiffness;
     IR_GIVE_OPTIONAL_FIELD(ir, _val, _IFT_NonLinearStatic_stiffmode);
     this->stiffMode = ( NonLinearStatic_stiffnessMode ) _val;
@@ -180,47 +180,40 @@ NonLinearStatic :: updateAttributes(MetaStep *mStep)
     IR_GIVE_OPTIONAL_FIELD(ir, _val, _IFT_NonLinearStatic_refloadmode);
     this->refLoadInputMode = ( SparseNonLinearSystemNM :: referenceLoadInputModeType ) _val;
 
-    mstepCumulateLoadLevelFlag = ir->hasField(_IFT_NonLinearStatic_keepll);
+    mstepCumulateLoadLevelFlag = ir.hasField(_IFT_NonLinearStatic_keepll);
 
     // called just to mark field as recognized, used later
-    ir->hasField(_IFT_NonLinearStatic_donotfixload);
+   ir.hasField(_IFT_NonLinearStatic_donotfixload);
 }
 
 
-IRResultType
-NonLinearStatic :: initializeFrom(InputRecord *ir)
+void
+NonLinearStatic :: initializeFrom(InputRecord &ir)
 {
-    IRResultType result;                // Required by IR_GIVE_FIELD macro
-
-    result = LinearStatic :: initializeFrom(ir);
-    if ( result != IRRT_OK ) {
-        return result;
-    }
+    LinearStatic :: initializeFrom(ir);
 
     nonlocalStiffnessFlag = 0;
     IR_GIVE_OPTIONAL_FIELD(ir, nonlocalStiffnessFlag, _IFT_NonLinearStatic_nonlocstiff);
 
     updateElasticStiffnessFlag = false;
-    if ( ir->hasField(_IFT_NonLinearStatic_updateElasticStiffnessFlag) ) {
-      updateElasticStiffnessFlag = true;
+    if ( ir.hasField(_IFT_NonLinearStatic_updateElasticStiffnessFlag) ) {
+        updateElasticStiffnessFlag = true;
     }
-    
+
 #ifdef __PARALLEL_MODE
     if ( isParallel() ) {
         //commBuff = new CommunicatorBuff (this->giveNumberOfProcesses(), CBT_dynamic);
         commBuff = new CommunicatorBuff(this->giveNumberOfProcesses(), CBT_static);
-        communicator = new NodeCommunicator(this, commBuff, this->giveRank(),
-                                            this->giveNumberOfProcesses());
+        communicator = new NodeCommunicator( this, commBuff, this->giveRank(),
+                                             this->giveNumberOfProcesses() );
 
-        if ( ir->hasField(_IFT_NonLinearStatic_nonlocalext) ) {
+        if ( ir.hasField(_IFT_NonLinearStatic_nonlocalext) ) {
             nonlocalExt = 1;
-            nonlocCommunicator = new ElementCommunicator(this, commBuff, this->giveRank(),
-                                                         this->giveNumberOfProcesses());
+            nonlocCommunicator = new ElementCommunicator( this, commBuff, this->giveRank(),
+                                                          this->giveNumberOfProcesses() );
         }
     }
 #endif
-
-    return IRRT_OK;
 }
 
 
@@ -228,21 +221,38 @@ double NonLinearStatic :: giveUnknownComponent(ValueModeType mode, TimeStep *tSt
 // returns unknown quantity like displacement, velocity of equation eq
 // This function translates this request to numerical method language
 {
-    int eq = dof->__giveEquationNumber();
-#ifdef DEBUG
-    if ( eq == 0 ) {
-        OOFEM_ERROR("invalid equation number");
-    }
-#endif
-
-
     if ( tStep != this->giveCurrentStep() ) {
         OOFEM_ERROR("unknown time step encountered");
         return 0.;
     }
 
-    switch ( mode ) {
-    case VM_Incremental:
+    int eq = dof->__giveEquationNumber();
+    if (mode == VM_Residual) {
+        // evaluate the residual of momentum balance for specific unknown
+        // evaluate the residual of momentum balance for specific unknown
+        
+        if (eq && internalForces.isNotEmpty()) {
+            double ans = loadLevel*incrementalLoadVector.at(eq)-internalForces.at(eq);
+            if (initialLoadVector.isNotEmpty()) {
+                ans += initialLoadVector.at(eq);
+            }
+            return ans;
+        } else {
+            return 0.;
+        }
+    } else if (mode == VM_Total) {
+#ifdef DEBUG
+        if ( eq == 0 ) OOFEM_ERROR("invalid equation number");
+#endif
+        if ( totalDisplacement.isNotEmpty() ) {
+            return totalDisplacement.at(eq);
+        } else {
+            return 0.;
+        }
+    } else if (mode == VM_Incremental) {
+#ifdef DEBUG
+        if ( eq == 0 ) OOFEM_ERROR("invalid equation number");
+#endif
         // return incrementOfDisplacement -> at(eq);
         // return nMethod-> giveUnknownComponent(IncrementOfSolution, eq);
         if ( incrementOfDisplacement.isNotEmpty() ) {
@@ -250,41 +260,34 @@ double NonLinearStatic :: giveUnknownComponent(ValueModeType mode, TimeStep *tSt
         } else {
             return 0.;
         }
-
-    case VM_Total:
-        if ( totalDisplacement.isNotEmpty() ) {
-            return totalDisplacement.at(eq);
-        } else {
-            return 0.;
-        }
-
-    case VM_Velocity:
+    } else if (mode == VM_Velocity) {
+#ifdef DEBUG
+        if ( eq == 0 ) OOFEM_ERROR("invalid equation number");
+#endif
         if ( incrementOfDisplacement.isNotEmpty() ) {
             return incrementOfDisplacement.at(eq) / tStep->giveTimeIncrement();
         } else {
             return 0.;
         }
-
-    default:
-        OOFEM_ERROR("Unknown is of undefined ValueModeType for this problem");
+    } else {
+       OOFEM_ERROR("Unknown is of undefined ValueModeType for this problem"); 
     }
-
     return 0.0;
 }
 
 TimeStep *NonLinearStatic :: giveSolutionStepWhenIcApply(bool force)
 {
-  if ( master && (!force)) {
-    return master->giveSolutionStepWhenIcApply();
-  } else {
-    if ( !stepWhenIcApply ) {
-        int inin = giveNumberOfTimeStepWhenIcApply();
-	//        int nFirst = giveNumberOfFirstStep();
-        stepWhenIcApply.reset(new TimeStep(inin, this, 0, -deltaT, deltaT, 0));
-    }
+    if ( master && ( !force ) ) {
+        return master->giveSolutionStepWhenIcApply();
+    } else {
+        if ( !stepWhenIcApply ) {
+            int inin = giveNumberOfTimeStepWhenIcApply();
+            //        int nFirst = giveNumberOfFirstStep();
+            stepWhenIcApply = std :: make_unique< TimeStep >(inin, this, 0, -deltaT, deltaT, 0);
+        }
 
-    return stepWhenIcApply.get();
-  }
+        return stepWhenIcApply.get();
+    }
 }
 
 
@@ -294,19 +297,16 @@ TimeStep *NonLinearStatic :: giveNextStep()
     int mStepNum = 1;
     double totalTime = 0.0;
     StateCounterType counter = 1;
-    double deltaTtmp = deltaT;
-
-    //do not increase deltaT on microproblem
-    if ( pScale == microScale ) {
-        deltaTtmp = 0.;
-    }
+    // double deltaTtmp = deltaT;
+    double deltaTtmp = this->giveDeltaT(istep);
 
     if ( currentStep ) {
-        totalTime = currentStep->giveTargetTime() + deltaTtmp;
         istep = currentStep->giveNumber() + 1;
+	deltaTtmp = this->giveDeltaT(istep);
+	totalTime = currentStep->giveTargetTime() + deltaTtmp;
         counter = currentStep->giveSolutionStateCounter() + 1;
         mStepNum = currentStep->giveMetaStepNumber();
-
+	
         if ( !this->giveMetaStep(mStepNum)->isStepValid(istep) ) {
             mStepNum++;
             if ( mStepNum > nMetaSteps ) {
@@ -316,26 +316,54 @@ TimeStep *NonLinearStatic :: giveNextStep()
     } else {
         // first step -> generate initial step
         TimeStep *newStep = giveSolutionStepWhenIcApply();
-        currentStep.reset(new TimeStep(*newStep));
+        currentStep = std :: make_unique< TimeStep >(* newStep);
     }
 
     previousStep = std :: move(currentStep);
-    currentStep.reset( new TimeStep(istep, this, mStepNum, totalTime, deltaTtmp, counter) );
+    currentStep = std :: make_unique< TimeStep >(istep, this, mStepNum, totalTime, deltaTtmp, counter);
     // dt variable are set eq to 0 for statics - has no meaning
     // *Wrong* It has meaning for viscoelastic materials.
 
     return currentStep.get();
 }
 
+Function *
+NonLinearStatic :: giveDtFunction()
+// Returns the load-time function of the receiver.
+{
+    if ( !dtFunction ) {
+        return NULL;
+    }
+
+    return giveDomain(1)->giveFunction(dtFunction);
+}
+
+
+double
+NonLinearStatic :: giveDeltaT(int n)
+{
+
+    //do not increase deltaT on microproblem
+    if ( pScale == microScale ) {
+      return 0.;
+    }
+  
+    if ( giveDtFunction() ) {
+      return giveDtFunction()->evaluateAtTime(n);
+    }
+
+    return deltaT;
+}
+
 
 void NonLinearStatic :: solveYourself()
 {
     if ( this->isParallel() ) {
- #ifdef __VERBOSE_PARALLEL
+#ifdef __VERBOSE_PARALLEL
         // force equation numbering before setting up comm maps
         int neq = this->giveNumberOfDomainEquations( 1, EModelDefaultEquationNumbering() );
         OOFEM_LOG_INFO("[process rank %d] neq is %d\n", this->giveRank(), neq);
- #endif
+#endif
 
         // set up communication patterns
         this->initializeCommMaps();
@@ -369,9 +397,9 @@ NonLinearStatic :: updateLoadVectors(TimeStep *tStep)
     bool isLastMetaStep = ( tStep->giveNumber() == mstep->giveLastStepNumber() );
 
     if ( controlMode == nls_indirectControl ) {
-        //if ((tStep->giveNumber() == mstep->giveLastStepNumber()) && ir->hasField("fixload")) {
+        //if ((tStep->giveNumber() == mstep->giveLastStepNumber()) &&ir.hasField("fixload")) {
         if ( isLastMetaStep ) {
-            if ( !mstep->giveAttributesRecord()->hasField(_IFT_NonLinearStatic_donotfixload) ) {
+            if ( !mstep->giveAttributesRecord().hasField(_IFT_NonLinearStatic_donotfixload) ) {
                 OOFEM_LOG_INFO("Fixed load level\n");
 
                 //update initialLoadVector
@@ -404,7 +432,7 @@ NonLinearStatic :: updateLoadVectors(TimeStep *tStep)
 
 
     // if (isLastMetaStep) {
-    if ( isLastMetaStep && !mstep->giveAttributesRecord()->hasField(_IFT_NonLinearStatic_donotfixload) ) {
+    if ( isLastMetaStep && !mstep->giveAttributesRecord().hasField(_IFT_NonLinearStatic_donotfixload) ) {
 #ifdef VERBOSE
         OOFEM_LOG_INFO("Reseting load level\n");
 #endif
@@ -433,7 +461,7 @@ NonLinearStatic :: proceedStep(int di, TimeStep *tStep)
         // first step  create space for stiffness Matrix
         //
         if ( !stiffnessMatrix ) {
-            stiffnessMatrix.reset( classFactory.createSparseMtrx(sparseMtrxType) );
+            stiffnessMatrix = classFactory.createSparseMtrx(sparseMtrxType);
         }
 
         if ( !stiffnessMatrix ) {
@@ -503,13 +531,13 @@ NonLinearStatic :: proceedStep(int di, TimeStep *tStep)
 #ifdef VERBOSE
         OOFEM_LOG_RELEVANT("Computing initial guess\n");
 #endif
-	FloatArray extrapolatedForces;
+        FloatArray extrapolatedForces;
         this->assemblePrescribedExtrapolatedForces( extrapolatedForces, tStep, TangentStiffnessMatrix, this->giveDomain(di) );
         extrapolatedForces.negated();
-        this->updateComponent( tStep, NonLinearLhs, this->giveDomain(di) );
+        this->updateMatrix( * stiffnessMatrix, tStep, this->giveDomain(di) );
         SparseLinearSystemNM *linSolver = nMethod->giveLinearSolver();
         OOFEM_LOG_RELEVANT("solving for increment\n");
-        linSolver->solve(*stiffnessMatrix, extrapolatedForces, incrementOfDisplacement);
+        linSolver->solve(* stiffnessMatrix, extrapolatedForces, incrementOfDisplacement);
         OOFEM_LOG_RELEVANT("initial guess found\n");
         totalDisplacement.add(incrementOfDisplacement);
     } else if ( this->initialGuessType != IG_None ) {
@@ -520,20 +548,59 @@ NonLinearStatic :: proceedStep(int di, TimeStep *tStep)
 
     //totalDisplacement.printYourself();
     if ( initialLoadVector.isNotEmpty() ) {
-      numMetStatus = nMethod->solve(*stiffnessMatrix, incrementalLoadVector, & initialLoadVector,
+        numMetStatus = nMethod->solve(* stiffnessMatrix, incrementalLoadVector, & initialLoadVector,
                                       totalDisplacement, incrementOfDisplacement, internalForces,
                                       internalForcesEBENorm, loadLevel, refLoadInputMode, currentIterations, tStep);
     } else {
-      numMetStatus = nMethod->solve(*stiffnessMatrix, incrementalLoadVector, NULL,
+        numMetStatus = nMethod->solve(* stiffnessMatrix, incrementalLoadVector, NULL,
                                       totalDisplacement, incrementOfDisplacement, internalForces,
                                       internalForcesEBENorm, loadLevel, refLoadInputMode, currentIterations, tStep);
     }
-    ///@todo Martin: ta bort!!!
-    //this->updateComponent(tStep, NonLinearLhs, this->giveDomain(di));
-    ///@todo Use temporary variables. updateYourself() should set the final values, while proceedStep should be callable multiple times for each step (if necessary). / Mikael
     OOFEM_LOG_RELEVANT("Equilibrium reached at load level = %f in %d iterations\n", cumulatedLoadLevel + loadLevel, currentIterations);
     prevStepLength =  currentStepLength;
 }
+
+
+void
+NonLinearStatic :: updateSolution(FloatArray &solutionVector, TimeStep *tStep, Domain *d)
+{
+    // No-op: This can't really be supported in any nice way in nlinearstatic.
+}
+
+
+void
+NonLinearStatic :: updateMatrix(SparseMtrx &mat, TimeStep *tStep, Domain *d)
+{
+    if ( stiffMode == nls_tangentStiffness ) {
+        mat.zero(); // zero stiffness matrix
+#ifdef VERBOSE
+        OOFEM_LOG_DEBUG("Assembling tangent stiffness matrix\n");
+#endif
+        this->assemble(mat, tStep, TangentAssembler(TangentStiffness), EModelDefaultEquationNumbering(), d);
+    } else if ( ( stiffMode == nls_secantStiffness ) || ( stiffMode == nls_secantInitialStiffness && initFlag ) ) {
+#ifdef VERBOSE
+        OOFEM_LOG_DEBUG("Assembling secant stiffness matrix\n");
+#endif
+        mat.zero(); // zero stiffness matrix
+        this->assemble(mat, tStep, TangentAssembler(SecantStiffness), EModelDefaultEquationNumbering(), d);
+        initFlag = 0;
+    } else if ( ( stiffMode == nls_elasticStiffness ) && ( initFlag ||
+                                                           ( this->giveMetaStep( tStep->giveMetaStepNumber() )->giveFirstStepNumber() == tStep->giveNumber() ) || ( updateElasticStiffnessFlag ) ) ) {
+#ifdef VERBOSE
+        OOFEM_LOG_DEBUG("Assembling elastic stiffness matrix\n");
+#endif
+        mat.zero(); // zero stiffness matrix
+        this->assemble(mat, tStep, TangentAssembler(ElasticStiffness),
+                       EModelDefaultEquationNumbering(), d);
+        initFlag = 0;
+    } else {
+        // currently no action , this method is mainly intended to
+        // assemble new tangent stiffness after each iteration
+        // when secantStiffMode is on, we use the same stiffness
+        // during iteration process
+    }
+}
+
 
 void
 NonLinearStatic :: updateComponent(TimeStep *tStep, NumericalCmpn cmpn, Domain *d)
@@ -551,23 +618,23 @@ NonLinearStatic :: updateComponent(TimeStep *tStep, NumericalCmpn cmpn, Domain *
 #ifdef VERBOSE
             OOFEM_LOG_DEBUG("Assembling tangent stiffness matrix\n");
 #endif
-            this->assemble(*stiffnessMatrix, tStep, TangentAssembler(TangentStiffness),
+            this->assemble(* stiffnessMatrix, tStep, TangentAssembler(TangentStiffness),
                            EModelDefaultEquationNumbering(), d);
         } else if ( ( stiffMode == nls_secantStiffness ) || ( stiffMode == nls_secantInitialStiffness && initFlag ) ) {
 #ifdef VERBOSE
             OOFEM_LOG_DEBUG("Assembling secant stiffness matrix\n");
 #endif
             stiffnessMatrix->zero(); // zero stiffness matrix
-            this->assemble(*stiffnessMatrix, tStep, TangentAssembler(SecantStiffness),
+            this->assemble(* stiffnessMatrix, tStep, TangentAssembler(SecantStiffness),
                            EModelDefaultEquationNumbering(), d);
             initFlag = 0;
         } else if ( ( stiffMode == nls_elasticStiffness ) && ( initFlag ||
-                                                              ( this->giveMetaStep( tStep->giveMetaStepNumber() )->giveFirstStepNumber() == tStep->giveNumber() ) || (updateElasticStiffnessFlag) ) ) {
+                                                               ( this->giveMetaStep( tStep->giveMetaStepNumber() )->giveFirstStepNumber() == tStep->giveNumber() ) || ( updateElasticStiffnessFlag ) ) ) {
 #ifdef VERBOSE
             OOFEM_LOG_DEBUG("Assembling elastic stiffness matrix\n");
 #endif
             stiffnessMatrix->zero(); // zero stiffness matrix
-            this->assemble(*stiffnessMatrix, tStep, TangentAssembler(ElasticStiffness),
+            this->assemble(* stiffnessMatrix, tStep, TangentAssembler(ElasticStiffness),
                            EModelDefaultEquationNumbering(), d);
             initFlag = 0;
         } else {
@@ -583,7 +650,14 @@ NonLinearStatic :: updateComponent(TimeStep *tStep, NumericalCmpn cmpn, Domain *
         OOFEM_LOG_DEBUG("Updating internal forces\n");
 #endif
         // update internalForces and internalForcesEBENorm concurrently
-        this->giveInternalForces(internalForces, true, d->giveNumber(), tStep);
+        this->updateInternalRHS(internalForces, tStep, d, & this->internalForcesEBENorm);
+        break;
+
+    case ExternalRhs:
+#ifdef VERBOSE
+        OOFEM_LOG_DEBUG("Updating external forces\n");
+#endif
+        this->assembleIncrementalReferenceLoadVectors(incrementalLoadVector, incrementalLoadVectorOfPrescribed, this->refLoadInputMode, d, tStep);
         break;
 
     default:
@@ -599,7 +673,7 @@ NonLinearStatic :: printOutputAt(FILE *file, TimeStep *tStep)
         return;                                                                      // do not print even Solution step header
     }
 
-    fprintf(file, "\n\nOutput for time %.3e, solution step number %d\n", tStep->giveTargetTime(), tStep->giveNumber() );
+    fprintf( file, "\n\nOutput for time %.3e, solution step number %d\n", tStep->giveTargetTime(), tStep->giveNumber() );
     fprintf(file, "Reached load level : %20.6f in %d iterations\n\n",
             cumulatedLoadLevel + loadLevel, currentIterations);
 
@@ -611,14 +685,12 @@ NonLinearStatic :: printOutputAt(FILE *file, TimeStep *tStep)
 }
 
 
-contextIOResultType
+void
 NonLinearStatic :: saveContext(DataStream &stream, ContextMode mode)
 {
     contextIOResultType iores;
 
-    if ( ( iores = EngngModel :: saveContext(stream, mode) ) != CIO_OK ) {
-        THROW_CIOERR(iores);
-    }
+    EngngModel :: saveContext(stream, mode);
 
     if ( ( iores = totalDisplacement.storeYourself(stream) ) != CIO_OK ) {
         THROW_CIOERR(iores);
@@ -648,19 +720,15 @@ NonLinearStatic :: saveContext(DataStream &stream, ContextMode mode)
     if ( ( iores = initialLoadVectorOfPrescribed.storeYourself(stream) ) != CIO_OK ) {
         THROW_CIOERR(iores);
     }
-
-    return CIO_OK;
 }
 
 
-contextIOResultType
+void
 NonLinearStatic :: restoreContext(DataStream &stream, ContextMode mode)
 {
     contextIOResultType iores;
 
-    if ( ( iores = EngngModel :: restoreContext(stream, mode) ) != CIO_OK ) {
-        THROW_CIOERR(iores);
-    }
+    EngngModel :: restoreContext(stream, mode);
 
     //if ((iores = this->giveNumericalMethod(giveCurrentStep())->restoreContext (stream)) !=CIO_OK) THROW_CIOERR(iores);
 
@@ -695,8 +763,6 @@ NonLinearStatic :: restoreContext(DataStream &stream, ContextMode mode)
     if ( ( iores = initialLoadVectorOfPrescribed.restoreYourself(stream) ) != CIO_OK ) {
         THROW_CIOERR(iores);
     }
-
-    return CIO_OK;
 }
 
 
@@ -726,7 +792,7 @@ NonLinearStatic :: assemble(SparseMtrx &answer, TimeStep *tStep, const MatrixAss
 
     LinearStatic :: assemble(answer, tStep, ma, s, domain);
 
-    if ( ( nonlocalStiffnessFlag ) && dynamic_cast< const TangentAssembler* >(&ma) ) {
+    if ( ( nonlocalStiffnessFlag ) && dynamic_cast< const TangentAssembler * >(& ma) ) {
         // add nonlocal contribution
         for ( auto &elem : domain->giveElements() ) {
             static_cast< StructuralElement * >( elem.get() )->addNonlocalStiffnessContributions(answer, s, tStep);
@@ -822,9 +888,9 @@ NonLinearStatic :: estimateMaxPackSize(IntArray &commMap, DataStream &buff, int 
     Domain *domain = this->giveDomain(1);
 
     if ( packUnpackType == 0 ) { ///@todo Fix this old ProblemCommMode__NODE_CUT value
-        for ( int map: commMap ) {
-            DofManager *dman = domain->giveDofManager( map );
-            for ( Dof *dof: *dman ) {
+        for ( int map : commMap ) {
+            DofManager *dman = domain->giveDofManager(map);
+            for ( Dof *dof : *dman ) {
                 if ( dof->isPrimaryDof() && ( dof->__giveEquationNumber() ) ) {
                     count++;
                 } else {
@@ -836,8 +902,8 @@ NonLinearStatic :: estimateMaxPackSize(IntArray &commMap, DataStream &buff, int 
         //printf ("\nestimated count is %d\n",count);
         return ( buff.givePackSizeOfDouble(1) * max(count, pcount) );
     } else if ( packUnpackType == 1 ) {
-        for ( int map: commMap ) {
-            count += domain->giveElement( map )->estimatePackSize(buff);
+        for ( int map : commMap ) {
+            count += domain->giveElement(map)->estimatePackSize(buff);
         }
 
         return count;
@@ -852,15 +918,15 @@ LoadBalancer *
 NonLinearStatic :: giveLoadBalancer()
 {
     if ( lb ) {
-        return lb;
+        return lb.get();
     }
 
     if ( loadBalancingFlag ) {
         ///@todo Make the name possibly optional (but currently, there is just one choice, "parmetis")
         lb = classFactory.createLoadBalancer( "parmetis", this->giveDomain(1) );
-        return lb;
+        return lb.get();
     } else {
-        return NULL;
+        return nullptr;
     }
 }
 
@@ -869,14 +935,14 @@ LoadBalancerMonitor *
 NonLinearStatic :: giveLoadBalancerMonitor()
 {
     if ( lbm ) {
-        return lbm;
+        return lbm.get();
     }
 
     if ( loadBalancingFlag ) {
-        lbm = classFactory.createLoadBalancerMonitor( "wallclock", this);
-        return lbm;
+        lbm = classFactory.createLoadBalancerMonitor("wallclock", this);
+        return lbm.get();
     } else {
-        return NULL;
+        return nullptr;
     }
 }
 #endif
@@ -891,7 +957,7 @@ NonLinearStatic :: packMigratingData(TimeStep *tStep)
 
     for ( int idofman = 1; idofman <= ndofman; idofman++ ) {
         DofManager *_dm = domain->giveDofManager(idofman);
-        for ( Dof *_dof: *_dm ) {
+        for ( Dof *_dof : *_dm ) {
             if ( _dof->isPrimaryDof() ) {
                 int _eq;
                 if ( ( _eq = _dof->__giveEquationNumber() ) ) {
@@ -938,16 +1004,16 @@ NonLinearStatic :: unpackMigratingData(TimeStep *tStep)
 
     for ( int idofman = 1; idofman <= ndofman; idofman++ ) {
         DofManager *_dm = domain->giveDofManager(idofman);
-        for ( Dof *_dof: *_dm ) {
+        for ( Dof *_dof : *_dm ) {
             if ( _dof->isPrimaryDof() ) {
                 int _eq;
                 if ( ( _eq = _dof->__giveEquationNumber() ) ) {
                     // pack values in solution vectors
-                    totalDisplacement.at(_eq) = _dof->giveUnknownsDictionaryValue( tStep, VM_Total );
-                    initialLoadVector.at(_eq) = _dof->giveUnknownsDictionaryValue( tStep, VM_RhsInitial );
-                    incrementalLoadVector.at(_eq) = _dof->giveUnknownsDictionaryValue( tStep, VM_RhsIncremental );
+                    totalDisplacement.at(_eq) = _dof->giveUnknownsDictionaryValue(tStep, VM_Total);
+                    initialLoadVector.at(_eq) = _dof->giveUnknownsDictionaryValue(tStep, VM_RhsInitial);
+                    incrementalLoadVector.at(_eq) = _dof->giveUnknownsDictionaryValue(tStep, VM_RhsIncremental);
 
- #if 0
+#if 0
                     // debug print
                     if ( _dm->giveParallelMode() == DofManager_shared ) {
                         fprintf(stderr, "[%d] Shared: %d(%d) -> %d\n", myrank, idofman, idof, _eq);
@@ -955,16 +1021,16 @@ NonLinearStatic :: unpackMigratingData(TimeStep *tStep)
                         fprintf(stderr, "[%d] Local : %d(%d) -> %d\n", myrank, idofman, idof, _eq);
                     }
 
- #endif
+#endif
                 } else if ( ( _eq = _dof->__givePrescribedEquationNumber() ) ) {
                     // pack values in prescribed solution vectors
-                    initialLoadVectorOfPrescribed.at(_eq) = _dof->giveUnknownsDictionaryValue( tStep, VM_RhsInitial );
-                    incrementalLoadVectorOfPrescribed.at(_eq) = _dof->giveUnknownsDictionaryValue( tStep, VM_RhsIncremental );
+                    initialLoadVectorOfPrescribed.at(_eq) = _dof->giveUnknownsDictionaryValue(tStep, VM_RhsInitial);
+                    incrementalLoadVectorOfPrescribed.at(_eq) = _dof->giveUnknownsDictionaryValue(tStep, VM_RhsIncremental);
 
- #if 0
+#if 0
                     // debug print
                     fprintf(stderr, "[%d] %d(%d) -> %d\n", myrank, idofman, idof, -_eq);
- #endif
+#endif
                 }
             } // end primary dof
         } // end dof loop
@@ -979,5 +1045,4 @@ NonLinearStatic :: unpackMigratingData(TimeStep *tStep)
 
     initFlag = true;
 }
-
 } // end namespace oofem

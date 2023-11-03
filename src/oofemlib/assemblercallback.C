@@ -55,7 +55,7 @@ void VectorAssembler :: vectorFromEdgeLoad(FloatArray& vec, Element& element, Ed
 
 void VectorAssembler :: vectorFromNodeLoad(FloatArray& vec, DofManager& dman, NodalLoad* load, TimeStep* tStep, ValueModeType mode) const { vec.clear(); }
 
-void VectorAssembler :: assembleFromActiveBC(FloatArray &answer, ActiveBoundaryCondition &bc, TimeStep* tStep, ValueModeType mode, const UnknownNumberingScheme &s, FloatArray *eNorms) const { }
+void VectorAssembler :: assembleFromActiveBC(FloatArray &answer, ActiveBoundaryCondition &bc, TimeStep* tStep, ValueModeType mode, const UnknownNumberingScheme &s, FloatArray *eNorms, void* lock) const { }
 
 void VectorAssembler :: locationFromElement(IntArray& loc, Element& element, const UnknownNumberingScheme& s, IntArray* dofIds) const
 {
@@ -75,7 +75,7 @@ void MatrixAssembler :: matrixFromSurfaceLoad(FloatMatrix& mat, Element& element
 
 void MatrixAssembler :: matrixFromEdgeLoad(FloatMatrix& mat, Element& element, EdgeLoad* load, int edge, TimeStep* tStep) const { mat.clear(); }
 
-void MatrixAssembler :: assembleFromActiveBC(SparseMtrx &k, ActiveBoundaryCondition &bc, TimeStep* tStep, const UnknownNumberingScheme &s_r, const UnknownNumberingScheme &s_c) const {}
+void MatrixAssembler :: assembleFromActiveBC(SparseMtrx &k, ActiveBoundaryCondition &bc, TimeStep* tStep, const UnknownNumberingScheme &s_r, const UnknownNumberingScheme &s_c, void *lock) const {}
 
 void MatrixAssembler :: locationFromElement(IntArray& loc, Element& element, const UnknownNumberingScheme& s, IntArray* dofIds) const
 {
@@ -91,29 +91,31 @@ void MatrixAssembler :: locationFromElementNodes(IntArray& loc, Element& element
 void MatrixProductAssembler :: vectorFromElement(FloatArray& vec, Element& element, TimeStep* tStep, ValueModeType mode) const
 {
     FloatMatrix mat;
+    FloatArray r;
     this->mAssem.matrixFromElement(mat, element, tStep);
-    vec.beProductOf(mat, this->vec);
+    element.computeVectorOf(mode, tStep, r);
+    vec.beProductOf(mat, r);
 }
 
 void MatrixProductAssembler :: vectorFromLoad(FloatArray& vec, Element& element, BodyLoad* load, TimeStep* tStep, ValueModeType mode) const
 {
     FloatMatrix mat;
     this->mAssem.matrixFromLoad(mat, element, load, tStep);
-    vec.beProductOf(mat, this->vec);
+    //vec.beProductOf(mat, this->vec);
 }
 
 void MatrixProductAssembler :: vectorFromSurfaceLoad(FloatArray& vec, Element& element, SurfaceLoad* load, int boundary, TimeStep* tStep, ValueModeType mode) const
 {
     FloatMatrix mat;
     this->mAssem.matrixFromSurfaceLoad(mat, element, load, boundary, tStep);
-    vec.beProductOf(mat, this->vec);
+    //vec.beProductOf(mat, this->vec);
 }
 
 void MatrixProductAssembler :: vectorFromEdgeLoad(FloatArray& vec, Element& element, EdgeLoad* load, int edge, TimeStep* tStep, ValueModeType mode) const
 {
     FloatMatrix mat;
     this->mAssem.matrixFromEdgeLoad(mat, element, load, edge, tStep); // ??????
-    vec.beProductOf(mat, this->vec);
+    //vec.beProductOf(mat, this->vec);
 }
 
 
@@ -141,9 +143,9 @@ void InternalForceAssembler :: vectorFromEdgeLoad(FloatArray& vec, Element& elem
     //element.computeInternalForcesFromEdgeLoad(vec, load, edge, tStep);
 }
 
-void InternalForceAssembler :: assembleFromActiveBC(FloatArray &answer, ActiveBoundaryCondition &bc, TimeStep* tStep, ValueModeType mode, const UnknownNumberingScheme &s, FloatArray *eNorms) const
+void InternalForceAssembler :: assembleFromActiveBC(FloatArray &answer, ActiveBoundaryCondition &bc, TimeStep* tStep, ValueModeType mode, const UnknownNumberingScheme &s, FloatArray *eNorms, void* lock) const
 {
-    bc.assembleVector(answer, tStep, InternalForcesVector, mode, s, eNorms);
+    bc.assembleVector(answer, tStep, InternalForcesVector, mode, s, eNorms, lock);
     //bc.assembleInternalForces(answer, tStep, s, eNorms);
 }
 
@@ -156,6 +158,7 @@ void ExternalForceAssembler :: vectorFromElement(FloatArray& vec, Element& eleme
 
 void ExternalForceAssembler :: vectorFromLoad(FloatArray& vec, Element& element, BodyLoad* load, TimeStep* tStep, ValueModeType mode) const
 {
+    vec.clear();
     if ( ! load->reference )
         element.computeLoadVector(vec, load, ExternalForcesVector, mode, tStep);
         //element.computeExternalForcesFromLoad(vec, load, tStep);
@@ -163,6 +166,7 @@ void ExternalForceAssembler :: vectorFromLoad(FloatArray& vec, Element& element,
 
 void ExternalForceAssembler :: vectorFromSurfaceLoad(FloatArray& vec, Element& element, SurfaceLoad* load, int boundary, TimeStep* tStep, ValueModeType mode) const
 {
+    vec.clear();
     if ( ! load->reference )
         element.computeBoundarySurfaceLoadVector(vec, load, boundary, ExternalForcesVector, mode, tStep);
         //element.computeExternalForcesFromSurfaceLoad(vec, load, boundary, tStep);
@@ -170,6 +174,7 @@ void ExternalForceAssembler :: vectorFromSurfaceLoad(FloatArray& vec, Element& e
 
 void ExternalForceAssembler :: vectorFromEdgeLoad(FloatArray& vec, Element& element, EdgeLoad* load, int edge, TimeStep* tStep, ValueModeType mode) const
 {
+    vec.clear();
     if ( ! load->reference )
         element.computeBoundaryEdgeLoadVector(vec, load, edge, ExternalForcesVector, mode, tStep);
         //element.computeExternalForcesFromEdgeLoad(vec, load, edge, tStep);
@@ -177,20 +182,22 @@ void ExternalForceAssembler :: vectorFromEdgeLoad(FloatArray& vec, Element& elem
 
 void ExternalForceAssembler :: vectorFromNodeLoad(FloatArray& vec, DofManager& dman, NodalLoad* load, TimeStep* tStep, ValueModeType mode) const
 {
+    vec.clear();
     if ( ! load->reference )
         dman.computeLoadVector(vec, load, ExternalForcesVector, tStep, mode);
         //dman.computeExternalForcesFromLoad(vec, load, tStep);
 }
 
-void ExternalForceAssembler :: assembleFromActiveBC(FloatArray &answer, ActiveBoundaryCondition &bc, TimeStep* tStep, ValueModeType mode, const UnknownNumberingScheme &s, FloatArray *eNorms) const
+void ExternalForceAssembler :: assembleFromActiveBC(FloatArray &answer, ActiveBoundaryCondition &bc, TimeStep* tStep, ValueModeType mode, const UnknownNumberingScheme &s, FloatArray *eNorms, void* lock) const
 {
-    bc.assembleVector(answer, tStep, ExternalForcesVector, mode, s, eNorms);
+    bc.assembleVector(answer, tStep, ExternalForcesVector, mode, s, eNorms, lock);
     //bc.assembleExternalForces(answer, tStep, s, eNorms);
 }
 
 
 void ReferenceForceAssembler :: vectorFromLoad(FloatArray& vec, Element& element, BodyLoad* load, TimeStep* tStep, ValueModeType mode) const
 {
+    vec.clear();
     if ( load->reference )
         element.computeLoadVector(vec, load, ExternalForcesVector, mode, tStep);
     //element.computeExternalForcesFromLoad(vec, load, tStep);
@@ -199,6 +206,7 @@ void ReferenceForceAssembler :: vectorFromLoad(FloatArray& vec, Element& element
 
 void ReferenceForceAssembler :: vectorFromSurfaceLoad(FloatArray& vec, Element& element, SurfaceLoad* load, int boundary, TimeStep* tStep, ValueModeType mode) const
 {
+    vec.clear();
     if ( load->reference )
         element.computeBoundarySurfaceLoadVector(vec, load, boundary, ExternalForcesVector, mode, tStep);
     //element.computeExternalForcesFromBoundaryLoad(vec, load, boundary, tStep);
@@ -206,6 +214,7 @@ void ReferenceForceAssembler :: vectorFromSurfaceLoad(FloatArray& vec, Element& 
 
 void ReferenceForceAssembler :: vectorFromEdgeLoad(FloatArray& vec, Element& element, EdgeLoad* load, int edge, TimeStep* tStep, ValueModeType mode) const
 {
+    vec.clear();
     if ( load->reference )
         element.computeBoundaryEdgeLoadVector(vec, load, edge, ExternalForcesVector, mode, tStep);
     //element.computeExternalForcesFromEdgeLoad(vec, load, edge, tStep);
@@ -213,6 +222,7 @@ void ReferenceForceAssembler :: vectorFromEdgeLoad(FloatArray& vec, Element& ele
 
 void ReferenceForceAssembler :: vectorFromNodeLoad(FloatArray& vec, DofManager& dman, NodalLoad* load, TimeStep* tStep, ValueModeType mode) const
 {
+    vec.clear();
     if ( load->reference )
         dman.computeLoadVector(vec, load, ExternalForcesVector, tStep, mode);
         //dman.computeExternalForcesFromLoad(vec, load, tStep);
@@ -262,9 +272,9 @@ void TangentAssembler :: matrixFromEdgeLoad(FloatMatrix& mat, Element& element, 
   element.computeTangentFromEdgeLoad(mat, load, edge, this->rmode, tStep);
 }
 
-void TangentAssembler :: assembleFromActiveBC(SparseMtrx &k, ActiveBoundaryCondition &bc, TimeStep* tStep, const UnknownNumberingScheme &s_r, const UnknownNumberingScheme &s_c) const
+void TangentAssembler :: assembleFromActiveBC(SparseMtrx &k, ActiveBoundaryCondition &bc, TimeStep* tStep, const UnknownNumberingScheme &s_r, const UnknownNumberingScheme &s_c, void *lock) const
 {
-    bc.assemble(k, tStep, TangentStiffnessMatrix, s_r, s_c);
+    bc.assemble(k, tStep, TangentStiffnessMatrix, s_r, s_c, 1.0, lock);
 }
 
 
@@ -315,14 +325,14 @@ void EffectiveTangentAssembler :: matrixFromSurfaceLoad(FloatMatrix& mat, Elemen
 void EffectiveTangentAssembler :: matrixFromEdgeLoad(FloatMatrix& mat, Element& element, EdgeLoad* load, int edge, TimeStep* tStep) const
 {
     mat.clear();
-    //element.computeTangentFromEdgeLoad(mat, load, edge, this->rmode, tStep);
-    //mat.times(this->k);
+    element.computeTangentFromEdgeLoad(mat, load, edge, this->rmode, tStep);
+    mat.times(this->k);
 }
 
-void EffectiveTangentAssembler :: assembleFromActiveBC(SparseMtrx &k, ActiveBoundaryCondition &bc, TimeStep* tStep, const UnknownNumberingScheme &s_r, const UnknownNumberingScheme &s_c) const
+void EffectiveTangentAssembler :: assembleFromActiveBC(SparseMtrx &k, ActiveBoundaryCondition &bc, TimeStep* tStep, const UnknownNumberingScheme &s_r, const UnknownNumberingScheme &s_c, void* lock) const
 {
     // TODO: Crucial part to add: We have to support a scaling factor for this method to support effective tangents.
-    bc.assemble(k, tStep, TangentStiffnessMatrix, s_r, s_c, this->k);
+    bc.assemble(k, tStep, TangentStiffnessMatrix, s_r, s_c, this->k, lock);
 }
 
 

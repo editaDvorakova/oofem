@@ -6,14 +6,14 @@
 #include "timer.h"
 
 // Optional (only need the input fields defines)
-#include "../tm/stationarytransportproblem.h"
+#include "tm/EngineeringModels/stationarytransportproblem.h"
 #include "nrsolver.h"
-#include "../tm/simpletransportcrosssection.h"
-#include "../tm/isoheatmat.h"
-#include "../tm/brick1_ht.h"
-#include "../tm/transportgradientdirichlet.h"
-#include "../tm/transportgradientneumann.h"
-#include "../tm/transportgradientperiodic.h"
+#include "tm/simpletransportcrosssection.h"
+#include "tm/Materials/isoheatmat.h"
+#include "tm/Elements/brick1_ht.h"
+#include "tm/BoundaryCondition/transportgradientdirichlet.h"
+#include "tm/BoundaryCondition/transportgradientneumann.h"
+#include "tm/BoundaryCondition/transportgradientperiodic.h"
 #include "modulemanager.h"
 #include "exportmodule.h"
 #include "vtkxmlexportmodule.h"
@@ -24,9 +24,9 @@
 #include "boundarycondition.h"
 #include "set.h"
 
-#include "../tm/transportgradientneumann.h"
-#include "../tm/transportgradientdirichlet.h"
-#include "../tm/transportgradientperiodic.h"
+#include "tm/BoundaryCondition/transportgradientneumann.h"
+#include "tm/BoundaryCondition/transportgradientdirichlet.h"
+#include "tm/BoundaryCondition/transportgradientperiodic.h"
 
 #include <random>
 #include <fstream>
@@ -44,22 +44,21 @@ using namespace H5;
 class OOFEM_EXPORT BasicInputRecord : public InputRecord
 {
 public:
-    virtual InputRecord *GiveCopy() { return nullptr; }
-    virtual std :: string giveRecordAsString() const { return ""; }
-    virtual IRResultType giveField(int &answer, InputFieldType id) { return IRRT_NOTFOUND; }
-    virtual IRResultType giveField(double &answer, InputFieldType id) { return IRRT_NOTFOUND; }
-    virtual IRResultType giveField(bool &answer, InputFieldType id) { return IRRT_NOTFOUND; }
-    virtual IRResultType giveField(std :: string &answer, InputFieldType id) { return IRRT_NOTFOUND; }
-    virtual IRResultType giveField(FloatArray &answer, InputFieldType id) { return IRRT_NOTFOUND; }
-    virtual IRResultType giveField(IntArray &answer, InputFieldType id) { return IRRT_NOTFOUND; }
-    virtual IRResultType giveField(FloatMatrix &answer, InputFieldType id) { return IRRT_NOTFOUND; }
-    virtual IRResultType giveField(std :: vector< std :: string > &answer, InputFieldType id) { return IRRT_NOTFOUND; }
-    virtual IRResultType giveField(Dictionary &answer, InputFieldType id) { return IRRT_NOTFOUND; }
-    virtual IRResultType giveField(std :: list< Range > &answer, InputFieldType id) { return IRRT_NOTFOUND; }
-    virtual IRResultType giveField(ScalarFunction &function, InputFieldType id) { return IRRT_NOTFOUND; }
-    virtual void printYourself() {}
-    virtual void report_error(const char *_class, const char *proc, InputFieldType id, IRResultType result, const char *file, int line) {}
-    virtual void finish(bool wrn = true) {}
+    std::unique_ptr<InputRecord> clone() const override { return std::unique_ptr<InputRecord>(); }
+    std :: string giveRecordAsString() const override { return ""; }
+    void giveField(int &answer, InputFieldType id) override { }
+    void giveField(double &answer, InputFieldType id) override { }
+    void giveField(bool &answer, InputFieldType id) override { }
+    void giveField(std :: string &answer, InputFieldType id) override { }
+    void giveField(FloatArray &answer, InputFieldType id) override { }
+    void giveField(IntArray &answer, InputFieldType id) override { }
+    void giveField(FloatMatrix &answer, InputFieldType id) override { }
+    void giveField(std :: vector< std :: string > &answer, InputFieldType id) override { }
+    void giveField(Dictionary &answer, InputFieldType id) override { }
+    void giveField(std :: list< Range > &answer, InputFieldType id) override { }
+    void giveField(ScalarFunction &function, InputFieldType id) override { }
+    void printYourself() override {}
+    void finish(bool wrn = true) override {}
 };
 
 class OOFEM_EXPORT BasicNodeInputRecord : public BasicInputRecord
@@ -72,14 +71,14 @@ public:
     BasicNodeInputRecord(int num, FloatArray coords): recordNumber(num), coords(std::move(coords)) { }
     virtual ~BasicNodeInputRecord() {}
 
-    virtual IRResultType giveRecordKeywordField(std :: string &answer, int &value) { answer = "node"; value = recordNumber; return IRRT_OK; }
-    virtual IRResultType giveRecordKeywordField(std :: string &answer) { answer = "node"; return IRRT_OK; }
-    virtual IRResultType giveField(FloatArray &answer, InputFieldType id) {
-        if (std::string(id) == _IFT_Node_coords) { answer = coords; return IRRT_OK; }
-        return IRRT_NOTFOUND;
+    void giveRecordKeywordField(std :: string &answer, int &value) override { answer = "node"; value = recordNumber; }
+    void giveRecordKeywordField(std :: string &answer) override { answer = "node";  }
+    void giveField(FloatArray &answer, InputFieldType id) override {
+        if (std::string(id) == _IFT_Node_coords) answer = coords;
+        else throw MissingKeywordInputException(this*, id, recordNumber);
     }
 
-    virtual bool hasField(InputFieldType id) { return std::string(id) == _IFT_Node_coords; }
+    bool hasField(InputFieldType id) override { return std::string(id) == _IFT_Node_coords; }
 };
 
 
@@ -93,18 +92,14 @@ public:
     BasicElementInputRecord(int num, IntArray enodes): recordNumber(num), enodes(std::move(enodes)) { }
     virtual ~BasicElementInputRecord() {}
 
-    virtual InputRecord *GiveCopy() { return nullptr; }
-
-    virtual std :: string giveRecordAsString() const { return ""; }
-
-    virtual IRResultType giveRecordKeywordField(std :: string &answer, int &value) { answer = _IFT_Brick1_ht_Name; value = recordNumber; return IRRT_OK; }
-    virtual IRResultType giveRecordKeywordField(std :: string &answer) { answer = _IFT_Brick1_ht_Name; return IRRT_OK; }
-    virtual IRResultType giveField(IntArray &answer, InputFieldType id) { 
-        if (std::string(id) == _IFT_Element_nodes) { answer = enodes; return IRRT_OK; }
-        return IRRT_NOTFOUND;
+    void giveRecordKeywordField(std :: string &answer, int &value) override { answer = _IFT_Brick1_ht_Name; value = recordNumber; }
+    void giveRecordKeywordField(std :: string &answer) override { answer = _IFT_Brick1_ht_Name; }
+    void giveField(IntArray &answer, InputFieldType id) override { 
+        if (std::string(id) == _IFT_Element_nodes) answer = enodes;
+        else throw MissingKeywordInputException(this*, id, recordNumber);
     }
 
-    virtual bool hasField(InputFieldType id) { return std::string(id) == _IFT_Element_nodes; }
+    bool hasField(InputFieldType id) override { return std::string(id) == _IFT_Element_nodes; }
 };
 
 
@@ -114,14 +109,14 @@ public:
     DeactivatedElementInputRecord(int num, IntArray enodes): BasicElementInputRecord(num, enodes) { }
     virtual ~DeactivatedElementInputRecord() {}
 
-    virtual IRResultType giveField(IntArray &answer, InputFieldType id) {
-        if (std::string(id) == _IFT_Element_nodes) { answer = enodes; return IRRT_OK; }
-        return IRRT_NOTFOUND;
+    virtual void giveField(IntArray &answer, InputFieldType id) {
+        if (std::string(id) == _IFT_Element_nodes) answer = enodes;
+        else throw MissingKeywordInputException(this*, id, recordNumber);
     }
-    virtual IRResultType giveField(int &answer, InputFieldType id) { 
-        if (std::string(id) == _IFT_Element_activityTimeFunction) { answer = 2; return IRRT_OK; }
-        else if (std::string(id) == _IFT_Element_nip) { answer = 0; return IRRT_OK; }
-        return IRRT_NOTFOUND;
+    virtual void giveField(int &answer, InputFieldType id) { 
+        if (std::string(id) == _IFT_Element_activityTimeFunction) answer = 2;
+        else if (std::string(id) == _IFT_Element_nip) answer = 0;
+        else throw MissingKeywordInputException(this*, id, recordNumber);
     }
     virtual bool hasField(InputFieldType id) { return std::string(id) == _IFT_Element_activityTimeFunction || 
         std::string(id) == _IFT_Element_nip || std::string(id) == _IFT_Element_nodes; }
@@ -193,7 +188,7 @@ int main(int argc, char *argv[])
         timer.startTimer();
         DynamicDataReader myData("dream3d_analysis");
 
-        DynamicInputRecord *myInput;
+        std::unique_ptr<DynamicInputRecord> myInput;
         myData.setOutputFileName(name + ".out");
         myData.setDescription("Internally generated hex grid from Dream3D file");
 
@@ -216,7 +211,7 @@ int main(int argc, char *argv[])
         rveSize.printYourself("rve size");
 
         //Problem
-        myInput = new DynamicInputRecord(_IFT_StationaryTransportProblem_Name);
+        myInput = std::make_unique<DynamicInputRecord>(_IFT_StationaryTransportProblem_Name);
         myInput->setField(1, _IFT_EngngModel_nsteps);
         myInput->setField(1e-6, _IFT_NRSolver_rtolf);
         myInput->setField(3, _IFT_EngngModel_lstype);
@@ -224,33 +219,33 @@ int main(int argc, char *argv[])
         myInput->setField(1, _IFT_ModuleManager_nmodules);
         myInput->setField(_IFT_EngngModel_suppressOutput);
         myInput->setField(_IFT_StationaryTransportProblem_keepTangent);
-        myData.insertInputRecord(DataReader::IR_emodelRec, myInput);
+        myData.insertInputRecord(DataReader::IR_emodelRec, std::move(myInput));
 
         // VTKXML tstep_all domain_all primvars 1 6 cellvars 3 103 56 41'
-        myInput = new DynamicInputRecord(_IFT_VTKXMLExportModule_Name);
+        myInput = std::make_unique<DynamicInputRecord>(_IFT_VTKXMLExportModule_Name);
         myInput->setField(_IFT_ExportModule_tstepall);
         myInput->setField(_IFT_ExportModule_domainall);
         myInput->setField(IntArray{6}, _IFT_VTKXMLExportModule_primvars);
         myInput->setField(IntArray{103, 56, 41}, _IFT_VTKXMLExportModule_cellvars);
-        myData.insertInputRecord(DataReader::DataReader::IR_expModuleRec, myInput);
+        myData.insertInputRecord(DataReader::DataReader::IR_expModuleRec, std::move(myInput));
 
         //Domain
         ///@todo Remove this.
-        myInput = new DynamicInputRecord();
+        myInput = std::make_unique<DynamicInputRecord>();
         std::string help = "3d";
         // myInput->setRecordKeywordField("domain", 1);
         myInput->setField(help, _IFT_Domain_type);
-        myData.insertInputRecord(DataReader::IR_domainRec, myInput);
+        myData.insertInputRecord(DataReader::IR_domainRec, std::move(myInput));
 
         //Output
         ///@todo Remove this.
-        myInput = new DynamicInputRecord();
+        myInput = std::make_unique<DynamicInputRecord>();
         //myInput->setRecordKeywordField(_IFT_OutputManager_name, 1);
         myInput->setField(_IFT_OutputManager_Name);
-        myData.insertInputRecord(DataReader::IR_outManRec, myInput);
+        myData.insertInputRecord(DataReader::IR_outManRec, std::move(myInput));
 
         //Components size record
-        myInput = new DynamicInputRecord();
+        myInput = std::make_unique<DynamicInputRecord>();
         myInput->setField(n[0]*n[1]*n[2], _IFT_Domain_ndofman);
         myInput->setField(nelem[0]*nelem[1]*nelem[2], _IFT_Domain_nelem);
         myInput->setField(2, _IFT_Domain_ncrosssect);
@@ -260,7 +255,7 @@ int main(int argc, char *argv[])
         myInput->setField(2, _IFT_Domain_nfunct);
         myInput->setField(12, _IFT_Domain_nset);
         myInput->setField(3, _IFT_Domain_numberOfSpatialDimensions);
-        myData.insertInputRecord(DataReader::IR_domainCompRec, myInput);
+        myData.insertInputRecord(DataReader::IR_domainCompRec, std::move(myInput));
 
         //Nodes
         for (int nz = 0; nz < n[2]; ++nz) {
@@ -273,11 +268,12 @@ int main(int argc, char *argv[])
                         ny * spacing[1] - rveSize[1] * 0.5,
                         nz * spacing[2] - rveSize[2] * 0.5}));
 #else
-                    auto x = new BasicNodeInputRecord(node, {nx * spacing[0] - rveSize[0] * 0.5,
-                                                             ny * spacing[1] - rveSize[1] * 0.5,
-                                                             nz * spacing[2] - rveSize[2] * 0.5});
+                    auto x = std::make_unique<BasicNodeInputRecord>(node,
+                        {nx * spacing[0] - rveSize[0] * 0.5,
+                        ny * spacing[1] - rveSize[1] * 0.5,
+                        nz * spacing[2] - rveSize[2] * 0.5});
 
-                    myData.insertInputRecord(DataReader::IR_dofmanRec, x);
+                    myData.insertInputRecord(DataReader::IR_dofmanRec, std::move(x));
 #endif
                 }
             }
@@ -304,13 +300,13 @@ int main(int argc, char *argv[])
                         for ( auto node : enodes )
                             co_nodes.at(node) = 1;
                     }
-                    myData.insertInputRecord(DataReader::IR_elemRec, eir);
+                    myData.insertInputRecord(DataReader::IR_elemRec, std::move(eir));
 #else
                     if ( phases.at(e) != 1 ) { // Not Co phase, so lets deactivate
-                        myData.insertInputRecord(DataReader::IR_elemRec, new DeactivatedElementInputRecord(e, enodes));
+                        myData.insertInputRecord(DataReader::IR_elemRec, std::make_unique<DeactivatedElementInputRecord>(e, enodes));
                         //eir->setField(2, _IFT_Element_activityTimeFunction);
                     } else {
-                        myData.insertInputRecord(DataReader::IR_elemRec, new BasicElementInputRecord(e, enodes));
+                        myData.insertInputRecord(DataReader::IR_elemRec, std::make_unique<BasicElementInputRecord>(e, enodes));
                         for ( auto node : enodes )
                             co_nodes.at(node) = 1;
                     }
@@ -386,36 +382,36 @@ int main(int argc, char *argv[])
             for (int ex = 0; ex < nelem[0]; ++ex)
                 zm.followedBy({nC(ex, ey, 0, nelem)+1, 2});
 
-        myInput = new DynamicInputRecord(_IFT_Set_Name, 1);
+        myInput = std::make_unique<DynamicInputRecord>(_IFT_Set_Name, 1);
         myInput->setField(xm, _IFT_Set_elementBoundaries);
-        myData.insertInputRecord(DataReader::IR_setRec, myInput);
+        myData.insertInputRecord(DataReader::IR_setRec, std::move(myInput));
 
-        myInput = new DynamicInputRecord(_IFT_Set_Name, 2);
+        myInput = std::make_unique<DynamicInputRecord>(_IFT_Set_Name, 2);
         myInput->setField(ym, _IFT_Set_elementBoundaries);
-        myData.insertInputRecord(DataReader::IR_setRec, myInput);
+        myData.insertInputRecord(DataReader::IR_setRec, std::move(myInput));
 
-        myInput = new DynamicInputRecord(_IFT_Set_Name, 3);
+        myInput = std::make_unique<DynamicInputRecord>(_IFT_Set_Name, 3);
         myInput->setField(zm, _IFT_Set_elementBoundaries);
-        myData.insertInputRecord(DataReader::IR_setRec, myInput);
+        myData.insertInputRecord(DataReader::IR_setRec, std::move(myInput));
 
-        myInput = new DynamicInputRecord(_IFT_Set_Name, 4);
+        myInput = std::make_unique<DynamicInputRecord>(_IFT_Set_Name, 4);
         myInput->setField(xp, _IFT_Set_elementBoundaries);
-        myData.insertInputRecord(DataReader::IR_setRec, myInput);
+        myData.insertInputRecord(DataReader::IR_setRec, std::move(myInput));
 
-        myInput = new DynamicInputRecord(_IFT_Set_Name, 5);
+        myInput = std::make_unique<DynamicInputRecord>(_IFT_Set_Name, 5);
         myInput->setField(yp, _IFT_Set_elementBoundaries);
-        myData.insertInputRecord(DataReader::IR_setRec, myInput);
+        myData.insertInputRecord(DataReader::IR_setRec, std::move(myInput));
 
-        myInput = new DynamicInputRecord(_IFT_Set_Name, 6);
+        myInput = std::make_unique<DynamicInputRecord>(_IFT_Set_Name, 6);
         myInput->setField(zp, _IFT_Set_elementBoundaries);
-        myData.insertInputRecord(DataReader::IR_setRec, myInput);
+        myData.insertInputRecord(DataReader::IR_setRec, std::move(myInput));
 
         // Set of WC only nodes which gets prescribed as to not cause trouble!
         IntArray wc_nodes_index;
         co_nodes.add(-1); wc_nodes_index.findNonzeros(co_nodes);
-        myInput = new DynamicInputRecord(_IFT_Set_Name, 7);
+        myInput = std::make_unique<DynamicInputRecord>(_IFT_Set_Name, 7);
         myInput->setField(wc_nodes_index, _IFT_Set_nodes);
-        myData.insertInputRecord(DataReader::IR_setRec, myInput);
+        myData.insertInputRecord(DataReader::IR_setRec, std::move(myInput));
 
         IntArray totm, totp, tot;
         totm.followedBy(xm);
@@ -429,56 +425,56 @@ int main(int argc, char *argv[])
         tot.followedBy(totm);
         tot.followedBy(totp);
 
-        myInput = new DynamicInputRecord(_IFT_Set_Name, 8);
+        myInput = std::make_unique<DynamicInputRecord>(_IFT_Set_Name, 8);
         myInput->setField(tot, _IFT_Set_elementBoundaries);
-        myData.insertInputRecord(DataReader::IR_setRec, myInput);
+        myData.insertInputRecord(DataReader::IR_setRec, std::move(myInput));
 
-        myInput = new DynamicInputRecord(_IFT_Set_Name, 9);
+        myInput = std::make_unique<DynamicInputRecord>(_IFT_Set_Name, 9);
         myInput->setField(totp, _IFT_Set_elementBoundaries);
-        myData.insertInputRecord(DataReader::IR_setRec, myInput);
+        myData.insertInputRecord(DataReader::IR_setRec, std::move(myInput));
 
-        myInput = new DynamicInputRecord(_IFT_Set_Name, 10);
+        myInput = std::make_unique<DynamicInputRecord>(_IFT_Set_Name, 10);
         myInput->setField(totm, _IFT_Set_elementBoundaries);
-        myData.insertInputRecord(DataReader::IR_setRec, myInput);
+        myData.insertInputRecord(DataReader::IR_setRec, std::move(myInput));
 
         IntArray tmp, co_elems, wc_elems;
         tmp = phases; tmp.add(-1); wc_elems.findNonzeros(tmp);
         tmp = phases; tmp.add(-2); co_elems.findNonzeros(tmp);
 
-        myInput = new DynamicInputRecord(_IFT_Set_Name, 11);
+        myInput = std::make_unique<DynamicInputRecord>(_IFT_Set_Name, 11);
         myInput->setField(co_elems, _IFT_Set_elements);
-        myData.insertInputRecord(DataReader::IR_setRec, myInput);
+        myData.insertInputRecord(DataReader::IR_setRec, std::move(myInput));
 
-        myInput = new DynamicInputRecord(_IFT_Set_Name, 12);
+        myInput = std::make_unique<DynamicInputRecord>(_IFT_Set_Name, 12);
         myInput->setField(wc_elems, _IFT_Set_elements);
-        myData.insertInputRecord(DataReader::IR_setRec, myInput);
+        myData.insertInputRecord(DataReader::IR_setRec, std::move(myInput));
 
-        myInput = new DynamicInputRecord(_IFT_SimpleTransportCrossSection_Name, 1);
+        myInput = std::make_unique<DynamicInputRecord>(_IFT_SimpleTransportCrossSection_Name, 1);
         myInput->setField(1, _IFT_SimpleTransportCrossSection_material);
         myInput->setField(11, _IFT_CrossSection_SetNumber);
-        myData.insertInputRecord(DataReader::IR_crosssectRec, myInput);
+        myData.insertInputRecord(DataReader::IR_crosssectRec, std::move(myInput));
 
-        myInput = new DynamicInputRecord(_IFT_SimpleTransportCrossSection_Name, 2);
+        myInput = std::make_unique<DynamicInputRecord>(_IFT_SimpleTransportCrossSection_Name, 2);
         myInput->setField(2, _IFT_SimpleTransportCrossSection_material);
         myInput->setField(12, _IFT_CrossSection_SetNumber);
-        myData.insertInputRecord(DataReader::IR_crosssectRec, myInput);
+        myData.insertInputRecord(DataReader::IR_crosssectRec, std::move(myInput));
 
         //Material
-        myInput = new DynamicInputRecord(_IFT_IsotropicHeatTransferMaterial_Name, 1);
+        myInput = std::make_unique<DynamicInputRecord>(_IFT_IsotropicHeatTransferMaterial_Name, 1);
         myInput->setField(ScalarFunction(1.0), _IFT_IsotropicHeatTransferMaterial_k);
         myInput->setField(ScalarFunction(1.0), _IFT_IsotropicHeatTransferMaterial_c);
         myInput->setField(1.0, _IFT_Material_density);
-        myData.insertInputRecord(DataReader::IR_matRec, myInput);
+        myData.insertInputRecord(DataReader::IR_matRec, std::move(myInput));
 
-        myInput = new DynamicInputRecord(_IFT_IsotropicHeatTransferMaterial_Name, 2);
+        myInput = std::make_unique<DynamicInputRecord>(_IFT_IsotropicHeatTransferMaterial_Name, 2);
         myInput->setField(ScalarFunction(0.0), _IFT_IsotropicHeatTransferMaterial_k);
         myInput->setField(ScalarFunction(1.0), _IFT_IsotropicHeatTransferMaterial_c);
         myInput->setField(1.0, _IFT_Material_density);
-        myData.insertInputRecord(DataReader::IR_matRec, myInput);
+        myData.insertInputRecord(DataReader::IR_matRec, std::move(myInput));
 
         //Boundary Conditions
         if ( bc == "d" or bc == "md" ) {
-            myInput = new DynamicInputRecord(_IFT_TransportGradientDirichlet_Name, 1);
+            myInput = std::make_unique<DynamicInputRecord>(_IFT_TransportGradientDirichlet_Name, 1);
             myInput->setField(1, _IFT_GeneralBoundaryCondition_timeFunct);
             myInput->setField(IntArray{10}, _IFT_GeneralBoundaryCondition_dofs);
             myInput->setField(FloatArray{0., 0., 0.}, _IFT_TransportGradientDirichlet_centerCoords);
@@ -488,9 +484,9 @@ int main(int argc, char *argv[])
                 myInput->setField(IntArray{1, 2, 3, 4, 5, 6}, _IFT_TransportGradientDirichlet_surfSets);
                 myInput->setField(_IFT_TransportGradientDirichlet_tractionControl);
             }
-            myData.insertInputRecord(DataReader::IR_bcRec, myInput);
+            myData.insertInputRecord(DataReader::IR_bcRec, std::move(myInput));
         } else if ( bc == "n" or bc == "mn" ) {
-            myInput = new DynamicInputRecord(_IFT_TransportGradientNeumann_Name, 1);
+            myInput = std::make_unique<DynamicInputRecord>(_IFT_TransportGradientNeumann_Name, 1);
             myInput->setField(1, _IFT_GeneralBoundaryCondition_timeFunct);
             myInput->setField(IntArray{10}, _IFT_GeneralBoundaryCondition_dofs);
             myInput->setField(FloatArray{0., 0., 0.}, _IFT_TransportGradientNeumann_centerCoords);
@@ -500,9 +496,9 @@ int main(int argc, char *argv[])
             if ( bc == "mn" ) {
                 myInput->setField(_IFT_TransportGradientNeumann_dispControl);
             }
-            myData.insertInputRecord(DataReader::IR_bcRec, myInput);
+            myData.insertInputRecord(DataReader::IR_bcRec, std::move(myInput));
         } else if ( bc == "p" ) {
-            myInput = new DynamicInputRecord(_IFT_TransportGradientPeriodic_Name, 1);
+            myInput = std::make_unique<DynamicInputRecord>(_IFT_TransportGradientPeriodic_Name, 1);
             myInput->setField(1, _IFT_GeneralBoundaryCondition_timeFunct);
             myInput->setField(IntArray{10}, _IFT_GeneralBoundaryCondition_dofs);
             myInput->setField(FloatArray{0., 0., 0.}, _IFT_TransportGradientPeriodic_centerCoords);
@@ -512,27 +508,27 @@ int main(int argc, char *argv[])
             myInput->setField(9, _IFT_GeneralBoundaryCondition_set);
             myInput->setField(10, _IFT_TransportGradientPeriodic_masterSet);
 
-            myData.insertInputRecord(DataReader::IR_bcRec, myInput);
+            myData.insertInputRecord(DataReader::IR_bcRec, std::move(myInput));
         } else {
             OOFEM_ERROR("Unrecognized bc type, must be d, md, n, mn, or p");
         }
 
         // Fixing WC-only nodes
-        myInput = new DynamicInputRecord(_IFT_BoundaryCondition_Name, 2);
+        myInput = std::make_unique<DynamicInputRecord>(_IFT_BoundaryCondition_Name, 2);
         myInput->setField(1, _IFT_GeneralBoundaryCondition_timeFunct);
         myInput->setField(FloatArray{0.}, _IFT_BoundaryCondition_values);
         myInput->setField(IntArray{T_f}, _IFT_GeneralBoundaryCondition_dofs);
         myInput->setField(7, _IFT_GeneralBoundaryCondition_set);
-        myData.insertInputRecord(DataReader::IR_bcRec, myInput);
+        myData.insertInputRecord(DataReader::IR_bcRec, std::move(myInput));
 
         //Functions
-        myInput = new DynamicInputRecord(_IFT_ConstantFunction_Name, 1);
+        myInput = std::make_unique<DynamicInputRecord>(_IFT_ConstantFunction_Name, 1);
         myInput->setField(1.0, _IFT_ConstantFunction_f);
-        myData.insertInputRecord(DataReader::IR_funcRec, myInput);
+        myData.insertInputRecord(DataReader::IR_funcRec, std::move(myInput));
 
-        myInput = new DynamicInputRecord(_IFT_ConstantFunction_Name, 2);
+        myInput = std::make_unique<DynamicInputRecord>(_IFT_ConstantFunction_Name, 2);
         myInput->setField(0.0, _IFT_ConstantFunction_f);
-        myData.insertInputRecord(DataReader::IR_funcRec, myInput);
+        myData.insertInputRecord(DataReader::IR_funcRec, std::move(myInput));
 
         timer.stopTimer();
         printf("Mesh generation time %.3f s\n", timer.getWtime());
@@ -541,7 +537,7 @@ int main(int argc, char *argv[])
 
         printf("Initializing problem\n");
         timer.startTimer();
-        em.reset(InstanciateProblem(myData, _processor, 0));
+        em = InstanciateProblem(myData, _processor, 0);
 
         myData.finish();
         timer.stopTimer();

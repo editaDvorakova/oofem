@@ -35,12 +35,33 @@
 #include "fei3dwedgelin.h"
 #include "floatarray.h"
 #include "floatmatrix.h"
+#include "floatarrayf.h"
+#include "floatmatrixf.h"
 #include "intarray.h"
 #include "gaussintegrationrule.h"
 
 namespace oofem {
+
+FloatArrayF<6>
+FEI3dWedgeLin :: evalN(const FloatArrayF<3> &lcoords)
+{
+    double u = lcoords[0];
+    double v = lcoords[1];
+    double w = lcoords[2];
+    double x = 1. - u - v;
+    return {
+        0.5 * ( 1. - w ) * x,
+        0.5 * ( 1. - w ) * u,
+        0.5 * ( 1. - w ) * v,
+        0.5 * ( 1. + w ) * x,
+        0.5 * ( 1. + w ) * u,
+        0.5 * ( 1. + w ) * v,
+    };
+}
+
+
 void
-FEI3dWedgeLin :: evalN(FloatArray &answer, const FloatArray &lcoords, const FEICellGeometry &cellgeo)
+FEI3dWedgeLin :: evalN(FloatArray &answer, const FloatArray &lcoords, const FEICellGeometry &cellgeo) const
 {
     double u, v, w;
     answer.resize(6);
@@ -58,15 +79,91 @@ FEI3dWedgeLin :: evalN(FloatArray &answer, const FloatArray &lcoords, const FEIC
 }
 
 
+FloatMatrixF<3,6>
+FEI3dWedgeLin :: evaldNdxi(const FloatArrayF<3> &lcoords) 
+{
+    double u = lcoords.at(1);
+    double v = lcoords.at(2);
+    double w = lcoords.at(3);
+    double x = 1. - u - v;
+
+    return {
+        -0.5 * ( 1. - w ),
+        -0.5 * ( 1. - w ),
+        -0.5 * x,
+        0.5 * ( 1. - w ),
+        0.,
+        -0.5 * u,
+        0.,
+        0.5 * ( 1. - w ),
+        -0.5 * v,
+        -0.5 * ( 1. + w ),
+        -0.5 * ( 1. + w ),
+        0.5 * x,
+        0.5 * ( 1. + w ),
+        0.,
+        0.5 * u,
+        0.,
+        0.5 * ( 1. + w ),
+        0.5 * v,
+    };
+}
+
+
+void
+FEI3dWedgeLin :: evaldNdxi(FloatMatrix &dN, const FloatArray &lcoords, const FEICellGeometry &) const
+{
+    double u = lcoords.at(1);
+    double v = lcoords.at(2);
+    double w = lcoords.at(3);
+
+    dN.resize(6, 3);
+
+    dN.at(1, 1) = -0.5 * ( 1. - w );
+    dN.at(2, 1) =  0.5 * ( 1. - w );
+    dN.at(3, 1) =  0.;
+    dN.at(4, 1) = -0.5 * ( 1. + w );
+    dN.at(5, 1) =  0.5 * ( 1. + w );
+    dN.at(6, 1) =  0.;
+
+    dN.at(1, 2) = -0.5 * ( 1. - w );
+    dN.at(2, 2) =  0.;
+    dN.at(3, 2) =  0.5 * ( 1. - w );
+    dN.at(4, 2) = -0.5 * ( 1. + w );
+    dN.at(5, 2) =  0.;
+    dN.at(6, 2) =  0.5 * ( 1. + w );
+
+    dN.at(1, 3) = -0.5 * ( 1. - u - v );
+    dN.at(2, 3) = -0.5 * u;
+    dN.at(3, 3) = -0.5 * v;
+    dN.at(4, 3) =  0.5 * ( 1. - u - v );
+    dN.at(5, 3) =  0.5 * u;
+    dN.at(6, 3) =  0.5 * v;
+}
+
+
+std::pair<double, FloatMatrixF<3,6>>
+FEI3dWedgeLin :: evaldNdx(const FloatArrayF<3> &lcoords, const FEICellGeometry &cellgeo) 
+{
+    auto dNduvw = evaldNdxi(lcoords);
+    FloatMatrixF<3,6> coords;
+    for ( int i = 0; i < 6; i++ ) {
+        coords.setColumn(cellgeo.giveVertexCoordinates(i+1), i);
+    }
+    auto jacT = dotT(dNduvw, coords);
+    return {det(jacT), dot(inv(jacT), dNduvw)};
+}
+
+
 double
-FEI3dWedgeLin :: evaldNdx(FloatMatrix &answer, const FloatArray &lcoords, const FEICellGeometry &cellgeo)
+FEI3dWedgeLin :: evaldNdx(FloatMatrix &answer, const FloatArray &lcoords, const FEICellGeometry &cellgeo) const
 {
     FloatMatrix jacobianMatrix, inv, dNduvw, coords;
 
-    this->giveLocalDerivative(dNduvw, lcoords);
+    this->evaldNdxi(dNduvw, lcoords, cellgeo);
     coords.resize(3, 6);
     for ( int i = 1; i <= 6; i++ ) {
-        coords.setColumn(* cellgeo.giveVertexCoordinates(i), i);
+        coords.setColumn(cellgeo.giveVertexCoordinates(i), i);
     }
     jacobianMatrix.beProductOf(coords, dNduvw);
     inv.beInverseOf(jacobianMatrix);
@@ -77,7 +174,7 @@ FEI3dWedgeLin :: evaldNdx(FloatMatrix &answer, const FloatArray &lcoords, const 
 
 
 void
-FEI3dWedgeLin :: local2global(FloatArray &answer, const FloatArray &lcoords, const FEICellGeometry &cellgeo)
+FEI3dWedgeLin :: local2global(FloatArray &answer, const FloatArray &lcoords, const FEICellGeometry &cellgeo) const
 {
     FloatArray n;
 
@@ -85,23 +182,23 @@ FEI3dWedgeLin :: local2global(FloatArray &answer, const FloatArray &lcoords, con
 
     answer.clear();
     for ( int i = 1; i <= 6; i++ ) {
-        answer.add( n.at(i), * cellgeo.giveVertexCoordinates(i) );
+        answer.add( n.at(i), cellgeo.giveVertexCoordinates(i) );
     }
 }
 
 
 double FEI3dWedgeLin :: giveCharacteristicLength(const FEICellGeometry &cellgeo) const
 {
-    const FloatArray *n1 = cellgeo.giveVertexCoordinates(1);
-    const FloatArray *n2 = cellgeo.giveVertexCoordinates(6);
+    const auto &n1 = cellgeo.giveVertexCoordinates(1);
+    const auto &n2 = cellgeo.giveVertexCoordinates(6);
     ///@todo Change this so that it is not dependent on node order.
-    return n1->distance(n2);
+    return distance(n1, n2);
 }
 
 #define POINT_TOL 1.e-3
 
 int
-FEI3dWedgeLin :: global2local(FloatArray &answer, const FloatArray &gcoords, const FEICellGeometry &cellgeo)
+FEI3dWedgeLin :: global2local(FloatArray &answer, const FloatArray &gcoords, const FEICellGeometry &cellgeo) const
 {
     FloatArray res, delta, guess;
     FloatMatrix jac;
@@ -156,64 +253,31 @@ FEI3dWedgeLin :: global2local(FloatArray &answer, const FloatArray &gcoords, con
 
 
 double
-FEI3dWedgeLin :: giveTransformationJacobian(const FloatArray &lcoords, const FEICellGeometry &cellgeo)
+FEI3dWedgeLin :: giveTransformationJacobian(const FloatArray &lcoords, const FEICellGeometry &cellgeo) const
 {
     FloatMatrix jacobianMatrix;
 
     this->giveJacobianMatrixAt(jacobianMatrix, lcoords, cellgeo);
-    return jacobianMatrix.giveDeterminant() / 2.; ///@todo Should this really be a factor 1/2 here?
+    return jacobianMatrix.giveDeterminant();
 }
 
 
 void
-FEI3dWedgeLin :: giveJacobianMatrixAt(FloatMatrix &jacobianMatrix, const FloatArray &lcoords, const FEICellGeometry &cellgeo)
+FEI3dWedgeLin :: giveJacobianMatrixAt(FloatMatrix &jacobianMatrix, const FloatArray &lcoords, const FEICellGeometry &cellgeo) const
 // Returns the jacobian matrix  J (x,y,z)/(ksi,eta,dzeta)  of the receiver.
 {
     FloatMatrix dNduvw, coords;
-    this->giveLocalDerivative(dNduvw, lcoords);
+    this->evaldNdxi(dNduvw, lcoords, cellgeo);
     coords.resize(3, 6);
     for ( int i = 1; i <= 6; i++ ) {
-        coords.setColumn(* cellgeo.giveVertexCoordinates(i), i);
+        coords.setColumn(cellgeo.giveVertexCoordinates(i), i);
     }
     jacobianMatrix.beProductOf(coords, dNduvw);
 }
 
 
 void
-FEI3dWedgeLin :: giveLocalDerivative(FloatMatrix &dN, const FloatArray &lcoords)
-{
-    double u, v, w;
-    u = lcoords.at(1);
-    v = lcoords.at(2);
-    w = lcoords.at(3);
-
-    dN.resize(6, 3);
-
-    dN.at(1, 1) = -0.5 * ( 1. - w );
-    dN.at(2, 1) =  0.5 * ( 1. - w );
-    dN.at(3, 1) =  0.;
-    dN.at(4, 1) = -0.5 * ( 1. + w );
-    dN.at(5, 1) =  0.5 * ( 1. + w );
-    dN.at(6, 1) =  0.;
-
-    dN.at(1, 2) = -0.5 * ( 1. - w );
-    dN.at(2, 2) =  0.;
-    dN.at(3, 2) =  0.5 * ( 1. - w );
-    dN.at(4, 2) = -0.5 * ( 1. + w );
-    dN.at(5, 2) =  0.;
-    dN.at(6, 2) =  0.5 * ( 1. + w );
-
-    dN.at(1, 3) = -0.5 * ( 1. - u - v );
-    dN.at(2, 3) = -0.5 * u;
-    dN.at(3, 3) = -0.5 * v;
-    dN.at(4, 3) =  0.5 * ( 1. - u - v );
-    dN.at(5, 3) =  0.5 * u;
-    dN.at(6, 3) =  0.5 * v;
-}
-
-
-void
-FEI3dWedgeLin :: edgeEvalN(FloatArray &answer, int iedge, const FloatArray &lcoords, const FEICellGeometry &cellgeo)
+FEI3dWedgeLin :: edgeEvalN(FloatArray &answer, int iedge, const FloatArray &lcoords, const FEICellGeometry &cellgeo) const
 {
     double ksi = lcoords.at(1);
     answer.resize(2);
@@ -223,57 +287,57 @@ FEI3dWedgeLin :: edgeEvalN(FloatArray &answer, int iedge, const FloatArray &lcoo
 
 
 void
-FEI3dWedgeLin :: edgeEvaldNdx(FloatMatrix &answer, int iedge, const FloatArray &lcoords, const FEICellGeometry &cellgeo)
+FEI3dWedgeLin :: edgeEvaldNdx(FloatMatrix &answer, int iedge, const FloatArray &lcoords, const FEICellGeometry &cellgeo) const
 {
     OOFEM_ERROR("not implemented");
 }
 
 
 void
-FEI3dWedgeLin :: edgeLocal2global(FloatArray &answer, int iedge, const FloatArray &lcoords, const FEICellGeometry &cellgeo)
+FEI3dWedgeLin :: edgeLocal2global(FloatArray &answer, int iedge, const FloatArray &lcoords, const FEICellGeometry &cellgeo) const
 {
-    IntArray nodes;
     FloatArray n;
 
-    this->computeLocalEdgeMapping(nodes, iedge);
+    const auto &nodes = this->computeLocalEdgeMapping(iedge);
     this->edgeEvalN(n, iedge, lcoords, cellgeo);
 
     answer.clear();
     for ( int i = 1; i <= n.giveSize(); ++i ) {
-        answer.add( n.at(i), * cellgeo.giveVertexCoordinates( nodes.at(i) ) );
+        answer.add( n.at(i), cellgeo.giveVertexCoordinates( nodes.at(i) ) );
     }
 }
 
 
-void
-FEI3dWedgeLin :: computeLocalEdgeMapping(IntArray &edgeNodes, int iedge)
+IntArray
+FEI3dWedgeLin :: computeLocalEdgeMapping(int iedge) const
 {
     if ( iedge == 1 ) {
-        edgeNodes = {1, 2};
+        return {1, 2};
     } else if ( iedge == 2 ) {
-        edgeNodes = {2, 3};
+        return {2, 3};
     } else if ( iedge == 3 ) {
-        edgeNodes = {3, 1};
+        return {3, 1};
     } else if ( iedge == 4 ) {
-        edgeNodes = {4, 5};
+        return {4, 5};
     } else if ( iedge == 5 ) {
-        edgeNodes = {5, 6};
+        return {5, 6};
     } else if ( iedge == 6 ) {
-        edgeNodes = {6, 4};
+        return {6, 4};
     } else if ( iedge == 7 ) {
-        edgeNodes = {1, 4};
+        return {1, 4};
     } else if ( iedge == 8 ) {
-        edgeNodes = {2, 5};
+        return {2, 5};
     } else if ( iedge == 9 ) {
-        edgeNodes = {3, 6};
+        return {3, 6};
     } else {
-        OOFEM_ERROR("Edge %d doesn't exist.\n", iedge);
+        throw std::range_error("invalid edge number");
+        return {};
     }
 }
 
 
 double
-FEI3dWedgeLin :: edgeGiveTransformationJacobian(int iedge, const FloatArray &lcoords, const FEICellGeometry &cellgeo)
+FEI3dWedgeLin :: edgeGiveTransformationJacobian(int iedge, const FloatArray &lcoords, const FEICellGeometry &cellgeo) const
 {
     OOFEM_ERROR("not implemented");
     return 0.0;
@@ -281,7 +345,7 @@ FEI3dWedgeLin :: edgeGiveTransformationJacobian(int iedge, const FloatArray &lco
 
 
 void
-FEI3dWedgeLin :: surfaceEvalN(FloatArray &answer, int isurf, const FloatArray &lcoords, const FEICellGeometry &cellgeo)
+FEI3dWedgeLin :: surfaceEvalN(FloatArray &answer, int isurf, const FloatArray &lcoords, const FEICellGeometry &cellgeo) const
 {
     double ksi = lcoords.at(1);
     double eta = lcoords.at(2);
@@ -303,67 +367,67 @@ FEI3dWedgeLin :: surfaceEvalN(FloatArray &answer, int isurf, const FloatArray &l
 
 void
 FEI3dWedgeLin :: surfaceLocal2global(FloatArray &answer, int isurf,
-                                     const FloatArray &lcoords, const FEICellGeometry &cellgeo)
+                                     const FloatArray &lcoords, const FEICellGeometry &cellgeo) const
 {
-    IntArray nodes;
     FloatArray n;
 
-    this->computeLocalSurfaceMapping(nodes, isurf);
+    const auto &nodes = this->computeLocalSurfaceMapping(isurf);
     this->surfaceEvalN(n, isurf, lcoords, cellgeo);
 
     answer.clear();
     for ( int i = 1; i <= n.giveSize(); ++i ) {
-        answer.add( n.at(i), * cellgeo.giveVertexCoordinates( nodes.at(i) ) );
+        answer.add( n.at(i), cellgeo.giveVertexCoordinates( nodes.at(i) ) );
     }
 }
 
 
-void
-FEI3dWedgeLin :: computeLocalSurfaceMapping(IntArray &nodes, int isurf)
+IntArray
+FEI3dWedgeLin :: computeLocalSurfaceMapping(int isurf) const
 {
     if ( isurf == 1 ) {
-        nodes = {1, 2, 3};
+        return {1, 2, 3};
     } else if ( isurf == 2 ) {
-        nodes = {4, 5, 6};
+        return {4, 5, 6};
     } else if ( isurf == 3 ) {
-        nodes = {1, 2, 5, 4};
+        return {1, 2, 5, 4};
     } else if ( isurf == 4 ) {
-        nodes = {2, 3, 6, 5};
+        return {2, 3, 6, 5};
     } else if ( isurf == 5 ) {
-        nodes = {3, 1, 4, 6};
+        return {3, 1, 4, 6};
     } else {
-        OOFEM_ERROR("Surface %d doesn't exist.\n", isurf);
+        throw std::range_error("invalid surface number");
+        return {};
     }
 }
 
 
 double
 FEI3dWedgeLin :: surfaceGiveTransformationJacobian(int isurf, const FloatArray &lcoords,
-                                                   const FEICellGeometry &cellgeo)
+                                                   const FEICellGeometry &cellgeo) const
 {
     OOFEM_ERROR("not implemented");
     return 0;
 }
 
 
-IntegrationRule *
-FEI3dWedgeLin :: giveIntegrationRule(int order)
+std::unique_ptr<IntegrationRule>
+FEI3dWedgeLin :: giveIntegrationRule(int order) const
 {
-    IntegrationRule *iRule = new GaussIntegrationRule(1, NULL);
+    auto iRule = std::make_unique<GaussIntegrationRule>(1, nullptr);
     ///@todo This function below isn't supported for wedges. We must decide how we should do this.
     //int points = iRule->getRequiredNumberOfIntegrationPoints(_Wedge, order);
     OOFEM_WARNING("Warning.. ignoring 'order' argument: FIXME");
     int pointsZeta = 1;
     int pointsTriangle = 1;
     iRule->SetUpPointsOnWedge(pointsTriangle, pointsZeta, _Unknown);
-    return iRule;
+    return std::move(iRule);
 }
 
 
-IntegrationRule *
-FEI3dWedgeLin :: giveBoundaryIntegrationRule(int order, int boundary)
+std::unique_ptr<IntegrationRule>
+FEI3dWedgeLin :: giveBoundaryIntegrationRule(int order, int boundary) const
 {
-    IntegrationRule *iRule = new GaussIntegrationRule(1, NULL);
+    auto iRule = std::make_unique<GaussIntegrationRule>(1, nullptr);
     if ( boundary <= 2 ) {
         int points = iRule->getRequiredNumberOfIntegrationPoints(_Triangle, order + 0);
         iRule->SetUpPointsOnTriangle(points, _Unknown);
@@ -371,6 +435,6 @@ FEI3dWedgeLin :: giveBoundaryIntegrationRule(int order, int boundary)
         int points = iRule->getRequiredNumberOfIntegrationPoints(_Square, order + 2);
         iRule->SetUpPointsOnSquare(points, _Unknown);
     }
-    return iRule;
+    return std::move(iRule);
 }
 } // end namespace oofem

@@ -32,7 +32,7 @@
  *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#include "../sm/Elements/Interfaces/intelsurftr1.h"
+#include "sm/Elements/Interfaces/intelsurftr1.h"
 #include "node.h"
 #include "crosssection.h"
 #include "gausspoint.h"
@@ -89,8 +89,8 @@ IntElSurfTr1 :: computeGaussPoints()
     // Sets up the array of Gauss Points of the receiver.
     if ( integrationRulesArray.size() == 0 ) {
         integrationRulesArray.resize(1);
-        //integrationRulesArray[0] = new LobattoIntegrationRule (1,domain, 1, 2);
-        integrationRulesArray [ 0 ].reset( new GaussIntegrationRule(1, this, 1, 3) ); 
+        //integrationRulesArray[0] = std::make_unique<LobattoIntegrationRule>(1,domain, 1, 2);
+        integrationRulesArray [ 0 ] = std::make_unique<GaussIntegrationRule>(1, this, 1, 3); 
         integrationRulesArray [ 0 ]->setUpIntegrationPoints(_Triangle, 4, _3dInterface); ///@todo add parameter for ngp
     }
 }
@@ -109,7 +109,7 @@ IntElSurfTr1 :: computeCovarBaseVectorsAt(IntegrationPoint *ip, FloatArray &G1, 
     FloatArray meanNode;
     int numNodes = this->giveNumberOfNodes();
     for ( int i = 1; i <= dNdxi.giveNumberOfRows(); i++ ) {
-        meanNode = 0.5 * ( *this->giveNode(i)->giveCoordinates() + *this->giveNode(i + numNodes / 2)->giveCoordinates() );
+        meanNode = 0.5 * ( this->giveNode(i)->giveCoordinates() + this->giveNode(i + numNodes / 2)->giveCoordinates() );
         G1 += dNdxi.at(i, 1) * meanNode;
         G2 += dNdxi.at(i, 2) * meanNode;
     }
@@ -127,10 +127,10 @@ IntElSurfTr1 :: computeAreaAround(IntegrationPoint *ip)
 }
 
 
-IRResultType
-IntElSurfTr1 :: initializeFrom(InputRecord *ir)
+void
+IntElSurfTr1 :: initializeFrom(InputRecord &ir)
 {
-    return StructuralInterfaceElement :: initializeFrom(ir);
+    StructuralInterfaceElement :: initializeFrom(ir);
 }
 
 
@@ -181,7 +181,7 @@ IntElSurfTr1 :: computeGlobalCoordinates(FloatArray &answer, const FloatArray &l
     answer.resize(3);
     answer.zero();
     for ( int i = 1; i <= 3; i++ ) {
-        meanNode = 0.5 * ( *this->giveNode(i)->giveCoordinates() + *this->giveNode(i + 3)->giveCoordinates() );
+        meanNode = 0.5 * ( this->giveNode(i)->giveCoordinates() + this->giveNode(i + 3)->giveCoordinates() );
         answer += N.at(i) * meanNode;
     }
 

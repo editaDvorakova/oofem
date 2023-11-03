@@ -32,10 +32,10 @@
  *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#include "../sm/EngineeringModels/structengngmodel.h"
-#include "../sm/Elements/structuralelement.h"
-#include "../sm/Elements/structuralelementevaluator.h"
-#include "../sm/Elements/Interfaces/structuralinterfaceelement.h"
+#include "sm/EngineeringModels/structengngmodel.h"
+#include "sm/Elements/structuralelement.h"
+#include "sm/Elements/structuralelementevaluator.h"
+#include "sm/Elements/Interfaces/structuralinterfaceelement.h"
 #include "dofmanager.h"
 #include "dof.h"
 #include "element.h"
@@ -45,8 +45,8 @@
 #include "assemblercallback.h"
 #include "unknownnumberingscheme.h"
 
-#include "../sm/Materials/structuralmaterial.h"
-#include "../sm/CrossSections/structuralcrosssection.h"
+#include "sm/Materials/structuralmaterial.h"
+#include "sm/CrossSections/structuralcrosssection.h"
 
 namespace oofem {
 
@@ -62,10 +62,8 @@ void LinearizedDilationForceAssembler :: vectorFromElement(FloatArray &vec, Elem
 
     vec.clear();
     for ( auto &gp : *selem.giveDefaultIntegrationRulePtr() ) {
-        FloatArray epsilonTemperature;
-
         /// @todo Problematic: Needs direct access to material model. Should do without (can be easily done by adding lots of code, but I'm searching for a simple, general, implementation) / Mikael
-        static_cast< StructuralMaterial *>( selem.giveStructuralCrossSection()->giveMaterial(gp) )->computeStressIndependentStrainVector(epsilonTemperature, gp, tStep, VM_Incremental);
+        auto epsilonTemperature = static_cast< StructuralMaterial *>( selem.giveStructuralCrossSection()->giveMaterial(gp) )->computeStressIndependentStrainVector(gp, tStep, VM_Incremental);
 
         if ( epsilonTemperature.giveSize() > 0 ) {
             FloatMatrix D, B;
@@ -82,6 +80,11 @@ void LinearizedDilationForceAssembler :: vectorFromElement(FloatArray &vec, Elem
 void InitialStressMatrixAssembler :: matrixFromElement(FloatMatrix &answer, Element &element, TimeStep *tStep) const
 {
     static_cast< StructuralElement & >( element ).computeInitialStressMatrix(answer, tStep);
+}
+
+void LumpedInitialStressMatrixAssembler :: matrixFromElement(FloatMatrix &answer, Element &element, TimeStep *tStep) const
+{
+    static_cast< StructuralElement & >( element ).computeLumpedInitialStressMatrix(answer, tStep);
 }
 
 
@@ -208,17 +211,17 @@ StructuralEngngModel :: computeExternalLoadReactionContribution(FloatArray &reac
 
 
 void
-StructuralEngngModel :: giveInternalForces(FloatArray &answer, bool normFlag, int di, TimeStep *tStep)
+StructuralEngngModel :: updateInternalRHS(FloatArray &answer, TimeStep *tStep, Domain *d, FloatArray *eNorm)
 {
-    // Simply assembles contributions from each element in domain
-    Domain *domain = this->giveDomain(di);
+#ifdef VERBOSE
+    OOFEM_LOG_DEBUG("Updating internal forces\n");
+#endif
     // Update solution state counter
     tStep->incrementStateCounter();
 
-    answer.resize( this->giveNumberOfDomainEquations( di, EModelDefaultEquationNumbering() ) );
+    answer.resize( this->giveNumberOfDomainEquations( d->giveNumber(), EModelDefaultEquationNumbering() ) );
     answer.zero();
-    this->assembleVector(answer, tStep, InternalForceAssembler(), VM_Total,
-                         EModelDefaultEquationNumbering(), domain, normFlag ? & this->internalForcesEBENorm : NULL);
+    this->assembleVector(answer, tStep, InternalForceAssembler(), VM_Total, EModelDefaultEquationNumbering(), d, eNorm);
 
     // Redistributes answer so that every process have the full values on all shared equations
     this->updateSharedDofManagers(answer, EModelDefaultEquationNumbering(), InternalForcesExchangeTag);
@@ -275,11 +278,17 @@ StructuralEngngModel :: updateInternalState(TimeStep *tStep)
 {
     for ( auto &domain: domainList ) {
         if ( requiresUnknownsDictionaryUpdate() ) {
+#ifdef _OPENMP
+#pragma omp parallel for 
+#endif
             for ( auto &dman : domain->giveDofManagers() ) {
                 this->updateDofUnknownsDictionary(dman.get(), tStep);
             }
         }
-
+        
+#ifdef _OPENMP
+#pragma omp parallel for 
+#endif
         for ( auto &bc : domain->giveBcs() ) {
             ActiveBoundaryCondition *abc;
 
@@ -292,10 +301,12 @@ StructuralEngngModel :: updateInternalState(TimeStep *tStep)
         }
 
         if ( internalVarUpdateStamp != tStep->giveSolutionStateCounter() ) {
+#ifdef _OPENMP
+#pragma omp parallel for 
+#endif
             for ( auto &elem : domain->giveElements() ) {
                 elem->updateInternalState(tStep);
             }
-
             internalVarUpdateStamp = tStep->giveSolutionStateCounter();
         }
     }

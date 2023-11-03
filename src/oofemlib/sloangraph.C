@@ -101,6 +101,7 @@ void SloanGraph :: initialize()
             dman2map.insert({bc->giveInternalDofManager(j), count});
         }
     }
+    this->numberOfNodes = count;
 
     IntArray connections;
     for ( auto &elem : domain->giveElements() ) {
@@ -196,7 +197,7 @@ SloanGraph :: findPeripheralNodes()
     }
 
     // initial spine
-    Spine.reset( new SloanLevelStructure(this, InitialRoot) );
+    Spine = std::make_unique<SloanLevelStructure>(this, InitialRoot);
     this->startNode = InitialRoot;
 
     int CurrentDiameter = Spine->giveDepth();
@@ -433,7 +434,7 @@ SloanGraph :: assignNewNumbers()
     }
 
 #ifdef MDC
-    if ( labeledNodes == domain->giveNumberOfDofManagers() ) {
+    if ( labeledNodes == this->numberOfNodes ) {
         break;
     }
 

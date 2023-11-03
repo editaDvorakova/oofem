@@ -36,7 +36,6 @@
 #define abaqususerelement_h
 
 #include "structuralelement.h"
-#include "nlstructuralelement.h"
 #include "floatarray.h"
 #include "floatmatrix.h"
 #include "timestep.h"
@@ -54,10 +53,9 @@
 //@}
 
 namespace oofem {
-
 /**
  * UEL interface from Abaqus user elements.
- * 
+ *
  * The function prototype for UEL is:
  * SUBROUTINE UEL(RHS,AMATRX,SVARS,ENERGY,NDOFEL,NRHS,NSVARS,
  *      PROPS,NPROPS,COORDS,MCRD,NNODE,U,DU,V,A,JTYPE,TIME,
@@ -74,7 +72,7 @@ namespace oofem {
  *
  * @author Giovanni
  */
-class AbaqusUserElement : public NLStructuralElement
+class AbaqusUserElement : public StructuralElement
 {
 private:
     /// Dynamically loaded uel
@@ -135,10 +133,10 @@ private:
     int mdLoad = 0;
 
     FloatMatrix adlmag, ddlmag;
-    int *jdltype = NULL;                // Temporary init.
+    int *jdltype = nullptr;                // Temporary init.
 
     /// params
-    double params [ 3 ];
+    double params[ 3 ];
 
     /// jprops
     IntArray jprops;
@@ -147,16 +145,16 @@ private:
     bool hasTangentFlag;
 
     /// Pointer to the dynamically loaded uel-function (translated to C)
-    void (*uel)(double *rhs, double *amatrx, double *svars, double energy [ 8 ], int *ndofel,            // 5
+    void (*uel)(double *rhs, double *amatrx, double *svars, double energy[ 8 ], int *ndofel,             // 5
                 int *nrhs, int *nsvars, double *props, int *nprops, double *coords, int *mcrd,           // 6
                 int *nnode, double *u, double *du, double *v, double *a, int *jtype,                     // 6
-                double time [ 2 ], double *dtime, int *kstep, int *kinc, int *jelem,                     // 5
-                double params [ 3 ], int *ndload, int *jdltyp, double *adlmag, double *predef,           // 5
+                double time[ 2 ], double *dtime, int *kstep, int *kinc, int *jelem,                      // 5
+                double params[ 3 ], int *ndload, int *jdltyp, double *adlmag, double *predef,            // 5
                 int *npredef, int *lflags, int *mvarx, double *ddlmag, int *mdload,                      // 5
                 double *pnewdt, int *jprops, int *njprop, double *period);                               // 4 - tot 36
 
     /// File containing the uel function
-    std :: string filename;
+    std::string filename;
 
 public:
     /// Constructor
@@ -165,17 +163,17 @@ public:
     /// Destructor
     virtual ~AbaqusUserElement();
 
-    virtual void computeConsistentMassMatrix(FloatMatrix &answer, TimeStep *tStep, double &mass, const double *ipDensity = NULL);
-    //virtual void computeInitialStressMatrix(FloatMatrix &answer, TimeStep *tStep);
-    virtual void computeStiffnessMatrix(FloatMatrix &answer, MatResponseMode rMode, TimeStep *tStep);
-    virtual void giveInternalForcesVector(FloatArray &answer, TimeStep *tStep, int useUpdatedGpRecord = 0);
+    void computeConsistentMassMatrix(FloatMatrix &answer, TimeStep *tStep, double &mass, const double *ipDensity = NULL) override;
+    //void computeInitialStressMatrix(FloatMatrix &answer, TimeStep *tStep) override;
+    void computeStiffnessMatrix(FloatMatrix &answer, MatResponseMode rMode, TimeStep *tStep) override;
+    void giveInternalForcesVector(FloatArray &answer, TimeStep *tStep, int useUpdatedGpRecord = 0) override;
     virtual void giveInternalForcesVector(FloatArray &answer, TimeStep *tStep, FloatArray &U, FloatMatrix &DU, int useUpdatedGpRecord);
-    virtual int computeNumberOfDofs() { return this->ndofel; }
-    virtual void giveDofManDofIDMask(int inode, IntArray &answer) const;
-    virtual void computeField(ValueModeType mode, TimeStep *tStep, const FloatArray &lcoords, FloatArray &answer)
+    int computeNumberOfDofs() override { return this->ndofel; }
+    void giveDofManDofIDMask(int inode, IntArray &answer) const override;
+    void computeField(ValueModeType mode, TimeStep *tStep, const FloatArray &lcoords, FloatArray &answer) override
     { OOFEM_ERROR("Abaqus user element cannot support computing local unknown vector\n"); }
-    virtual void updateYourself(TimeStep *tStep);
-    virtual void updateInternalState(TimeStep *tStep);
+    void updateYourself(TimeStep *tStep) override;
+    void updateInternalState(TimeStep *tStep) override;
 
     bool hasTangent() const {
         return hasTangentFlag;
@@ -200,40 +198,33 @@ public:
         return tempAmatrx;
     }
 
-    virtual Interface *giveInterface(InterfaceType it);
-
-    virtual IRResultType initializeFrom(InputRecord *ir);
-    virtual void giveInputRecord(DynamicInputRecord &input);
-    virtual void postInitialize();
+    void initializeFrom(InputRecord &ir) override;
+    void giveInputRecord(DynamicInputRecord &input) override;
+    void postInitialize() override;
 
     // definition & identification
-    virtual const char *giveClassName() const { return "AbaqusUserElement"; }
-    virtual const char *giveInputRecordName() const { return _IFT_AbaqusUserElement_Name; }
-    virtual integrationDomain giveIntegrationDomain() const {
-        return _UnknownIntegrationDomain;
-    }
-    virtual Element_Geometry_Type giveGeometryType() const {
-        return EGT_line_1;
-    }
+    const char *giveClassName() const override { return "AbaqusUserElement"; }
+    const char *giveInputRecordName() const override { return _IFT_AbaqusUserElement_Name; }
+    integrationDomain giveIntegrationDomain() const override { return _UnknownIntegrationDomain; }
+    Element_Geometry_Type giveGeometryType() const override { return EGT_line_1; }
 
 protected:
-    virtual void computeStressVector(FloatArray &answer, const FloatArray &strain, GaussPoint *gp, TimeStep *tStep) {
+    void computeStressVector(FloatArray &answer, const FloatArray &strain, GaussPoint *gp, TimeStep *tStep) override {
         OOFEM_ERROR("Function not defined for AbaqusUserElement and should never be called. This is a bug.");
     }
-    virtual void computeConstitutiveMatrixAt(FloatMatrix &answer, MatResponseMode rMode, GaussPoint *gp, TimeStep *tStep) {
-        OOFEM_ERROR("Function not defined for AbaqusUserElement and should never be called. This is a bug.");
-    }
-
-    virtual void computeBmatrixAt(GaussPoint *, FloatMatrix &, int = 1, int = ALL_STRAINS) {
+    void computeConstitutiveMatrixAt(FloatMatrix &answer, MatResponseMode rMode, GaussPoint *gp, TimeStep *tStep) override {
         OOFEM_ERROR("Function not defined for AbaqusUserElement and should never be called. This is a bug.");
     }
 
-    virtual int giveIPValue(FloatArray &answer, GaussPoint *gp, InternalStateType type, TimeStep *tStep) {
+    void computeBmatrixAt(GaussPoint *, FloatMatrix &, int = 1, int = ALL_STRAINS) override {
+        OOFEM_ERROR("Function not defined for AbaqusUserElement and should never be called. This is a bug.");
+    }
+
+    int giveIPValue(FloatArray &answer, GaussPoint *gp, InternalStateType type, TimeStep *tStep) override {
         OOFEM_ERROR("Function not defined for AbaqusUserElement and should never be called. This is a bug.");
         return 0;
     }
 };
-
 }// namespace oofem
 
 #endif  // abaqususerelement_h

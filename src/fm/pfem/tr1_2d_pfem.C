@@ -116,13 +116,12 @@ TR1_2D_PFEM ::   giveElementDofIDMask(IntArray &answer) const
 }
 
 
-IRResultType
-TR1_2D_PFEM :: initializeFrom(InputRecord *ir)
+void
+TR1_2D_PFEM :: initializeFrom(InputRecord &ir)
 {
-    IRResultType ret = this->PFEMElement :: initializeFrom(ir);
+    PFEMElement :: initializeFrom(ir);
 
     this->computeGaussPoints();
-    return ret;
 }
 
 void
@@ -131,7 +130,7 @@ TR1_2D_PFEM :: computeGaussPoints()
 {
     if ( integrationRulesArray.size() == 0 ) {
         integrationRulesArray.resize(1);
-        integrationRulesArray [ 0 ].reset( new GaussIntegrationRule(1, this, 1, 3) );
+        integrationRulesArray [ 0 ] = std::make_unique<GaussIntegrationRule>(1, this, 1, 3);
         integrationRulesArray [ 0 ]->setUpIntegrationPoints(_Triangle, 3, _2dFlow);
     }
 }
@@ -405,28 +404,15 @@ TR1_2D_PFEM :: computeCriticalTimeStep(TimeStep *tStep)
 }
 
 
-contextIOResultType TR1_2D_PFEM :: saveContext(DataStream &stream, ContextMode mode, void *obj)
+void TR1_2D_PFEM :: saveContext(DataStream &stream, ContextMode mode)
 {
-    contextIOResultType iores;
-
-    if ( ( iores = PFEMElement2d :: saveContext(stream, mode, obj) ) != CIO_OK ) {
-        THROW_CIOERR(iores);
-    }
-
-    return CIO_OK;
+    PFEMElement2d :: saveContext(stream, mode);
 }
 
 
-contextIOResultType TR1_2D_PFEM :: restoreContext(DataStream &stream, ContextMode mode, void *obj)
+void TR1_2D_PFEM :: restoreContext(DataStream &stream, ContextMode mode)
 {
-    contextIOResultType iores;
-
-    if ( ( iores = PFEMElement2d :: restoreContext(stream, mode, obj) ) != CIO_OK ) {
-        THROW_CIOERR(iores);
-    }
-
-
-    return CIO_OK;
+    PFEMElement2d :: restoreContext(stream, mode);
 }
 
 

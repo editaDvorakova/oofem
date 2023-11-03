@@ -64,10 +64,10 @@ void ProblemSequence :: solveYourself()
 }
 
 
-int ProblemSequence :: instanciateYourself(DataReader &dr, InputRecord *ir, const char *outFileName, const char *desc)
+int ProblemSequence :: instanciateYourself(DataReader &dr, InputRecord &ir, const char *outFileName, const char *desc)
 {
     int result = EngngModel :: instanciateYourself(dr, ir, dataOutputFileName.c_str(), desc);
-    ir->finish();
+    ir.finish();
 
     for ( auto &s : inputStreamNames ) {
         OOFEMTXTDataReader dr( inputStreamNames [ i - 1 ] );
@@ -82,11 +82,11 @@ int ProblemSequence :: instanciateYourself(DataReader &dr, InputRecord *ir, cons
 }
 
 
-IRResultType ProblemSequence :: initializeFrom(InputRecord *ir)
+void ProblemSequence :: initializeFrom(InputRecord &ir)
 {
-    IRResultType ret = EngngModel :: initializeFrom(ir);
+    EngngModel :: initializeFrom(ir);
+
     IR_GIVE_FIELD(ir, inputStreamNames, _IFT_ProblemSequence_engineeringModels);
-    return ret;
 }
 
 
@@ -100,29 +100,27 @@ int ProblemSequence :: checkProblemConsistency()
 }
 
 
-contextIOResultType ProblemSequence :: saveContext(DataStream &stream, ContextMode mode)
+void ProblemSequence :: saveContext(DataStream &stream, ContextMode mode)
 {
-    contextIOResultType ret = EngngModel :: saveContext(stream, mode);
+    EngngModel :: saveContext(stream, mode);
 
     stream.write(activeModel);
 
-    for (auto &emodel : emodelList) {
+    for ( auto &emodel : emodelList ) {
         emodel->saveContext(stream, mode);
     }
-    return ret;
 }
 
 
-contextIOResultType ProblemSequence :: restoreContext(DataStream &stream, ContextMode mode)
+void ProblemSequence :: restoreContext(DataStream &stream, ContextMode mode)
 {
-    contextIOResultType ret = EngngModel :: restoreContext(stream, mode);
+    EngngModel :: restoreContext(stream, mode);
 
     stream.read(activeModel);
 
-    for (auto &emodel : emodelList) {
+    for ( auto &emodel : emodelList ) {
         emodel->restoreContext(stream, mode);
     }
-    return ret;
 }
 
 

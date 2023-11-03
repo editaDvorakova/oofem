@@ -60,6 +60,7 @@ namespace oofem {
     ENUM_ITEM_WITH_VALUE(ConductivityMatrix, 9)                 \
     ENUM_ITEM_WITH_VALUE(CapacityMatrix, 10)                    \
     ENUM_ITEM_WITH_VALUE(InitialStressMatrix, 11)               \
+    ENUM_ITEM_WITH_VALUE(LumpedInitialStressMatrix, 12)         \
     /* characteristic vectors */ \
     ENUM_ITEM_WITH_VALUE(ExternalForcesVector, 150)                                       \
     ENUM_ITEM_WITH_VALUE(InternalForcesVector, 151)                                       \
@@ -81,7 +82,23 @@ namespace oofem {
     ENUM_ITEM_WITH_VALUE(LaplacePressureVector, 211)		                 \
     ENUM_ITEM_WITH_VALUE(LaplaceVelocityVector, 212)		                 \
     ENUM_ITEM_WITH_VALUE(DivergenceAuxVelocityVector, 213)                       \
-    ENUM_ITEM_WITH_VALUE(DivergenceVelocityVector, 214)
+    ENUM_ITEM_WITH_VALUE(DivergenceVelocityVector, 214) \
+    /* MPM */ \
+    ENUM_ITEM_WITH_VALUE(PermeabilityMatrix, 250) \
+    ENUM_ITEM_WITH_VALUE(FluidMassBalancePressureContribution, 251) \
+    ENUM_ITEM_WITH_VALUE(BiotConstant, 252) \
+    ENUM_ITEM_WITH_VALUE(CompressibilityCoefficient, 253) \
+    ENUM_ITEM_WITH_VALUE(MomentumBalance_StiffnessMatrix, 254) \
+    ENUM_ITEM_WITH_VALUE(MomentumBalance_PressureCouplingMatrix, 255) \
+    ENUM_ITEM_WITH_VALUE(MassBalance_PermeabilityMatrix, 256) \
+    ENUM_ITEM_WITH_VALUE(MassBalance_CompresibilityMatrix, 257) \
+    ENUM_ITEM_WITH_VALUE(MassBalance_StressCouplingMatrix, 258) \
+    ENUM_ITEM_WITH_VALUE(MomentumBalance_StressResidual, 259) \
+    ENUM_ITEM_WITH_VALUE(MomentumBalance_PressureResidual, 260) \
+    ENUM_ITEM_WITH_VALUE(MassBalance_StressRateResidual, 261) \
+    ENUM_ITEM_WITH_VALUE(MassBalance_PressureResidual, 262) \
+    ENUM_ITEM_WITH_VALUE(MassBalance_PressureRateResidual, 263)
+    
 
 
 enum CharType {

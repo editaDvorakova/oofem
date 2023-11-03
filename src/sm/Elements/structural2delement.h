@@ -35,13 +35,12 @@
 #ifndef structural2delement_h
 #define structural2delement_h
 
-#include "Elements/nlstructuralelement.h"
+#include "sm/Elements/nlstructuralelement.h"
 #include "feinterpol2d.h"
 
 #define _IFT_Structural2DElement_materialCoordinateSystem "matcs" ///< [optional] Support for material directions based on element orientation.
 
 namespace oofem {
-
 /**
  * Base class for planar 2D elements.
  *
@@ -49,17 +48,16 @@ namespace oofem {
  */
 class Structural2DElement : public NLStructuralElement
 {
-
 protected:
-    /** 
+    /**
      * To facilitate the transformation of 2d elements into 3d, the complexity of transformation from 3d to
      *  local 2d system can be efficiently hidden in custom FEICellGeometry wrapper, that performs the transformation
      * into local system. This way, the existing 2d intrpolation classes can be used.
-     * The element maintain its FEICellGeometry, which is accesible through the giveCellGeometryWrapper. 
-     * Generalization to 3d then would require only substitution of the geometry warpper and definition of 
+     * The element maintain its FEICellGeometry, which is accesible through the giveCellGeometryWrapper.
+     * Generalization to 3d then would require only substitution of the geometry warpper and definition of
      * element transformation matrix.
      */
-    FEICellGeometry* cellGeometryWrapper;
+    FEICellGeometry *cellGeometryWrapper;
 
     bool matRotation;
 
@@ -69,89 +67,89 @@ public:
      * @param n Element number.
      * @param d Domain to which new material will belong.
      */
-    Structural2DElement(int n, Domain * d);
+    Structural2DElement(int n, Domain *d);
     /// Destructor.
     virtual ~Structural2DElement();
-    virtual void postInitialize();
-    virtual int giveNumberOfNodes() const;
+    void postInitialize() override;
+    int giveNumberOfNodes() const override;
     /**
      * Returns the Cell Geometry Wrapper. Default inplementation creates FEIElementGeometryWrapper.
      */
-    virtual FEICellGeometry* giveCellGeometryWrapper();
-    
-    virtual int computeNumberOfDofs();
-    virtual void giveDofManDofIDMask(int inode, IntArray &answer) const;
-    virtual double computeVolumeAround(GaussPoint *gp);
-    
-    virtual IRResultType initializeFrom(InputRecord *ir);
-    
-    virtual double giveCharacteristicLength(const FloatArray &normalToCrackPlane);
-    
+    virtual FEICellGeometry *giveCellGeometryWrapper();
+
+    int computeNumberOfDofs() override;
+    void giveDofManDofIDMask(int inode, IntArray &answer) const override;
+    double computeVolumeAround(GaussPoint *gp) override;
+
+    void initializeFrom(InputRecord &ir) override;
+
+    double giveCharacteristicLength(const FloatArray &normalToCrackPlane) override;
+
 protected:
-    virtual void computeBmatrixAt(GaussPoint *gp, FloatMatrix &answer, int lowerIndx = 1, int upperIndx = ALL_STRAINS) = 0 ;
-    virtual void computeBHmatrixAt(GaussPoint *gp, FloatMatrix &answer) = 0;
-    virtual void computeGaussPoints();
+    void computeBmatrixAt(GaussPoint *gp, FloatMatrix &answer, int lowerIndx = 1, int upperIndx = ALL_STRAINS) override = 0;
+    void computeBHmatrixAt(GaussPoint *gp, FloatMatrix &answer) override = 0;
+    void computeGaussPoints() override;
 
-    void giveMaterialOrientationAt( FloatArray &x, FloatArray &y, const FloatArray &lcoords);
-    
+    void giveMaterialOrientationAt(FloatArray &x, FloatArray &y, const FloatArray &lcoords);
+
     // Edge support
-    virtual void giveEdgeDofMapping(IntArray &answer, int iEdge) const;
-    virtual double computeEdgeVolumeAround(GaussPoint *gp, int iEdge);
-    virtual int computeLoadLEToLRotationMatrix(FloatMatrix &answer, int iEdge, GaussPoint *gp);
-    virtual int testElementExtension(ElementExtension ext) { return ( ( ext == Element_EdgeLoadSupport ) ? 1 : 0 ); }
+    void giveEdgeDofMapping(IntArray &answer, int iEdge) const override;
+    double computeEdgeVolumeAround(GaussPoint *gp, int iEdge) override;
+    int computeLoadLEToLRotationMatrix(FloatMatrix &answer, int iEdge, GaussPoint *gp) override;
+    int testElementExtension(ElementExtension ext) override { return ( ( ext == Element_EdgeLoadSupport ) ? 1 : 0 ); }
 };
-
 
 
 class PlaneStressElement : public Structural2DElement
 {
 public:
-    PlaneStressElement(int n, Domain * d);
+    PlaneStressElement(int n, Domain *d);
     virtual ~PlaneStressElement() { }
-    virtual MaterialMode giveMaterialMode() { return _PlaneStress; }
-    virtual void computeStressVector(FloatArray &answer, const FloatArray &strain, GaussPoint *gp, TimeStep *tStep);
-    virtual void computeConstitutiveMatrixAt(FloatMatrix &answer, MatResponseMode rMode, GaussPoint *gp, TimeStep *tStep);
+    MaterialMode giveMaterialMode() override { return _PlaneStress; }
+    void computeStressVector(FloatArray &answer, const FloatArray &strain, GaussPoint *gp, TimeStep *tStep) override;
+    void computeConstitutiveMatrixAt(FloatMatrix &answer, MatResponseMode rMode, GaussPoint *gp, TimeStep *tStep) override;
+    void computeConstitutiveMatrix_dPdF_At(FloatMatrix &answer, MatResponseMode rMode, GaussPoint *gp, TimeStep *tStep) override;
 
 protected:
-    virtual void computeBmatrixAt(GaussPoint *gp, FloatMatrix &answer, int lowerIndx = 1, int upperIndx = ALL_STRAINS) ;
-    virtual void computeBHmatrixAt(GaussPoint *gp, FloatMatrix &answer);
+    void computeBmatrixAt(GaussPoint *gp, FloatMatrix &answer, int lowerIndx = 1, int upperIndx = ALL_STRAINS) override;
+    void computeBHmatrixAt(GaussPoint *gp, FloatMatrix &answer) override;
 };
 
 
 class PlaneStrainElement : public Structural2DElement
 {
 public:
-    PlaneStrainElement(int n, Domain * d);
+    PlaneStrainElement(int n, Domain *d);
     virtual ~PlaneStrainElement() { }
-    virtual MaterialMode giveMaterialMode() { return _PlaneStrain; }
-    virtual void computeStressVector(FloatArray &answer, const FloatArray &strain, GaussPoint *gp, TimeStep *tStep);
-    virtual void computeConstitutiveMatrixAt(FloatMatrix &answer, MatResponseMode rMode, GaussPoint *gp, TimeStep *tStep);
+    MaterialMode giveMaterialMode() override { return _PlaneStrain; }
+    void computeStressVector(FloatArray &answer, const FloatArray &strain, GaussPoint *gp, TimeStep *tStep) override;
+    void computeConstitutiveMatrixAt(FloatMatrix &answer, MatResponseMode rMode, GaussPoint *gp, TimeStep *tStep) override;
+    void computeConstitutiveMatrix_dPdF_At(FloatMatrix &answer, MatResponseMode rMode, GaussPoint *gp, TimeStep *tStep) override;
 
 protected:
-    virtual void computeBmatrixAt(GaussPoint *gp, FloatMatrix &answer, int lowerIndx = 1, int upperIndx = ALL_STRAINS) ;
-    virtual void computeBHmatrixAt(GaussPoint *gp, FloatMatrix &answer);
+    void computeBmatrixAt(GaussPoint *gp, FloatMatrix &answer, int lowerIndx = 1, int upperIndx = ALL_STRAINS) override;
+    void computeBHmatrixAt(GaussPoint *gp, FloatMatrix &answer) override;
 };
 
 
 class AxisymElement : public Structural2DElement
 {
 public:
-    AxisymElement(int n, Domain * d);
+    AxisymElement(int n, Domain *d);
     virtual ~AxisymElement() { }
-    virtual MaterialMode giveMaterialMode() { return _3dMat; }
-    virtual void computeStressVector(FloatArray &answer, const FloatArray &strain, GaussPoint *gp, TimeStep *tStep);
-    virtual void computeConstitutiveMatrixAt(FloatMatrix &answer, MatResponseMode rMode, GaussPoint *gp, TimeStep *tStep);
+    MaterialMode giveMaterialMode() override { return _3dMat; }
+    void computeStressVector(FloatArray &answer, const FloatArray &strain, GaussPoint *gp, TimeStep *tStep) override;
+    void computeConstitutiveMatrixAt(FloatMatrix &answer, MatResponseMode rMode, GaussPoint *gp, TimeStep *tStep) override;
+    void computeConstitutiveMatrix_dPdF_At(FloatMatrix &answer, MatResponseMode rMode, GaussPoint *gp, TimeStep *tStep) override;
 
-    virtual double giveCharacteristicLength(const FloatArray &crackToNormalPlane);
-    virtual double computeVolumeAround(GaussPoint *gp);
+    double giveCharacteristicLength(const FloatArray &crackToNormalPlane) override;
+    double computeVolumeAround(GaussPoint *gp) override;
 
 protected:
-    virtual void computeBmatrixAt(GaussPoint *gp, FloatMatrix &answer, int lowerIndx = 1, int upperIndx = ALL_STRAINS) ;
-    virtual void computeBHmatrixAt(GaussPoint *gp, FloatMatrix &answer);
-    virtual void computeGaussPoints();
-    virtual double computeEdgeVolumeAround(GaussPoint *gp, int iEdge);
+    void computeBmatrixAt(GaussPoint *gp, FloatMatrix &answer, int lowerIndx = 1, int upperIndx = ALL_STRAINS) override;
+    void computeBHmatrixAt(GaussPoint *gp, FloatMatrix &answer) override;
+    void computeGaussPoints() override;
+    double computeEdgeVolumeAround(GaussPoint *gp, int iEdge) override;
 };
-
-
 } // end namespace oofem
 #endif // structural2delement_h

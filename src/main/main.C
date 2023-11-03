@@ -35,7 +35,7 @@
 //  MAIN
 //  Solves finite element problems.
 //
-#ifdef __PYTHON_MODULE
+#ifdef _PYTHON_EXTENSION
  #include <Python.h>
 #endif
 
@@ -83,14 +83,8 @@
 
 using namespace oofem;
 
-void freeStoreError()
-// This function is called whenever operator "new" is unable to allocate memory.
-{
-    OOFEM_FATAL("free store exhausted");
-}
-
 // debug
-void oofem_debug(EngngModel *emodel);
+void oofem_debug(EngngModel &emodel);
 
 void oofem_print_help();
 void oofem_print_version();
@@ -99,11 +93,40 @@ void oofem_print_epilog();
 // Finalize PETSc, SLEPc and MPI
 void oofem_finalize_modules();
 
+#define LOG_ERR_HEADER "_______________________________________________________"
+#define LOG_ERR_TAIL   "_______________________________________________________\a\n"
+
+
+// Handler for uncaught exceptions
+void exception_handler() {
+    try {
+        auto eptr = std::current_exception();
+        if (eptr) {
+            std::rethrow_exception(eptr);
+        }
+    } catch (const RuntimeException& e) {
+
+        fprintf(stderr, "%s\nOOFEM Error exception: %s\n%s", LOG_ERR_HEADER, e.what(), LOG_ERR_TAIL);
+    #ifdef __GNUC__
+        print_stacktrace();
+    #endif
+        oofem_logger.incrementErrorCounter();
+        oofem_logger.printStatistics();
+
+    } catch(const std::exception& e) {
+        fprintf(stderr, "Caught exception: %s\n", e.what());
+#ifdef __GNUC__
+        print_stacktrace();
+#endif
+        exit(1);
+    }
+}
+
+
 int main(int argc, char *argv[])
 {
-#ifndef _MSC_VER
-    std :: set_new_handler(freeStoreError);   // prevents memory overflow
-#endif
+    // Stack trace on uncaught exceptions;
+    std::set_terminate( exception_handler );
 
     int adaptiveRestartFlag = 0, restartStep = 0;
     bool parallelFlag = false, renumberFlag = false, debugFlag = false, contextFlag = false, restartFlag = false,
@@ -239,7 +262,7 @@ int main(int argc, char *argv[])
     SlepcInitialize(& modulesArgc, & modulesArgv, PETSC_NULL, PETSC_NULL);
 #endif
 
-#ifdef __PYTHON_MODULE
+#ifdef _PYTHON_EXTENSION
     Py_Initialize();
     // Adding . to the system path allows us to run Python functions stored in the working directory.
     PyRun_SimpleString("import sys");
@@ -264,7 +287,7 @@ int main(int argc, char *argv[])
     OOFEM_LOG_FORCED(PRG_HEADER_SM);
 
     OOFEMTXTDataReader dr( inputFileName.str() );
-    EngngModel *problem = :: InstanciateProblem(dr, _processor, contextFlag, NULL, parallelFlag);
+    auto problem = :: InstanciateProblem(dr, _processor, contextFlag, NULL, parallelFlag);
     dr.finish();
     if ( !problem ) {
         OOFEM_LOG_ERROR("Couldn't instanciate problem, exiting");
@@ -297,14 +320,14 @@ int main(int argc, char *argv[])
     }
 
     if ( debugFlag ) {
-        oofem_debug(problem);
+        oofem_debug(*problem);
     }
 
 
     try {
         problem->solveYourself();
     } catch(OOFEM_Terminate & c) {
-        delete problem;
+        problem = nullptr;
 
         oofem_finalize_modules();
 
@@ -318,7 +341,7 @@ int main(int argc, char *argv[])
     }
 #endif
     oofem_logger.printStatistics();
-    delete problem;
+    problem = nullptr;
 
     oofem_finalize_modules();
 
@@ -348,7 +371,7 @@ void oofem_print_help()
 
 void oofem_print_version()
 {
-    printf("\n%s (%s, %s)\nof %s on %s\n", PRG_VERSION, HOST_TYPE, MODULE_LIST, __DATE__, HOST_NAME);
+    printf("\n%s (%s, %s)\nof %s on %s (Git Hash: %s)\n", PRG_VERSION, HOST_TYPE, MODULE_LIST, __DATE__, HOST_NAME, OOFEM_GIT_HASH);
     oofem_print_epilog();
 }
 
@@ -373,21 +396,27 @@ void oofem_finalize_modules()
     MPI_Finalize();
 #endif
 
-#ifdef __PYTHON_MODULE
+#ifdef _PYTHON_EXTENSION
     Py_Finalize();
 #endif
 }
 
 //#include "loadbalancer.h"
 //#include "xfem/iga.h"
-
-void oofem_debug(EngngModel *emodel)
+#include "floatmatrix.h"
+#include "domain.h"
+#include "element.h"
+void oofem_debug(EngngModel &emodel)
 {
+    FloatMatrix k;
+    emodel.giveDomain(1)->giveElement(1)->giveCharacteristicMatrix(k, ConductivityMatrix, NULL);
+    emodel.giveDomain(1)->giveElement(1)->giveCharacteristicMatrix(k, CapacityMatrix, NULL);
+
     //FloatMatrix k;
-    //((BsplinePlaneStressElement*)emodel->giveDomain(1)->giveElement(1))->giveCharacteristicMatrix(k, StiffnessMatrix, NULL);
+    //((BsplinePlaneStressElement*)emodel.giveDomain(1)->giveElement(1))->giveCharacteristicMatrix(k, StiffnessMatrix, NULL);
 
 #ifdef __PARALLEL_MODE
-    //LoadBalancer* lb = emodel->giveDomain(1)->giveLoadBalancer();
+    //LoadBalancer* lb = emodel.giveDomain(1)->giveLoadBalancer();
     //lb->calculateLoadTransfer();
     //lb->migrateLoad();
     //exit(1);

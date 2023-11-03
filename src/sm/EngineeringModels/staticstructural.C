@@ -32,9 +32,9 @@
  *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#include "../sm/EngineeringModels/staticstructural.h"
-#include "../sm/Elements/structuralelement.h"
-#include "../sm/Elements/structuralelementevaluator.h"
+#include "sm/EngineeringModels/staticstructural.h"
+#include "sm/Elements/structuralelement.h"
+#include "sm/Elements/structuralelementevaluator.h"
 #include "dofmanager.h"
 #include "set.h"
 #include "timestep.h"
@@ -53,6 +53,7 @@
 #include "datastream.h"
 #include "contextioerr.h"
 #include "classfactory.h"
+#include "assemblercallback.h"
 
 #ifdef __PARALLEL_MODE
  #include "problemcomm.h"
@@ -62,17 +63,17 @@
 namespace oofem {
 REGISTER_EngngModel(StaticStructural);
 
-StaticStructural :: StaticStructural(int i, EngngModel *_master) : StructuralEngngModel(i, _master),
+StaticStructural :: StaticStructural(int i, EngngModel *master) : StructuralEngngModel(i, master),
     internalForces(),
     eNorm(),
     sparseMtrxType(SMT_Skyline),
     solverType(),
     stiffMode(TangentStiffness),
     loadLevel(0.),
-    deltaT(1.)
+    deltaT(1.),
+    mRecomputeStepAfterPropagation(false)
 {
     ndomains = 1;
-    mRecomputeStepAfterPropagation = false;
 }
 
 
@@ -84,7 +85,7 @@ StaticStructural :: ~StaticStructural()
 NumericalMethod *StaticStructural :: giveNumericalMethod(MetaStep *mStep)
 {
     if ( !nMethod ) {
-        nMethod.reset( classFactory.createNonLinearSolver(this->solverType.c_str(), this->giveDomain(1), this) );
+        nMethod = classFactory.createNonLinearSolver(this->solverType.c_str(), this->giveDomain(1), this);
         if ( !nMethod ) {
             OOFEM_ERROR("Failed to create solver (%s).", this->solverType.c_str());
         }
@@ -98,15 +99,10 @@ StaticStructural :: giveUnknownDictHashIndx(ValueModeType mode, TimeStep *tStep)
     return tStep->giveNumber() % 2;
 }
 
-IRResultType
-StaticStructural :: initializeFrom(InputRecord *ir)
+void
+StaticStructural :: initializeFrom(InputRecord &ir)
 {
-    IRResultType result;                // Required by IR_GIVE_FIELD macro
-
-    result = StructuralEngngModel :: initializeFrom(ir);
-    if ( result != IRRT_OK ) {
-        return result;
-    }
+    StructuralEngngModel :: initializeFrom(ir);
 
     int val = SMT_Skyline;
     IR_GIVE_OPTIONAL_FIELD(ir, val, _IFT_EngngModel_smtype);
@@ -124,7 +120,7 @@ StaticStructural :: initializeFrom(InputRecord *ir)
 
     this->solverType = "nrsolver";
     IR_GIVE_OPTIONAL_FIELD(ir, solverType, _IFT_StaticStructural_solvertype);
-    nMethod.reset(NULL);
+    nMethod = nullptr;
 
     int tmp = TangentStiffness; // Default TangentStiffness
     IR_GIVE_OPTIONAL_FIELD(ir, tmp, _IFT_StaticStructural_stiffmode);
@@ -134,7 +130,7 @@ StaticStructural :: initializeFrom(InputRecord *ir)
     IR_GIVE_OPTIONAL_FIELD(ir, _val, _IFT_EngngModel_initialGuess);
     this->initialGuessType = ( InitialGuess ) _val;
 
-    mRecomputeStepAfterPropagation = ir->hasField(_IFT_StaticStructural_recomputeaftercrackpropagation);
+    mRecomputeStepAfterPropagation = ir.hasField(_IFT_StaticStructural_recomputeaftercrackpropagation);
 
 #ifdef __PARALLEL_MODE
     ///@todo Where is the best place to create these?
@@ -145,7 +141,7 @@ StaticStructural :: initializeFrom(InputRecord *ir)
         communicator = new NodeCommunicator(this, commBuff, this->giveRank(),
                                             this->giveNumberOfProcesses());
 
-        if ( ir->hasField(_IFT_StaticStructural_nonlocalExtension) ) {
+        if ( ir.hasField(_IFT_StaticStructural_nonlocalExtension) ) {
             nonlocalExt = 1;
             nonlocCommunicator = new ElementCommunicator(this, commBuff, this->giveRank(),
                                                          this->giveNumberOfProcesses());
@@ -154,19 +150,15 @@ StaticStructural :: initializeFrom(InputRecord *ir)
 
 #endif
 
-    this->field.reset( new DofDistributedPrimaryField(this, 1, FT_Displacements, 0) );
-
-    return IRRT_OK;
+    this->field = std::make_unique<DofDistributedPrimaryField>(this, 1, FT_Displacements, 0);
 }
 
 
 void
 StaticStructural :: updateAttributes(MetaStep *mStep)
 {
-    IRResultType result;                  // Required by IR_GIVE_FIELD macro
-
     MetaStep *mStep1 = this->giveMetaStep( mStep->giveNumber() ); //this line ensures correct input file in staggered problem
-    InputRecord *ir = mStep1->giveAttributesRecord();
+    auto &ir = mStep1->giveAttributesRecord();
 
     int val = SMT_Skyline;
     IR_GIVE_OPTIONAL_FIELD(ir, val, _IFT_EngngModel_smtype);
@@ -186,7 +178,7 @@ StaticStructural :: updateAttributes(MetaStep *mStep)
     IR_GIVE_OPTIONAL_FIELD(ir, s, _IFT_StaticStructural_solvertype);
     if ( s.compare(this->solverType) ) {
         this->solverType = s;
-        nMethod.reset(NULL);
+        nMethod = nullptr;
     }
 
     int tmp = TangentStiffness; // Default TangentStiffness
@@ -197,7 +189,7 @@ StaticStructural :: updateAttributes(MetaStep *mStep)
     IR_GIVE_OPTIONAL_FIELD(ir, _val, _IFT_EngngModel_initialGuess);
     this->initialGuessType = ( InitialGuess ) _val;
 
-    mRecomputeStepAfterPropagation = ir->hasField(_IFT_StaticStructural_recomputeaftercrackpropagation);
+    mRecomputeStepAfterPropagation = ir.hasField(_IFT_StaticStructural_recomputeaftercrackpropagation);
 
     EngngModel :: updateAttributes(mStep1);
 }
@@ -207,8 +199,8 @@ TimeStep *StaticStructural :: giveNextStep()
 {
     if ( !currentStep ) {
         // first step -> generate initial step
-        //currentStep.reset( new TimeStep(*giveSolutionStepWhenIcApply()) );
-        currentStep.reset( new TimeStep(giveNumberOfTimeStepWhenIcApply(), this, 1, 0., this->deltaT, 0) );
+        //currentStep = std::make_unique<TimeStep>(*giveSolutionStepWhenIcApply());
+        currentStep = std::make_unique<TimeStep>(giveNumberOfTimeStepWhenIcApply(), this, 1, 0., this->deltaT, 0);
     }
     previousStep = std :: move(currentStep);
     double dt;
@@ -217,7 +209,7 @@ TimeStep *StaticStructural :: giveNextStep()
     } else {
         dt = this->deltaT;
     }
-    currentStep.reset( new TimeStep(*previousStep, dt) );
+    currentStep = std::make_unique<TimeStep>(*previousStep, dt);
 
     return currentStep.get();
 }
@@ -230,7 +222,6 @@ double StaticStructural :: giveEndOfTimeOfInterest()
     else
         return this->deltaT * this->giveNumberOfSteps();
 }
-
 
 
 void StaticStructural :: solveYourself()
@@ -258,25 +249,14 @@ void StaticStructural :: solveYourself()
 
 void StaticStructural :: solveYourselfAt(TimeStep *tStep)
 {
-    int neq;
     int di = 1;
+    int neq = this->giveNumberOfDomainEquations( di, EModelDefaultEquationNumbering() );
 
     this->field->advanceSolution(tStep);
-    this->field->applyBoundaryCondition(tStep); ///@todo Temporary hack, advanceSolution should apply the boundary conditions directly.
+    this->field->initialize(VM_Total, tStep, this->solution, EModelDefaultEquationNumbering() );
 
-    neq = this->giveNumberOfDomainEquations( di, EModelDefaultEquationNumbering() );
-    if ( tStep->giveNumber() == 1 ) {
-        this->field->initialize(VM_Total, tStep, this->solution, EModelDefaultEquationNumbering() );
-    } else {
-        this->field->initialize(VM_Total, tStep->givePreviousStep(), this->solution, EModelDefaultEquationNumbering() );
-        this->field->update(VM_Total, tStep, this->solution, EModelDefaultEquationNumbering() );
-    }
-    this->field->applyBoundaryCondition(tStep); ///@todo Temporary hack to override the incorrect values that is set by "update" above. Remove this when that is fixed.
-
-
-    // Create "stiffness matrix"
     if ( !this->stiffnessMatrix ) {
-        this->stiffnessMatrix.reset( classFactory.createSparseMtrx(sparseMtrxType) );
+        this->stiffnessMatrix = classFactory.createSparseMtrx(sparseMtrxType);
         if ( !this->stiffnessMatrix ) {
             OOFEM_ERROR("Couldn't create requested sparse matrix of type %d", sparseMtrxType);
         }
@@ -318,7 +298,7 @@ void StaticStructural :: solveYourselfAt(TimeStep *tStep)
                 OOFEM_LOG_RELEVANT("Computing old tangent\n");
             }
 
-            this->updateComponent( tStep, NonLinearLhs, this->giveDomain(di) );
+            this->updateMatrix(*stiffnessMatrix, tStep, this->giveDomain(di));
             SparseLinearSystemNM *linSolver = nMethod->giveLinearSolver();
 
             if( this->giveProblemScale() == macroScale ) {
@@ -332,9 +312,7 @@ void StaticStructural :: solveYourselfAt(TimeStep *tStep)
             }
 
             this->solution.add(incrementOfSolution);
-            
-            this->field->update(VM_Total, tStep, this->solution, EModelDefaultEquationNumbering());
-            this->field->applyBoundaryCondition(tStep); ///@todo Temporary hack to override the incorrect values that is set by "update" above. Remove this when that is fixed.
+            this->updateSolution(solution, tStep, this->giveDomain(di));
         }
     } else if ( this->initialGuessType != IG_None ) {
         OOFEM_ERROR("Initial guess type: %d not supported", initialGuessType);
@@ -343,18 +321,20 @@ void StaticStructural :: solveYourselfAt(TimeStep *tStep)
     }
 
     // Build initial/external load
-    FloatArray externalForces(neq);
-    this->assembleVector( externalForces, tStep, ExternalForceAssembler(), VM_Total,
-                         EModelDefaultEquationNumbering(), this->giveDomain(1) );
+    externalForces.resize(neq);
+    externalForces.zero();
+    this->assembleVector(externalForces, tStep, ExternalForceAssembler(), VM_Total,
+                         EModelDefaultEquationNumbering(), this->giveDomain(di) );
     this->updateSharedDofManagers(externalForces, EModelDefaultEquationNumbering(), LoadExchangeTag);
 
     // Build reference load (for CALM solver)
-    FloatArray referenceForces;
     if ( this->nMethod->referenceLoad() ) {
         // This check is pretty much only here as to avoid unnecessarily trying to integrate all the loads.
         referenceForces.resize(neq);
-        this->assembleVector( referenceForces, tStep, ReferenceForceAssembler(), VM_Total,
-                            EModelDefaultEquationNumbering(), this->giveDomain(1) );
+        referenceForces.zero();
+        
+        this->assembleVector(referenceForces, tStep, ReferenceForceAssembler(), VM_Total,
+                             EModelDefaultEquationNumbering(), this->giveDomain(di) );
         this->updateSharedDofManagers(referenceForces, EModelDefaultEquationNumbering(), LoadExchangeTag);
     }
 
@@ -379,7 +359,7 @@ void StaticStructural :: solveYourselfAt(TimeStep *tStep)
     } else {
         status = this->nMethod->solve(*this->stiffnessMatrix,
                                             externalForces,
-                                            NULL,
+                                            nullptr,
                                             this->solution,
                                             incrementOfSolution,
                                             this->internalForces,
@@ -390,7 +370,7 @@ void StaticStructural :: solveYourselfAt(TimeStep *tStep)
                                             tStep);
     }
     if ( !( status & NM_Success ) ) {
-        OOFEM_ERROR("No success in solving problem");
+      OOFEM_WARNING("No success in solving problem at step %d", tStep->giveNumber());
     }
 }
 
@@ -409,17 +389,43 @@ void StaticStructural :: terminate(TimeStep *tStep)
 
 double StaticStructural :: giveUnknownComponent(ValueModeType mode, TimeStep *tStep, Domain *d, Dof *dof)
 {
-    double val1 = dof->giveUnknownsDictionaryValue(tStep, VM_Total);
-    if ( mode == VM_Total ) {
-        return val1;
-    } else if ( mode == VM_Incremental ) {
-        double val0 = dof->giveUnknownsDictionaryValue(tStep->givePreviousStep(), VM_Total);
-        return val1 - val0;
+    if (mode == VM_Residual) {
+        // evaluate the residual of momentum balance for specific unknown
+        // evaluate the residual of momentum balance for specific unknown
+        int eq = dof->__giveEquationNumber();
+        if (eq && internalForces.isNotEmpty()) {
+            double ans = loadLevel*referenceForces.at(eq)-internalForces.at(eq);
+            if (externalForces.isNotEmpty()) {
+                ans += externalForces.at(eq);
+            }
+            return ans;
+        } else {
+            return 0.;
+        }
     } else {
-        OOFEM_ERROR("Unknown value mode requested");
-        return 0;
+        return this->field->giveUnknownValue(dof, mode, tStep);
     }
-    return this->field->giveUnknownValue(dof, mode, tStep);
+}
+
+
+void StaticStructural :: updateSolution(FloatArray &solutionVector, TimeStep *tStep, Domain *d)
+{
+    this->field->update(VM_Total, tStep, solutionVector, EModelDefaultEquationNumbering());
+}
+
+
+void StaticStructural :: updateInternalRHS(FloatArray &answer, TimeStep *tStep, Domain *d, FloatArray *eNorm)
+{
+    answer.zero();
+    this->assembleVector(answer, tStep, InternalForceAssembler(), VM_Total, EModelDefaultEquationNumbering(), d, eNorm);
+    this->updateSharedDofManagers(answer, EModelDefaultEquationNumbering(), InternalForcesExchangeTag);
+}
+
+
+void StaticStructural :: updateMatrix(SparseMtrx &mat, TimeStep *tStep, Domain *d)
+{
+    mat.zero();
+    this->assemble(mat, tStep, TangentAssembler(this->stiffMode), EModelDefaultEquationNumbering(), d);
 }
 
 
@@ -427,9 +433,7 @@ void StaticStructural :: updateComponent(TimeStep *tStep, NumericalCmpn cmpn, Do
 {
     if ( cmpn == InternalRhs ) {
         // Updates the solution in case it has changed 
-        ///@todo NRSolver should report when the solution changes instead of doing it this way.
         this->field->update(VM_Total, tStep, this->solution, EModelDefaultEquationNumbering());
-        this->field->applyBoundaryCondition(tStep);///@todo Temporary hack to override the incorrect vavues that is set by "update" above. Remove this when that is fixed.
 
         this->internalForces.zero();
         this->assembleVector(this->internalForces, tStep, InternalForceAssembler(), VM_Total,
@@ -446,35 +450,35 @@ void StaticStructural :: updateComponent(TimeStep *tStep, NumericalCmpn cmpn, Do
 }
 
 
-contextIOResultType StaticStructural :: saveContext(DataStream &stream, ContextMode mode)
+void
+StaticStructural :: computeExternalLoadReactionContribution(FloatArray &reactions, TimeStep *tStep, int di)
 {
-    contextIOResultType iores;
-
-    if ( ( iores = StructuralEngngModel :: saveContext(stream, mode) ) != CIO_OK ) {
-        THROW_CIOERR(iores);
+    if ( ( di == 1 ) && ( tStep == this->giveCurrentStep() ) ) {
+      reactions.resize( this->giveNumberOfDomainEquations( di, EModelDefaultPrescribedEquationNumbering() ) );
+      reactions.zero();
+      this->assembleVector( reactions, tStep, ReferenceForceAssembler(), VM_Total,
+                            EModelDefaultPrescribedEquationNumbering(), this->giveDomain(di) );
+      reactions.times(loadLevel);
+      this->assembleVector( reactions, tStep, ExternalForceAssembler(), VM_Total,
+                            EModelDefaultPrescribedEquationNumbering(), this->giveDomain(di) );
+    } else {
+      OOFEM_ERROR("unable to respond due to invalid solution step or domain");
     }
-
-    if ( ( iores = this->field->saveContext(stream, mode) ) != CIO_OK ) {
-        THROW_CIOERR(iores);
-    }
-
-    return CIO_OK;
 }
 
 
-contextIOResultType StaticStructural :: restoreContext(DataStream &stream, ContextMode mode)
+
+void StaticStructural :: saveContext(DataStream &stream, ContextMode mode)
 {
-    contextIOResultType iores;
+    StructuralEngngModel :: saveContext(stream, mode);
+    this->field->saveContext(stream);
+}
 
-    if ( ( iores = StructuralEngngModel :: restoreContext(stream, mode) ) != CIO_OK ) {
-        THROW_CIOERR(iores);
-    }
 
-    if ( ( iores = this->field->restoreContext(stream, mode) ) != CIO_OK ) {
-        THROW_CIOERR(iores);
-    }
-
-    return CIO_OK;
+void StaticStructural :: restoreContext(DataStream &stream, ContextMode mode)
+{
+    StructuralEngngModel :: restoreContext(stream, mode);
+    this->field->restoreContext(stream);
 }
 
 
@@ -485,17 +489,12 @@ StaticStructural :: updateDomainLinks()
     this->giveNumericalMethod( this->giveCurrentMetaStep() )->setDomain( this->giveDomain(1) );
 }
 
+
 int
 StaticStructural :: forceEquationNumbering()
 {
-    stiffnessMatrix.reset( NULL );
+    stiffnessMatrix = nullptr;
     return StructuralEngngModel::forceEquationNumbering();
-}
-
-
-void StaticStructural :: setSolution(TimeStep *tStep, const FloatArray &vectorToStore)
-{
-    this->field->update(VM_Total, tStep, vectorToStore, EModelDefaultEquationNumbering());
 }
 
 
@@ -530,7 +529,7 @@ StaticStructural :: estimateMaxPackSize(IntArray &commMap, DataStream &buff, int
     if ( packUnpackType == 0 ) { ///@todo Fix this old ProblemCommMode__NODE_CUT value
         for ( int map: commMap ) {
             DofManager *dman = domain->giveDofManager( map );
-            for ( Dof *dof: *dman ) {
+            for ( auto &dof: *dman ) {
                 if ( dof->isPrimaryDof() && dof->__giveEquationNumber() > 0 ) {
                     count++;
                 } else {

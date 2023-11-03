@@ -38,6 +38,7 @@
 #include "gausspoint.h"
 #include "material.h"
 #include "contextioerr.h"
+#include "datastream.h"
 #include "gaussintegrationrule.h"
 
 namespace oofem {
@@ -63,19 +64,12 @@ CrossSection :: setupIntegrationPoints(IntegrationRule &irule, int npointsXY, in
     return irule.setUpIntegrationPoints( element->giveIntegrationDomain(), npointsXY, npointsZ, element->giveMaterialMode() );
 }
 
-IRResultType
-CrossSection :: initializeFrom(InputRecord *ir)
-//
-// instanciates receiver from input record
-//
+void
+CrossSection :: initializeFrom(InputRecord &ir)
 {
-    IRResultType result;                   // Required by IR_GIVE_FIELD macro
-
     // Read set number the cross section is applied to
     this->setNumber = 0;
     IR_GIVE_OPTIONAL_FIELD(ir, this->setNumber, _IFT_CrossSection_SetNumber);
-
-    return IRRT_OK;
 }
 
 void
@@ -106,39 +100,19 @@ CrossSection :: printYourself()
 }
 
 
-contextIOResultType
+void
 CrossSection :: saveIPContext(DataStream &stream, ContextMode mode, GaussPoint *gp)
-//
-// saves full material context (saves state variables, that completely describe
-// current state)
-//
 {
-    contextIOResultType iores;
     Material *mat = this->giveMaterial(gp);
-
-    if ( ( iores = mat->saveIPContext(stream, mode, gp) ) != CIO_OK ) {
-        THROW_CIOERR(iores);
-    }
-
-    return CIO_OK;
+    mat->saveIPContext(stream, mode, gp);
 }
 
 
-contextIOResultType
+void
 CrossSection :: restoreIPContext(DataStream &stream, ContextMode mode, GaussPoint *gp)
-//
-// restores full material context (saves state variables, that completely describe
-// current state)
-//
 {
-    contextIOResultType iores;
     Material *mat = this->giveMaterial(gp);
-
-    if ( ( iores = mat->restoreIPContext(stream, mode, gp) ) != CIO_OK ) {
-        THROW_CIOERR(iores);
-    }
-
-    return CIO_OK;
+    mat->restoreIPContext(stream, mode, gp);
 }
 
 bool
@@ -148,7 +122,7 @@ CrossSection :: hasProperty(CrossSectionProperty aProperty)
 }
 
 double
-CrossSection :: give(CrossSectionProperty aProperty, GaussPoint *gp)
+CrossSection :: give(CrossSectionProperty aProperty, GaussPoint *gp) const
 // Returns the value of the property aProperty of the receiver.
 {
     if ( propertyDictionary.includes(aProperty) ) {
@@ -161,7 +135,7 @@ CrossSection :: give(CrossSectionProperty aProperty, GaussPoint *gp)
 }
 
 double
-CrossSection :: give(CrossSectionProperty aProperty, const FloatArray &coords, Element *elem, bool local)
+CrossSection :: give(CrossSectionProperty aProperty, const FloatArray &coords, Element *elem, bool local) const
 // Returns the value of the property aProperty of the receiver.
 {
     if ( propertyDictionary.includes(aProperty) ) {
@@ -178,6 +152,34 @@ double
 CrossSection :: predictRelativeComputationalCost(GaussPoint *gp)
 {
     return this->giveRelativeSelfComputationalCost() * this->giveMaterial(gp)->predictRelativeComputationalCost(gp);
+}
+
+
+void CrossSection :: saveContext(DataStream &stream, ContextMode mode)
+{
+    FEMComponent :: saveContext(stream, mode);
+
+    if ( ( mode & CM_Definition ) ) {
+        propertyDictionary.saveContext (stream) ;
+
+        if ( !stream.write(setNumber) ) {
+            THROW_CIOERR(CIO_IOERR);
+        }
+    }
+}
+
+
+void CrossSection :: restoreContext(DataStream &stream, ContextMode mode)
+{
+    FEMComponent :: restoreContext(stream, mode);
+
+    if ( mode & CM_Definition ) {
+        propertyDictionary.restoreContext(stream);
+
+        if ( !stream.read(setNumber) ) {
+            THROW_CIOERR(CIO_IOERR);
+        }
+    }
 }
 
 } // end namespace oofem

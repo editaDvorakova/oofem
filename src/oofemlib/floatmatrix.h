@@ -32,12 +32,6 @@
  *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-/*
- * The original idea for this class comes from
- * Dubois-Pelerin, Y.: "Object-Oriented  Finite Elements: Programming concepts and Implementation",
- * PhD Thesis, EPFL, Lausanne, 1992.
- */
-
 #ifndef flotmtrx_h
 #define flotmtrx_h
 
@@ -49,8 +43,9 @@
 #include <iosfwd>
 #include <initializer_list>
 #include <algorithm>
+#include <string>
 
-#ifdef BOOST_PYTHON
+#ifdef _BOOSTPYTHON_BINDINGS
 namespace boost {
 namespace python {
 namespace api {
@@ -62,6 +57,8 @@ class object;
 
 namespace oofem {
 class FloatArray;
+template<std::size_t N> class FloatArrayF;
+template<std::size_t M, std::size_t N> class FloatMatrixF;
 class IntArray;
 class DataStream;
 
@@ -102,6 +99,14 @@ protected:
     std :: vector< double >values;
 
 public:
+    /// @name Iterator for for-each loops (columns-wise order):
+    //@{
+    std::vector< double > :: iterator begin() { return this->values.begin(); }
+    std::vector< double > :: iterator end() { return this->values.end(); }
+    std::vector< double > :: const_iterator begin() const { return this->values.begin(); }
+    std::vector< double > :: const_iterator end() const { return this->values.end(); }
+    //@}
+
     /**
      * Creates matrix of given size.
      * @param n Number of rows.
@@ -125,6 +130,9 @@ public:
     FloatMatrix(FloatMatrix && mat) : nRows(mat.nRows), nColumns(mat.nColumns), values( std :: move(mat.values) ) {}
     /// Initializer list constructor.
     FloatMatrix(std :: initializer_list< std :: initializer_list< double > >mat);
+    /// Initializer list constructor.
+    template<std::size_t M, std::size_t N>
+    FloatMatrix(const FloatMatrixF<N,M> &src) : nRows(N), nColumns(M), values(src.begin(), src.end()) { }
     /// Assignment operator.
     FloatMatrix &operator=(std :: initializer_list< std :: initializer_list< double > >mat);
     /// Assignment operator.
@@ -142,8 +150,14 @@ public:
         values = std :: move(mat.values);
         return * this;
     }
-    /// Destructor.
-    ~FloatMatrix() {}
+    /// Assignment operator, adjusts size of the receiver if necessary.
+    template<std::size_t N, std::size_t M>
+    FloatMatrix &operator=(const FloatMatrixF<N,M> &mat) {
+        nRows = N;
+        nColumns = M;
+        values.assign(mat.begin(), mat.end());
+        return * this;
+    }
 
     /**
      * Checks size of receiver towards requested bounds.
@@ -170,22 +184,26 @@ public:
      * @param i Row position of coefficient.
      * @param j Column position of coefficient.
      */
-#ifdef DEBUG
-    double at(int i, int j) const;
-#else
-    inline double at(int i, int j) const { return values [ ( j - 1 ) * nRows + i - 1 ]; }
+    inline double at(int i, int j) const
+    {
+#ifndef NDEBUG
+        this->checkBounds(i, j);
 #endif
+        return values [ ( j - 1 ) * nRows + i - 1 ];
+    }
     /**
      * Coefficient access function. Returns value of coefficient at given
      * position of the receiver. Implements 1-based indexing.
      * @param i Row position of coefficient.
      * @param j Column position of coefficient.
      */
-#ifdef DEBUG
-    double &at(int i, int j);
-#else
-    inline double &at(int i, int j) { return values [ ( j - 1 ) * nRows + i - 1 ]; }
+    inline double &at(int i, int j)
+    {
+#ifndef NDEBUG
+        this->checkBounds(i, j);
 #endif
+        return values [ ( j - 1 ) * nRows + i - 1 ];
+    }
 
     /**
      * Coefficient access function. Returns l-value of coefficient at given
@@ -193,21 +211,25 @@ public:
      * @param i Row position of coefficient.
      * @param j Column position of coefficient.
      */
-#ifdef DEBUG
-    double &operator()(int i, int j);
-#else
-    inline double &operator()(int i, int j) { return values [ j * nRows + i ]; }
+    inline double &operator()(int i, int j)
+    {
+#ifndef NDEBUG
+        this->checkBounds(i + 1, j + 1);
 #endif
+        return values [ j * nRows + i ];
+    }
     /**
      * Coefficient access function. Implements 0-based indexing.
      * @param i Row position of coefficient.
      * @param j Column position of coefficient.
      */
-#ifdef DEBUG
-    double operator()(int i, int j) const;
-#else
-    inline double operator()(int i, int j) const { return values [ j * nRows + i ]; }
-#endif
+    inline double operator()(int i, int j) const
+    {
+#ifndef NDEBUG
+        this->checkBounds(i + 1, j + 1);
+#endif 
+        return values [ j * nRows + i ];
+    }
     /**
      * Assembles the contribution using localization array into receiver. The receiver must
      * have dimensions large enough to localize contribution.
@@ -223,6 +245,14 @@ public:
      * @param colind Column localization indices.
      */
     void assemble(const FloatMatrix &src, const IntArray &rowind, const IntArray &colind);
+    /**
+     * Assembles the transposed contribution using localization array into receiver. The receiver must
+     * have dimensions large enough to localize contribution.
+     * @param src Source to be assembled.
+     * @param rowind Row localization indices.
+     * @param colind Column localization indices.
+     */
+    void assembleT(const FloatMatrix &src, const IntArray &rowind, const IntArray &colind);
     /**
      * Assembles the contribution using localization array into receiver. The receiver must
      * have dimensions large enough to localize contribution.
@@ -398,8 +428,9 @@ public:
     /**
      * Modifies receiver to become inverse of given parameter. Size of receiver will be adjusted.
      * @param src Matrix to be inverted.
+     * @return False if K is singular, otherwise true.
      */
-    void beInverseOf(const FloatMatrix &src);
+    bool beInverseOf(const FloatMatrix &src);
     /**
      * Solves the  system of linear equations @f$ K\cdot a = b @f$ . Uses Gaussian elimination with pivoting directly on receiver.
      * @param b RHS of linear system.
@@ -414,7 +445,7 @@ public:
      * @param answer Solution of linear equations, each column corresponding to columns in B.
      * @param transpose Solves for the transpose of K.
      */
-    void solveForRhs(const FloatMatrix &B, FloatMatrix &answer, bool transpose = false);
+    bool solveForRhs(const FloatMatrix &B, FloatMatrix &answer, bool transpose = false);
     /**
      * Adds to the receiver the product @f$ a^{\mathrm{T}}\cdot b \mathrm{d}V @f$. If the receiver has zero size, it is expanded.
      * Assumes that receiver and product @f$ a^{\mathrm{T}}\cdot b \mathrm{d}V @f$ are symmetric matrices. Computes only the
@@ -582,11 +613,27 @@ public:
     friend std :: ostream &operator<<(std :: ostream &out, const FloatMatrix &r);
 
 
-#ifdef BOOST_PYTHON
+#ifdef _BOOSTPYTHON_BINDINGS
     void __setitem__(boost :: python :: api :: object t, double val);
     double __getitem__(boost :: python :: api :: object t);
     void beCopyOf(const FloatMatrix &src) { this->operator=(src); }
 #endif
-};
+
+
+}; // class FloatMatrix
+
+//@name operators
+//@{
+/// Vector multiplication by scalar
+OOFEM_EXPORT FloatMatrix &operator *= ( FloatMatrix & x, const double & a );
+OOFEM_EXPORT FloatMatrix operator *( const FloatMatrix & a, const FloatMatrix & b ) ;
+OOFEM_EXPORT FloatArray operator *( const FloatMatrix & a, const FloatArray & b ) ;
+OOFEM_EXPORT FloatMatrix operator +( const FloatMatrix & a, const FloatMatrix & b ) ;
+OOFEM_EXPORT FloatMatrix operator -( const FloatMatrix & a, const FloatMatrix & b ) ;
+OOFEM_EXPORT FloatMatrix &operator += ( FloatMatrix & a, const FloatMatrix & b ) ;
+OOFEM_EXPORT FloatMatrix &operator -= ( FloatMatrix & a, const FloatMatrix & b ) ;
+
+//@}
+
 } // end namespace oofem
 #endif // flotmtrx_h

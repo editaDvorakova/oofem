@@ -92,11 +92,11 @@ class IDNLMaterial;
  *   Calculating the strains and stresses at its Gauss points.
  * - Printing its output in the data file and updating itself.
  */
-class StructuralElement : public Element
+class OOFEM_EXPORT StructuralElement : public Element
 {
 protected:
     /// Initial displacement vector, describes the initial nodal displacements when element has been casted.
-    std :: unique_ptr< FloatArray >initialDisplacements;
+    std::unique_ptr< FloatArray >initialDisplacements;
 
 public:
     /**
@@ -108,8 +108,8 @@ public:
     /// Destructor.
     virtual ~StructuralElement();
 
-    virtual void giveCharacteristicMatrix(FloatMatrix & answer, CharType, TimeStep * tStep);
-    virtual void giveCharacteristicVector(FloatArray &answer, CharType type, ValueModeType mode, TimeStep *tStep);
+    void giveCharacteristicMatrix(FloatMatrix &answer, CharType, TimeStep *tStep) override;
+    void giveCharacteristicVector(FloatArray &answer, CharType type, ValueModeType mode, TimeStep *tStep) override;
 
     /**
      * Computes mass matrix of receiver. Default implementation returns consistent mass matrix and uses
@@ -198,8 +198,14 @@ public:
     {
         OOFEM_ERROR("not implemented");
     }
+    /**
+     * Computes lumped initial stress matrix of receiver.
+     * @param answer Lumped initial stress matrix.
+     * @param tStep Time step.
+     */
+    virtual void computeLumpedInitialStressMatrix(FloatMatrix &answer, TimeStep *tStep) {}
 
-    virtual void computeField(ValueModeType mode, TimeStep *tStep, const FloatArray &lcoords, FloatArray &answer);
+    void computeField(ValueModeType mode, TimeStep *tStep, const FloatArray &lcoords, FloatArray &answer) override;
 
     // stress equivalent vector in nodes (vector of internal forces)
     // - mainly for nonLinear Analysis.
@@ -235,7 +241,7 @@ public:
      */
     virtual void computeStrainVector(FloatArray &answer, GaussPoint *gp, TimeStep *tStep);
 
-    virtual int giveIPValue(FloatArray &answer, GaussPoint *gp, InternalStateType type, TimeStep *tStep);
+    int giveIPValue(FloatArray &answer, GaussPoint *gp, InternalStateType type, TimeStep *tStep) override;
     /**
      * Computes at given time (tStep) the the resulting temperature component array.
      * This is summation of all temperature load  components of  receiver.
@@ -268,7 +274,7 @@ public:
      * updateBeforeNonlocalAverage member function of structural nonlocal material class.
      * @param tStep Time step.
      */
-    virtual void updateBeforeNonlocalAverage(TimeStep *tStep);
+    void updateBeforeNonlocalAverage(TimeStep *tStep) override;
     /**
      * Returns the "nonlocal" location array of receiver. This is necessary, when stiffness matrix
      * of nonlocal model is assembled. Since model is nonlocal, the value at given IP depends on
@@ -286,13 +292,13 @@ public:
     //@}
 
     // Overloaded methods.
-    virtual int adaptiveUpdate(TimeStep *tStep);
-    virtual void updateInternalState(TimeStep *tStep);
-    virtual void updateYourself(TimeStep *tStep);
-    virtual int checkConsistency();
-    virtual IRResultType initializeFrom(InputRecord *ir);
-    virtual void giveInputRecord(DynamicInputRecord &input);
-    virtual const char *giveClassName() const { return "StructuralElement"; }
+    int adaptiveUpdate(TimeStep *tStep) override;
+    void updateInternalState(TimeStep *tStep) override;
+    void updateYourself(TimeStep *tStep) override;
+    int checkConsistency() override;
+    void initializeFrom(InputRecord &ir) override;
+    void giveInputRecord(DynamicInputRecord &input) override;
+    const char *giveClassName() const override { return "StructuralElement"; }
 
 #ifdef __OOFEG
     /**
@@ -307,19 +313,19 @@ public:
      * @param tStep Time step.
      * @return Nonzero if o.k, zero otherwise.
      */
-    virtual int giveInternalStateAtNode(FloatArray &answer, InternalStateType type, InternalStateMode mode,
-                                        int node, TimeStep *tStep);
+    int giveInternalStateAtNode(FloatArray &answer, InternalStateType type, InternalStateMode mode,
+                                int node, TimeStep *tStep) override;
     /// Shows sparse structure
-    virtual void showSparseMtrxStructure(CharType mtrx, oofegGraphicContext &gc, TimeStep *tStep);
+    void showSparseMtrxStructure(CharType mtrx, oofegGraphicContext &gc, TimeStep *tStep) override;
     /// Shows extended sparse structure (for example, due to nonlocal interactions for tangent stiffness)
-    virtual void showExtendedSparseMtrxStructure(CharType mtrx, oofegGraphicContext &gc, TimeStep *tStep);
+    void showExtendedSparseMtrxStructure(CharType mtrx, oofegGraphicContext &gc, TimeStep *tStep) override;
 
 #endif
 
     // Interface for body loads applied by Sets:
-    virtual void computeLoadVector(FloatArray &answer, BodyLoad *load, CharType type, ValueModeType mode, TimeStep *tStep);
-    virtual void computeBoundarySurfaceLoadVector(FloatArray &answer, BoundaryLoad *load, int boundary, CharType type, ValueModeType mode, TimeStep *tStep, bool global = true);
-    virtual void computeBoundaryEdgeLoadVector(FloatArray &answer, BoundaryLoad *load, int boundary, CharType type, ValueModeType mode, TimeStep *tStep, bool global = true);
+    void computeLoadVector(FloatArray &answer, BodyLoad *load, CharType type, ValueModeType mode, TimeStep *tStep) override;
+    void computeBoundarySurfaceLoadVector(FloatArray &answer, BoundaryLoad *load, int boundary, CharType type, ValueModeType mode, TimeStep *tStep, bool global = true) override;
+    void computeBoundaryEdgeLoadVector(FloatArray &answer, BoundaryLoad *load, int boundary, CharType type, ValueModeType mode, TimeStep *tStep, bool global = true) override;
     /// computes edge interpolation matrix
     virtual void computeEdgeNMatrix(FloatMatrix &answer, int boundaryID, const FloatArray &lcoords);
     /**
@@ -347,6 +353,7 @@ public:
     virtual void computeConstitutiveMatrixAt(FloatMatrix &answer,
                                              MatResponseMode rMode, GaussPoint *gp,
                                              TimeStep *tStep) = 0;
+
     /// Helper function which returns the structural cross-section for the element.
     StructuralCrossSection *giveStructuralCrossSection();
 
@@ -395,8 +402,6 @@ protected:
      */
     virtual void giveSurfaceDofMapping(IntArray &answer, int iSurf) const { answer.clear(); }
 
-    ///@todo Old, only kept until all el have changed to the above
-    virtual IntegrationRule *GetSurfaceIntegrationRule(int order) { return NULL; }
     /**
      * Computes volume related to integration point on local edge.
      * @param gp edge integration point

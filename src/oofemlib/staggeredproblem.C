@@ -76,18 +76,18 @@ StaggeredProblem :: ~StaggeredProblem()
 
 ///////////
 int
-StaggeredProblem :: instanciateYourself(DataReader &dr, InputRecord *ir, const char *dataOutputFileName, const char *desc)
+StaggeredProblem :: instanciateYourself(DataReader &dr, InputRecord &ir, const char *dataOutputFileName, const char *desc)
 {
     int result;
     result = EngngModel :: instanciateYourself(dr, ir, dataOutputFileName, desc);
-    ir->finish();
+    ir.finish();
     // instanciate slave problems
     result &= this->instanciateSlaveProblems();
     return result;
 }
 
 int
-StaggeredProblem :: instanciateDefaultMetaStep(InputRecord *ir)
+StaggeredProblem :: instanciateDefaultMetaStep(InputRecord &ir)
 {
     if ( timeDefinedByProb ) {
         /* just set a nonzero number of steps;
@@ -128,36 +128,28 @@ StaggeredProblem :: instanciateSlaveProblems()
 }
 
 
-IRResultType
-StaggeredProblem :: initializeFrom(InputRecord *ir)
+void
+StaggeredProblem :: initializeFrom(InputRecord &ir)
 {
-    IRResultType result;                // Required by IR_GIVE_FIELD macro
-
     IR_GIVE_FIELD(ir, numberOfSteps, _IFT_EngngModel_nsteps);
     if ( numberOfSteps <= 0 ) {
-        OOFEM_ERROR("nsteps not specified, bad format");
+        throw ValueInputException(ir, _IFT_EngngModel_nsteps, "nsteps must be > 0");
     }
-    if ( ir->hasField(_IFT_StaggeredProblem_deltat) ) {
-        result = EngngModel :: initializeFrom(ir);
-        if ( result != IRRT_OK ) {
-            return result;
-        }
+    if ( ir.hasField(_IFT_StaggeredProblem_deltat) ) {
+        EngngModel :: initializeFrom(ir);
         IR_GIVE_FIELD(ir, deltaT, _IFT_StaggeredProblem_deltat);
         dtFunction = 0;
-    } else if ( ir->hasField(_IFT_StaggeredProblem_prescribedtimes) ) {
-        result = EngngModel :: initializeFrom(ir);
-        if ( result != IRRT_OK ) {
-            return result;
-        }
+    } else if ( ir.hasField(_IFT_StaggeredProblem_prescribedtimes) ) {
+        EngngModel :: initializeFrom(ir);
         IR_GIVE_FIELD(ir, discreteTimes, _IFT_StaggeredProblem_prescribedtimes);
         dtFunction = 0;
-    } else if ( ir->hasField(_IFT_StaggeredProblem_dtf) ) {
+    } else if ( ir.hasField(_IFT_StaggeredProblem_dtf) ) {
         IR_GIVE_OPTIONAL_FIELD(ir, dtFunction, _IFT_StaggeredProblem_dtf);
     } else {
         IR_GIVE_FIELD(ir, timeDefinedByProb, _IFT_StaggeredProblem_timeDefinedByProb);
     }
 
-    if ( ir->hasField(_IFT_StaggeredProblem_adaptiveStepLength) ) {
+    if ( ir.hasField(_IFT_StaggeredProblem_adaptiveStepLength) ) {
         adaptiveStepLength = true;
         this->minStepLength = 0.;
         IR_GIVE_OPTIONAL_FIELD(ir, minStepLength, _IFT_StaggeredProblem_minsteplength);
@@ -174,15 +166,14 @@ StaggeredProblem :: initializeFrom(InputRecord *ir)
 
     IR_GIVE_OPTIONAL_FIELD(ir, stepMultiplier, _IFT_StaggeredProblem_stepmultiplier);
     if ( stepMultiplier < 0 ) {
-        OOFEM_WARNING("stepMultiplier must be > 0");
-        return IRRT_BAD_FORMAT;
+        throw ValueInputException(ir, _IFT_StaggeredProblem_stepmultiplier, "stepMultiplier must be > 0");
     }
 
     //    timeLag = 0.;
     //    IR_GIVE_OPTIONAL_FIELD(ir, timeLag, _IFT_StaggeredProblem_timeLag);
 
     inputStreamNames.resize(2);
-    if ( ir->hasField(_IFT_StaggeredProblem_prob3) ){
+    if ( ir.hasField(_IFT_StaggeredProblem_prob3) ){
         inputStreamNames.resize(3);
     }
     
@@ -204,14 +195,14 @@ StaggeredProblem :: initializeFrom(InputRecord *ir)
         domainList.clear();
     }
 
-    suppressOutput = ir->hasField(_IFT_EngngModel_suppressOutput);
+    suppressOutput = ir.hasField(_IFT_EngngModel_suppressOutput);
 
     if ( suppressOutput ) {
         printf("Suppressing output.\n");
     } else {
 
         if ( ( outputStream = fopen(this->dataOutputFileName.c_str(), "w") ) == NULL ) {
-            OOFEM_ERROR("Can't open output file %s", this->dataOutputFileName.c_str());
+            throw ValueInputException(ir, "None", "can't open output file: " + this->dataOutputFileName);
         }
 
         fprintf(outputStream, "%s", PRG_HEADER);
@@ -224,19 +215,13 @@ StaggeredProblem :: initializeFrom(InputRecord *ir)
         }
 #endif
     }
-
-
-
-    return IRRT_OK;
 }
 
 
 void
 StaggeredProblem :: updateAttributes(MetaStep *mStep)
 {
-    IRResultType result;                  // Required by IR_GIVE_FIELD macro
-
-    InputRecord *ir = mStep->giveAttributesRecord();
+    auto &ir = mStep->giveAttributesRecord();
 
     EngngModel :: updateAttributes(mStep);
 
@@ -246,14 +231,14 @@ StaggeredProblem :: updateAttributes(MetaStep *mStep)
     }
 
     if ( !timeDefinedByProb ) {
-        if ( ir->hasField(_IFT_StaggeredProblem_deltat) ) {
+        if ( ir.hasField(_IFT_StaggeredProblem_deltat) ) {
             IR_GIVE_FIELD(ir, deltaT, _IFT_StaggeredProblem_deltat);
             IR_GIVE_OPTIONAL_FIELD(ir, dtFunction, _IFT_StaggeredProblem_dtf);
             IR_GIVE_OPTIONAL_FIELD(ir, stepMultiplier, _IFT_StaggeredProblem_stepmultiplier);
             if ( stepMultiplier < 0 ) {
                 OOFEM_ERROR("stepMultiplier must be > 0")
             }
-        } else if ( ir->hasField(_IFT_StaggeredProblem_prescribedtimes) ) {
+        } else if ( ir.hasField(_IFT_StaggeredProblem_prescribedtimes) ) {
             IR_GIVE_FIELD(ir, discreteTimes, _IFT_StaggeredProblem_prescribedtimes);
         }
     }
@@ -372,13 +357,24 @@ StaggeredProblem :: giveSolutionStepWhenIcApply(bool force)
     } else {
         if ( !stepWhenIcApply ) {
             int nFirst = giveNumberOfFirstStep();
-            //stepWhenIcApply.reset( new TimeStep(giveNumberOfTimeStepWhenIcApply(), this, 0, -giveDeltaT(nFirst), giveDeltaT(nFirst), 0) );//previous version for [-dt, 0]
-            stepWhenIcApply.reset( new TimeStep(giveNumberOfTimeStepWhenIcApply(), this, 0, 0., giveDeltaT(nFirst), 0) );//now go from [0, dt]
+            //stepWhenIcApply = std::make_unique<TimeStep>(giveNumberOfTimeStepWhenIcApply(), this, 0, -giveDeltaT(nFirst), giveDeltaT(nFirst), 0); //previous version for [-dt, 0]
+            stepWhenIcApply = std::make_unique<TimeStep>(giveNumberOfTimeStepWhenIcApply(), this, 0, 0., giveDeltaT(nFirst), 0); //now go from [0, dt]
         }
 
         return stepWhenIcApply.get();
     }
 }
+
+
+EngngModel *
+StaggeredProblem :: giveTimeControl(){
+    if ( !timeDefinedByProb ) {
+        return this;
+    } else { //time dictated by slave problem
+        return this->giveSlaveProblem(timeDefinedByProb);
+    }
+}
+
 
 int
 StaggeredProblem :: giveNumberOfFirstStep(bool force)
@@ -400,7 +396,7 @@ StaggeredProblem :: giveNextStep()
 
     if ( !currentStep ) {
         // first step -> generate initial step
-        currentStep.reset( new TimeStep( *giveSolutionStepWhenIcApply() ) );
+        currentStep = std::make_unique<TimeStep>( *giveSolutionStepWhenIcApply() );
     }
 
     double dt = this->giveDeltaT(currentStep->giveNumber()+1);
@@ -408,20 +404,20 @@ StaggeredProblem :: giveNextStep()
     totalTime = currentStep->giveTargetTime() + this->giveDeltaT(istep);
     counter = currentStep->giveSolutionStateCounter() + 1;
     previousStep = std :: move(currentStep);
-    currentStep.reset( new TimeStep(*previousStep, dt) );
+    currentStep = std::make_unique<TimeStep>(*previousStep, dt);
 
     if ( ( totalTime >= this->endOfTimeOfInterest ) && this->adaptiveStepLength ) {
         totalTime = this->endOfTimeOfInterest;
         OOFEM_LOG_INFO("\n==================================================================\n");
         OOFEM_LOG_INFO( "\nAdjusting time step length to: %lf \n\n", totalTime - previousStep->giveTargetTime() );
-        currentStep.reset( new TimeStep(istep, this, 1, totalTime, totalTime - previousStep->giveTargetTime(), counter) );
+        currentStep = std::make_unique<TimeStep>(istep, this, 1, totalTime, totalTime - previousStep->giveTargetTime(), counter);
         this->numberOfSteps = istep;
     } else {
         if ( this->adaptiveStepLength ) {
             OOFEM_LOG_INFO("\n==================================================================\n");
             OOFEM_LOG_INFO( "\nAdjusting time step length to: %lf \n\n", totalTime - previousStep->giveTargetTime() );
         }
-        currentStep.reset( new TimeStep(istep, this, 1, totalTime, totalTime - previousStep->giveTargetTime(), counter) );
+        currentStep = std::make_unique<TimeStep>(istep, this, 1, totalTime, totalTime - previousStep->giveTargetTime(), counter);
     }
 
     // time and dt variables are set eq to 0 for statics - has no meaning
@@ -433,11 +429,7 @@ void
 StaggeredProblem :: solveYourself()
 {
     EngngModel *sp;
-    if ( !timeDefinedByProb ) {
-        sp = this;
-    } else { //time dictated by slave problem
-        sp = this->giveSlaveProblem(timeDefinedByProb);
-    }
+    sp = giveTimeControl();
 
     int smstep = 1, sjstep = 1;
     this->timer.startTimer(EngngModelTimer :: EMTT_AnalysisTimer);
@@ -558,27 +550,23 @@ StaggeredProblem :: printOutputAt(FILE *file, TimeStep *tStep)
 }
 
 
-contextIOResultType
+void
 StaggeredProblem :: saveContext(DataStream &stream, ContextMode mode)
 {
     EngngModel :: saveContext(stream, mode);
     for ( auto &emodel: emodelList ) {
         emodel->saveContext(stream, mode);
     }
-
-    return CIO_OK;
 }
 
 
-contextIOResultType
+void
 StaggeredProblem :: restoreContext(DataStream &stream, ContextMode mode)
 {
     EngngModel :: restoreContext(stream, mode);
     for ( auto &emodel: this->emodelList ) {
         emodel->restoreContext(stream, mode);
     }
-
-    return CIO_OK;
 }
 
 

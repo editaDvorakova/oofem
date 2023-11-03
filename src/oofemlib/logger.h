@@ -36,6 +36,7 @@
 #define logger_h
 
 #include "oofemcfg.h"
+//#include "util.h"
 
 #include <cstdio>
 #include <string>
@@ -105,6 +106,8 @@ public:
     void setLogLevel(logLevelType level) { logLevel = level; }
     /// Sets log level to given one. Only log messages with level less or equal given threshold will be printed.
     void setLogLevel(int level);
+    /// Increment error count by one
+    void incrementErrorCounter() {numberOfErr++;}
     /// Prints number of errors and warning logged.
     void printStatistics();
 

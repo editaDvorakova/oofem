@@ -32,8 +32,8 @@
  *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#include "Elements/3D/qspace.h"
-#include "CrossSections/structuralcrosssection.h"
+#include "sm/Elements/3D/qspace.h"
+#include "sm/CrossSections/structuralcrosssection.h"
 #include "fei3dhexaquad.h"
 #include "node.h"
 #include "gausspoint.h"
@@ -50,18 +50,18 @@ REGISTER_Element(QSpace);
 
 FEI3dHexaQuad QSpace :: interpolation;
 
-QSpace :: QSpace(int n, Domain *aDomain) : Structural3DElement(n, aDomain), ZZNodalRecoveryModelInterface(this)
+QSpace :: QSpace(int n, Domain *aDomain) : Structural3DElement(n, aDomain), ZZNodalRecoveryModelInterface(this), SpatialLocalizerInterface(this)
 {
     numberOfDofMans = 20;
 }
 
 
-IRResultType
-QSpace :: initializeFrom(InputRecord *ir)
+void
+QSpace :: initializeFrom(InputRecord &ir)
 {
     numberOfGaussPoints = 27;
 
-    return Structural3DElement :: initializeFrom(ir);
+    Structural3DElement :: initializeFrom(ir);
 }
 
 
@@ -70,16 +70,6 @@ FEInterpolation *QSpace :: giveInterpolation() const { return & interpolation; }
 // ******************************
 // ***  Surface load support  ***
 // ******************************
-
-IntegrationRule *
-QSpace :: GetSurfaceIntegrationRule(int approxOrder)
-{
-    IntegrationRule *iRule = new GaussIntegrationRule(1, this, 1, 1);
-    int npoints = iRule->getRequiredNumberOfIntegrationPoints(_Square, approxOrder);
-    iRule->SetUpPointsOnSquare(npoints, _Unknown);
-    return iRule;
-}
-
 
 int
 QSpace :: computeLoadLSToLRotationMatrix(FloatMatrix &answer, int iSurf, GaussPoint *gp)
@@ -102,22 +92,21 @@ QSpace :: computeLoadLSToLRotationMatrix(FloatMatrix &answer, int iSurf, GaussPo
      */
     FloatArray gc(3);
     FloatArray h1(3), h2(3), nn(3), n(3);
-    IntArray snodes(4);
 
     answer.resize(3, 3);
     answer.zero();
 
-    this->interpolation.computeSurfaceMapping(snodes, dofManArray, iSurf);
+    const auto &snodes = this->interpolation.computeSurfaceMapping(dofManArray, iSurf);
     for ( int i = 1; i <= 4; i++ ) {
-        gc.add( * domain->giveNode( snodes.at(i) )->giveCoordinates() );
+        gc.add( domain->giveNode( snodes.at(i) )->giveCoordinates() );
     }
 
     gc.times(1. / 4.);
     // determine "average normal"
     for ( int i = 1; i <= 4; i++ ) {
         int j = ( i ) % 4 + 1;
-        h1.beDifferenceOf(* domain->giveNode( snodes.at(i) )->giveCoordinates(), gc);
-        h2.beDifferenceOf(* domain->giveNode( snodes.at(j) )->giveCoordinates(), gc);
+        h1.beDifferenceOf(domain->giveNode( snodes.at(i) )->giveCoordinates(), gc);
+        h2.beDifferenceOf(domain->giveNode( snodes.at(j) )->giveCoordinates(), gc);
         n.beVectorProductOf(h1, h2);
         if ( n.computeSquaredNorm() > 1.e-6 ) {
             n.normalize();
@@ -166,6 +155,8 @@ QSpace :: giveInterface(InterfaceType interface)
         return static_cast< SPRNodalRecoveryModelInterface * >(this);
     } else if ( interface == NodalAveragingRecoveryModelInterfaceType ) {
         return static_cast< NodalAveragingRecoveryModelInterface * >(this);
+    } else if ( interface == SpatialLocalizerInterfaceType ) {
+        return static_cast< SpatialLocalizerInterface * >(this);
     }
 
     OOFEM_LOG_INFO("Interface on Qspace element not supported");

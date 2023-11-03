@@ -35,13 +35,13 @@
 #ifndef qclinearstatic_h
 #define qclinearstatic_h
 
-#include "../sm/EngineeringModels/linearstatic.h"
+#include "sm/EngineeringModels/linearstatic.h"
 #include "sparselinsystemnm.h"
 #include "sparsemtrxtype.h"
 #include "node.h"
 
-#include "../sm/Quasicontinuum/fullsolveddomain.h"
-#include "../sm/Quasicontinuum/quasicontinuumnumberingscheme.h"
+#include "sm/Quasicontinuum/fullsolveddomain.h"
+#include "sm/Quasicontinuum/quasicontinuumnumberingscheme.h"
 
 #define _IFT_QClinearStatic_Name "qclinearstatic"
 #define _IFT_QuasiContinuum_approach "qcapproach"
@@ -91,9 +91,8 @@ protected:
     SparseMtrxType sparseMtrxType;
     /// Numerical method used to solve the problem.
     SparseLinearSystemNM *nMethod;
-    
-    QuasicontinuumNumberingscheme *qcEquationNumbering;
 
+    QuasicontinuumNumberingscheme qcEquationNumbering;
 
     int initFlag;
 	
@@ -113,10 +112,9 @@ protected:
     //std :: vector< std :: unique_ptr< Element > > interpolationElementList;
     //std :: vector< std :: unique_ptr< Element > > links;
 
-
     std::vector<IntArray> interpolationMeshNodes;
     int  numberOfIntepolationElements;
-    
+
     QCFullsolveddomain Fullsolveddomain;
 
     FloatArray FullSolvedDomainNodes;
@@ -125,27 +123,25 @@ protected:
     FloatArray FullSolvedDomainBox;
 
 public:
-    QClinearStatic(int i, EngngModel * _master = NULL);
+    QClinearStatic(int i, EngngModel *master = nullptr);
     virtual ~QClinearStatic();
 
-    virtual void postInitialize();
+    void postInitialize() override;
 
+    void solveYourself() override;
+    void solveYourselfAt(TimeStep *tStep) override;
 
-    virtual void solveYourself();
-    virtual void solveYourselfAt(TimeStep *tStep);
-
-    virtual IRResultType initializeFrom(InputRecord *ir);
+    void initializeFrom(InputRecord &ir) override;
 
     // identification
-    virtual const char *giveInputRecordName() const { return _IFT_QClinearStatic_Name; }
-    virtual const char *giveClassName() const { return "QClinearStatic"; }
-    virtual fMode giveFormulation() { return TL; }
-
+    const char *giveInputRecordName() const override { return _IFT_QClinearStatic_Name; }
+    const char *giveClassName() const override { return "QClinearStatic"; }
+    fMode giveFormulation() override { return TL; }
 
     virtual void updateNodeTypes(Domain *d);
     virtual void setQCNodeType(Domain *d);
 
-    virtual IRResultType initializeFullSolvedDomain(InputRecord *ir);
+    virtual void initializeFullSolvedDomain(InputRecord &ir);
     virtual bool nodeInFullSolvedDomainTest(Node *n);
     virtual void setRepNodesInVerticesOfInterpolationMesh(Domain *d);
 
@@ -162,19 +158,15 @@ public:
     virtual QCFullsolveddomain *giveFullSolvedDomain();
     virtual int giveQcApproachNumber() {return qcApproach;}
 
-    bool isElementActivated( int elemNum ) { return activatedElementList[elemNum-1]; }
-    bool isElementActivated( Element  *e ) { return activatedElementList[e->giveNumber()-1]; }
+    bool isElementActivated( int elemNum ) override { return activatedElementList[elemNum-1]; }
+    bool isElementActivated( Element  *e ) override { return activatedElementList[e->giveNumber()-1]; }
 
     void setActivatedNodeList( IntArray nodeList, Domain *d);
     void setActivatedElementList( IntArray elemList);
 
-
-    virtual UnknownNumberingScheme *giveEquationNumbering() {return this->qcEquationNumbering; }
-
-    
-
+    UnknownNumberingScheme &giveEquationNumbering() override { return this->qcEquationNumbering; }
 };
 
 
 } // end namespace oofem
-#endif // linearstatic_h
+#endif // qclinearstatic_h

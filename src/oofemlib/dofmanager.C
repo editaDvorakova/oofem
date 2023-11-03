@@ -322,11 +322,9 @@ int DofManager :: giveNumberOfPrimaryMasterDofs(const IntArray &dofIDArray) cons
 }
 
 
-IRResultType
-DofManager :: initializeFrom(InputRecord *ir)
+void
+DofManager :: initializeFrom(InputRecord &ir)
 {
-    IRResultType result;                 // Required by IR_GIVE_FIELD macro
-
     delete dofidmask;
     dofidmask = NULL;
     delete dofTypemap;
@@ -348,7 +346,7 @@ DofManager :: initializeFrom(InputRecord *ir)
     int dummy;
     IR_GIVE_OPTIONAL_FIELD(ir, dummy, "ndofs");
 
-    if ( ir->hasField(_IFT_DofManager_dofidmask) ) {
+    if ( ir.hasField(_IFT_DofManager_dofidmask) ) {
         IR_GIVE_FIELD(ir, dofIDArry, _IFT_DofManager_dofidmask);
         this->dofidmask = new IntArray(dofIDArry);
     } else {
@@ -370,7 +368,7 @@ DofManager :: initializeFrom(InputRecord *ir)
     IR_GIVE_OPTIONAL_FIELD(ir, dofTypeMask, _IFT_DofManager_doftypemask);
 
     // read boundary flag
-    if ( ir->hasField(_IFT_DofManager_boundaryflag) ) {
+    if ( ir.hasField(_IFT_DofManager_boundaryflag) ) {
         isBoundaryFlag = true;
     }
 
@@ -378,11 +376,11 @@ DofManager :: initializeFrom(InputRecord *ir)
     partitions.clear();
     IR_GIVE_OPTIONAL_FIELD(ir, partitions, _IFT_DofManager_partitions);
 
-    if ( ir->hasField(_IFT_DofManager_sharedflag) ) {
+    if ( ir.hasField(_IFT_DofManager_sharedflag) ) {
         parallel_mode = DofManager_shared;
-    } else if ( ir->hasField(_IFT_DofManager_remoteflag) ) {
+    } else if ( ir.hasField(_IFT_DofManager_remoteflag) ) {
         parallel_mode = DofManager_remote;
-    } else if ( ir->hasField(_IFT_DofManager_nullflag) ) {
+    } else if ( ir.hasField(_IFT_DofManager_nullflag) ) {
         parallel_mode = DofManager_null;
     } else {
         parallel_mode = DofManager_local;
@@ -450,8 +448,6 @@ DofManager :: initializeFrom(InputRecord *ir)
             }
         }
     }
-
-    return IRRT_OK;
 }
 
 
@@ -540,24 +536,16 @@ void DofManager :: updateYourself(TimeStep *tStep)
 }
 
 
-contextIOResultType DofManager :: saveContext(DataStream &stream, ContextMode mode, void *obj)
-//
-// saves full node context (saves state variables, that completely describe
-// current state)
-//
+void DofManager :: saveContext(DataStream &stream, ContextMode mode)
 {
-    int _val;
-    contextIOResultType iores;
-
-    if ( ( iores = FEMComponent :: saveContext(stream, mode, obj) ) != CIO_OK ) {
-        THROW_CIOERR(iores);
-    }
+    FEMComponent :: saveContext(stream, mode);
 
     if ( mode & CM_Definition ) {
         if ( !stream.write(this->giveNumberOfDofs()) ) {
             THROW_CIOERR(CIO_IOERR);
         }
 
+        int _val;
         for ( auto &dof : *this ) {
             _val = dof->giveDofType();
             if ( !stream.write(_val) ) {
@@ -567,11 +555,10 @@ contextIOResultType DofManager :: saveContext(DataStream &stream, ContextMode mo
             if ( !stream.write(_val) ) {
                 THROW_CIOERR(CIO_IOERR);
             }
-            if ( ( iores = dof->saveContext(stream, mode, obj) ) != CIO_OK ) {
-                THROW_CIOERR(iores);
-            }
+            dof->saveContext(stream, mode);
         }
 
+        contextIOResultType iores;
         if ( ( iores = loadArray.storeYourself(stream) ) != CIO_OK ) {
             THROW_CIOERR(iores);
         }
@@ -598,27 +585,17 @@ contextIOResultType DofManager :: saveContext(DataStream &stream, ContextMode mo
         }
     } else {
         for ( auto &dof : *this ) {
-            if ( ( iores = dof->saveContext(stream, mode, obj) ) != CIO_OK ) {
-                THROW_CIOERR(iores);
-            }
+            dof->saveContext(stream, mode);
         }
     }
-
-    return CIO_OK;
 }
 
 
-contextIOResultType DofManager :: restoreContext(DataStream &stream, ContextMode mode, void *obj)
-//
-// restores full node context (saves state variables, that completely describe
-// current state)
-//
+void DofManager :: restoreContext(DataStream &stream, ContextMode mode)
 {
     contextIOResultType iores;
 
-    if ( ( iores = FEMComponent :: restoreContext(stream, mode, obj) ) != CIO_OK ) {
-        THROW_CIOERR(iores);
-    }
+    FEMComponent :: restoreContext(stream, mode);
 
     if ( mode & CM_Definition ) {
         int _numberOfDofs;
@@ -639,9 +616,7 @@ contextIOResultType DofManager :: restoreContext(DataStream &stream, ContextMode
                 THROW_CIOERR(CIO_IOERR);
             }
             Dof *dof = classFactory.createDof( ( dofType ) dtype, (DofIDItem)dofid, this );
-            if ( ( iores = dof->restoreContext(stream, mode, obj) ) != CIO_OK ) {
-                THROW_CIOERR(iores);
-            }
+            dof->restoreContext(stream, mode);
             this->appendDof(dof);
         }
 
@@ -672,13 +647,9 @@ contextIOResultType DofManager :: restoreContext(DataStream &stream, ContextMode
         }
     } else {
         for ( auto &dof : this->dofArray ) {
-            if ( ( iores = dof->restoreContext(stream, mode, obj) ) != CIO_OK ) {
-                THROW_CIOERR(iores);
-            }
+            dof->restoreContext(stream, mode);
         }
     }
-
-    return CIO_OK;
 }
 
 

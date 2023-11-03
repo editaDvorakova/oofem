@@ -35,11 +35,12 @@
 #ifndef qspace_h
 #define qspace_h
 
-#include "Elements/structural3delement.h"
-#include "ErrorEstimators/huertaerrorestimator.h"
+#include "sm/Elements/structural3delement.h"
+#include "sm/ErrorEstimators/huertaerrorestimator.h"
 #include "zznodalrecoverymodel.h"
 #include "nodalaveragingrecoverymodel.h"
 #include "sprnodalrecoverymodel.h"
+#include "spatiallocalizer.h"
 
 #define _IFT_QSpace_Name "qspace"
 
@@ -52,7 +53,7 @@ class FEI3dHexaQuad;
  * @author Ladislav Svoboda
  * @author Mikael Öhman
  */
-class QSpace : public Structural3DElement, public SPRNodalRecoveryModelInterface, public ZZNodalRecoveryModelInterface, public NodalAveragingRecoveryModelInterface
+class QSpace : public Structural3DElement, public SPRNodalRecoveryModelInterface, public ZZNodalRecoveryModelInterface, public NodalAveragingRecoveryModelInterface, public SpatialLocalizerInterface
 {
 protected:
     static FEI3dHexaQuad interpolation;
@@ -63,34 +64,32 @@ public:
     QSpace(int n, Domain * d);
     virtual ~QSpace() { }
 
-    virtual FEInterpolation *giveInterpolation() const;
+    FEInterpolation *giveInterpolation() const override;
 
-    virtual IRResultType initializeFrom(InputRecord *ir);
+    void initializeFrom(InputRecord &ir) override;
 
-    virtual Interface *giveInterface(InterfaceType);
-    virtual int testElementExtension(ElementExtension ext) { return ( ( ext == Element_SurfaceLoadSupport ) ? 1 : 0 ); }
+    Interface *giveInterface(InterfaceType) override;
+    int testElementExtension(ElementExtension ext) override { return ( ( ext == Element_SurfaceLoadSupport ) ? 1 : 0 ); }
 
-    virtual void SPRNodalRecoveryMI_giveSPRAssemblyPoints(IntArray &pap);
-    virtual void SPRNodalRecoveryMI_giveDofMansDeterminedByPatch(IntArray &answer, int pap);
-    virtual int SPRNodalRecoveryMI_giveNumberOfIP();
-    virtual SPRPatchType SPRNodalRecoveryMI_givePatchType();
+    void SPRNodalRecoveryMI_giveSPRAssemblyPoints(IntArray &pap) override;
+    void SPRNodalRecoveryMI_giveDofMansDeterminedByPatch(IntArray &answer, int pap) override;
+    int SPRNodalRecoveryMI_giveNumberOfIP() override;
+    SPRPatchType SPRNodalRecoveryMI_givePatchType() override;
 
-    virtual void NodalAveragingRecoveryMI_computeNodalValue(FloatArray &answer, int node, InternalStateType type, TimeStep *tStep);
+    void NodalAveragingRecoveryMI_computeNodalValue(FloatArray &answer, int node, InternalStateType type, TimeStep *tStep) override;
 
     // definition & identification
-    virtual const char *giveInputRecordName() const { return _IFT_QSpace_Name; }
-    virtual const char *giveClassName() const { return "QSpace"; }
-    
-protected:
+    const char *giveInputRecordName() const override { return _IFT_QSpace_Name; }
+    const char *giveClassName() const override { return "QSpace"; }
 
-    virtual int giveNumberOfIPForMassMtrxIntegration() { return 27; }
+protected:
+    int giveNumberOfIPForMassMtrxIntegration() override { return 27; }
 
     /**
      * @name Surface load support
      */
     //@{
-    virtual IntegrationRule *GetSurfaceIntegrationRule(int);
-    virtual int computeLoadLSToLRotationMatrix(FloatMatrix &answer, int, GaussPoint *gp);
+    int computeLoadLSToLRotationMatrix(FloatMatrix &answer, int, GaussPoint *gp) override;
     //@}
 };
 } // end namespace oofem

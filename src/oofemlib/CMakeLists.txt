@@ -38,6 +38,8 @@ set (core_unsorted
     #
     symcompcol.C compcol.C
     unstructuredgridfield.C
+    # 
+    loadbalancer.C
     )
 
 #oofegutils
@@ -108,7 +110,8 @@ if (USE_PETSC)
     list (APPEND core_nm petscsolver.C petscsparsemtrx.C)
 endif ()
 
-if (USE_INTEL_MKL_PARDISO)
+if (USE_INTEL_MKL_PARDISO OR USE_ONEAPI)
+    message (STATUS "    MKL Solver is enabled for compilation")
     list (APPEND core_nm mklpardisosolver.C)
 endif ()
 
@@ -124,6 +127,7 @@ set (core_fields
     intvarfield.C
     maskedprimaryfield.C
     dofdistributedprimaryfield.C
+    eigenvectorprimaryfield.C
     uniformgridfield.C
     )
 
@@ -143,21 +147,24 @@ set (core_ltf
 set (core_cs
     crosssection.C
     emptycs.C
+    dummycrosssection.C
     )
 
 set (core_td
-    particletopologydescription.C
     )
 
 set (core_dofman
     dofmanager.C
     node.C
     slavenode.C
+    generalslavenode.C
     hangingnode.C
     qcnode.C
     rigidarmnode.C
     elementinternaldofman.C
     elementside.C
+    latticedirichletcouplingnode.C
+    latticeneumanncouplingnode.C
     )
 
 set (core_material
@@ -172,10 +179,21 @@ set (core_export
     outputexportmodule.C
     errorcheckingexportmodule.C
     vtkexportmodule.C
+    vtkbaseexportmodule.C
     vtkxmlexportmodule.C
+    vtkmemoryexportmodule.C
+    vtkxmlperiodicexportmodule.C
+    vtkxmllatticeexportmodule.C
+    vtkpfemexportmodule.C
+    vtkxfemexportmodule.C
     homexportmodule.C
     matlabexportmodule.C
     gpexportmodule.C
+    )
+
+set (core_monitors
+    monitormanager.C
+    monitor.C
     )
 
 set (core_iga
@@ -194,6 +212,7 @@ set (core_arrays
 set (core_engng
     engngm.C
     staggeredproblem.C
+    dummyengngm.C
     )
 
 set (core_element
@@ -219,6 +238,7 @@ set (core_fei
     fei2dquadbiquad.C
     fei3dlinelin.C
     fei3dtrlin.C
+    fei3dquadlin.C
     fei3dtrquad.C
     fei3dtetlin.C
     fei3dtetquad.C
@@ -264,7 +284,6 @@ set (core_parallel
     domaintransactionmanager.C
     parallelordering.C
     dyncombuff.C
-    loadbalancer.C
     wallclockloadbalancermonitor.C
     nonlocalmatwtp.C
     )
@@ -300,10 +319,16 @@ set (core_bc
     linearconstraintbc.C
     )
 
-if (USE_PYTHON)
+if (USE_PYTHON_EXTENSION)
     list (APPEND core_bc userdefdirichletbc.C)
     list (APPEND core_unsorted pythonexpression.C)
 endif ()
+
+if (USE_PYBIND_BINDINGS)
+    list (APPEND core_unsorted pythonfield.C)
+endif ()
+
+
 
 set (core_mapping
     mmaclosestiptransfer.C
@@ -331,6 +356,7 @@ set (core
     ${core_dofman}
     ${core_material}
     ${core_export}
+    ${core_monitors}
     ${core_ltf}
     ${core_cs}
     ${core_arrays}

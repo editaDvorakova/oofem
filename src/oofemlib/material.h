@@ -45,11 +45,13 @@
 #include "internalstatevaluetype.h"
 #include "matresponsemode.h"
 #include "dictionary.h"
+#include "chartype.h"
 
 ///@name Input fields for Material
 //@{
 #define _IFT_Material_density "d"
 #define _IFT_Material_castingtime "castingtime"
+#define _IFT_Material_preCastingTimeMat "precastingtimemat"
 //@}
 
 namespace oofem {
@@ -111,6 +113,10 @@ protected:
      * material model
      */
     double castingTime;
+    
+    /// Material existing before casting time - optional parameter, zero by default
+    int preCastingTimeMat;
+    
 
 public:
     /**
@@ -120,13 +126,28 @@ public:
      */
     Material(int n, Domain *d);
     /// Destructor.
-    virtual ~Material();
+    virtual ~Material() = default;
 
     /**
      * Returns true if stiffness matrix of receiver is symmetric
      * Default implementation returns true.
      */
-    virtual bool isCharacteristicMtrxSymmetric(MatResponseMode rMode) { return true; }
+    virtual bool isCharacteristicMtrxSymmetric(MatResponseMode rMode) const { return true; }
+    /**
+     * @brief Returns characteristic matrix of the receiver
+     * 
+     */
+    virtual void giveCharacteristicMatrix(FloatMatrix &answer, CharType type, GaussPoint* gp, TimeStep *tStep) {}
+    /**
+     * @brief Returns characteristic vector of the receiver
+     * 
+     */
+    virtual void giveCharacteristicVector(FloatArray &answer, FloatArray& flux, CharType type, GaussPoint* gp, TimeStep *tStep) {}
+    /**
+     * @brief Returns characteristic value of the receiver
+     * 
+     */
+    virtual double giveCharacteristicValue(CharType type, GaussPoint* gp, TimeStep *tStep);
     /**
      * Returns the value of material property 'aProperty'. Property must be identified
      * by unique int id. Integration point also passed to allow for materials with spatially
@@ -135,14 +156,14 @@ public:
      * @param gp Integration point,
      * @return Property value.
      */
-    virtual double give(int aProperty, GaussPoint *gp);
+    virtual double give(int aProperty, GaussPoint *gp) const;
     /**
      * Returns true if 'aProperty' exists on material.
      * @param aProperty ID of property requested.
      * @param gp Integration point.
      * @return True if 'aProperty' exists.
      */
-    virtual bool hasProperty(int aProperty, GaussPoint *gp);
+    virtual bool hasProperty(int aProperty, GaussPoint *gp) const;
     /**
      * Modify 'aProperty', which already exists on material. Intended for evolving material properties.
      * @param aProperty ID of a property requested.
@@ -153,14 +174,14 @@ public:
     /**
      * @return Casting time of the receiver.
      */
-    double giveCastingTime() { return this->castingTime; }
+    double giveCastingTime() const { return this->castingTime; }
     /**
      * @param tStep Time step to check activity for.
      * @return True if material is activated for given solution step.
      */
-    virtual bool isActivated(TimeStep *tStep) {
+    virtual bool isActivated(TimeStep *tStep) const {
         if ( tStep ) {
-            return ( tStep->giveIntrinsicTime() >= this->castingTime );
+            return ( tStep->giveTargetTime() >= this->castingTime );
         } else {
             return true;
         }
@@ -168,24 +189,17 @@ public:
 
     // identification and auxiliary functions
     /**
-     * Returns nonzero if receiver is non linear
-     */
-    virtual int hasNonLinearBehaviour() { return 0; }
-
-    /**
      * Tests if material supports material mode.
      * @param mode Required material mode.
      * @return Nonzero if supported, zero otherwise.
      */
-    virtual int hasMaterialModeCapability(MaterialMode mode);
-
+    virtual bool hasMaterialModeCapability(MaterialMode mode) const;
 
     /**
      * Tests if material supports casting time
      * @return Nonzero if supported, zero otherwise.
      */
-    virtual int hasCastingTimeSupport();
-
+    virtual bool hasCastingTimeSupport() const;
 
     ///@name Access functions for internal states. Usually overloaded by new material models.
     //@{
@@ -210,28 +224,26 @@ public:
     virtual int giveIPValue(FloatArray &answer, GaussPoint *gp, InternalStateType type, TimeStep *tStep);
     //@}
 
-    virtual IRResultType initializeFrom(InputRecord *ir);
-    virtual void giveInputRecord(DynamicInputRecord &input);
-    virtual void printYourself();
+    void initializeFrom(InputRecord &ir) override;
+    void giveInputRecord(DynamicInputRecord &input) override;
+    void printYourself() override;
 
     /**
      * Stores integration point state to output stream.
      * @param stream Output stream.
      * @param mode Determines amount of info required in stream (state, definition, ...).
      * @param gp integration point.
-     * @return contextIOResultType.
      * @exception throws an ContextIOERR exception if error encountered.
      */
-    virtual contextIOResultType saveIPContext(DataStream &stream, ContextMode mode, GaussPoint *gp);
+    virtual void saveIPContext(DataStream &stream, ContextMode mode, GaussPoint *gp);
     /**
      * Reads integration point state to output stream.
      * @param stream Output stream.
      * @param mode Determines amount of info required in stream (state, definition, ...).
      * @param gp integration point.
-     * @return contextIOResultType.
      * @exception throws an ContextIOERR exception if error encountered.
      */
-    virtual contextIOResultType restoreIPContext(DataStream &stream, ContextMode mode, GaussPoint *gp);
+    virtual void restoreIPContext(DataStream &stream, ContextMode mode, GaussPoint *gp);
 
     /**
      * Allows programmer to test some internal data, before computation begins.
@@ -240,9 +252,14 @@ public:
      * mesh components are instanciated.
      * @return Nonzero if receiver is consistent.
      */
-    virtual int checkConsistency();
-
-
+    int checkConsistency() override;
+    /**
+     * Restores consistency of the status, i.e., computes or corrects
+     * the values of certain status variables such that the state is admissible.
+     * For instance, if the initial values of some internal variables
+     * are read from a file, other internal variables are adjusted accordingly.
+     */
+    virtual void restoreConsistency(GaussPoint *gp) { }
     /**
      * Optional function to call specific procedures when initializing a material.
      * For example, multiscale simulations need to create master and slave material statuses on specific integration points before the computation.
@@ -307,14 +324,13 @@ public:
      */
     virtual double predictRelativeRedistributionCost(GaussPoint *gp) { return 1.0; }
 
-
     /**
      * Creates new copy of associated status and inserts it into given integration point.
      * @param gp Integration point where newly created status will be stored.
      * @return Reference to new status.
      */
     virtual MaterialStatus *CreateStatus(GaussPoint *gp) const
-    { return NULL; }
+    { return nullptr; }
 
     /**
      * Initializes temporary variables stored in integration point status
@@ -325,7 +341,23 @@ public:
      * Default implementation simply extracts status from integration point and
      * calls its initTempStatus method.
      */
-    virtual void initTempStatus(GaussPoint *gp);
+    virtual void initTempStatus(GaussPoint *gp) const;
+
+    /**
+     * Stores receiver state to output stream.
+     * @param stream Output stream.
+     * @param mode Determines amount of info required in stream (state, definition, ...).
+     * @exception throws an ContextIOERR exception if error encountered.
+     */
+    void saveContext(DataStream &stream, ContextMode mode) override;
+    /**
+     * Restores the receiver state previously written in stream.
+     * @see saveContext
+     * @param stream Input stream.
+     * @param mode Determines amount of info available in stream (state, definition, ...).
+     * @exception throws an ContextIOERR exception if error encountered.
+     */
+    void restoreContext(DataStream &stream, ContextMode mode) override;
 };
 } // end namespace oofem
 #endif // material_h

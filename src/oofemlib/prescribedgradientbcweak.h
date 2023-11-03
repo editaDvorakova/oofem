@@ -62,39 +62,38 @@ class GaussPoint;
 class TracSegArray
 {
 public:
-	TracSegArray() {}
+    TracSegArray() {}
+    TracSegArray(TracSegArray &&src) = default;
     virtual ~TracSegArray() {}
 
     void printYourself() {
-    	printf("\nTracSegArray segments:\n");
-    	for(auto &l: mInteriorSegments) {
-    		printf("\n");
-    		l.giveVertex(1).printYourself();
-    		l.giveVertex(2).printYourself();
-    	}
+        printf("\nTracSegArray segments:\n");
+        for ( auto &l : mInteriorSegments ) {
+            printf("\n");
+            l.giveVertex(1).printYourself();
+            l.giveVertex(2).printYourself();
+        }
     }
 
     double giveLength() {
-    	double l = 0.0;
-    	for(Line &line : mInteriorSegments) {
-    		l += line.giveLength();
-    	}
+        double l = 0.0;
+        for( auto &line : mInteriorSegments ) {
+            l += line.giveLength();
+        }
 
-    	return l;
+        return l;
     }
 
     void giveTractionLocationArray(IntArray &rows, CharType type, const UnknownNumberingScheme &s);
 
     void setupIntegrationRuleOnEl();
 
-    std :: vector< Line >mInteriorSegments;
+    std :: vector< Line > mInteriorSegments;
 
     // Interior segments used for Gaussian quadrature
     std :: vector< Line > mInteriorSegmentsFine;
 
     std :: vector< FloatArray > mInteriorSegmentsPointsFine;
-
-
 
     std :: unique_ptr< Node > mFirstNode;
 
@@ -116,40 +115,41 @@ public:
 
     void clear();
 
-    virtual double domainSize() {return PrescribedGradientHomogenization::domainSize(this->giveDomain(), this->giveSetNumber());}
+    double domainSize() override { return PrescribedGradientHomogenization::domainSize(this->giveDomain(), this->giveSetNumber()); }
 
-    virtual int giveNumberOfInternalDofManagers();
-    virtual DofManager *giveInternalDofManager(int i);
+    int giveNumberOfInternalDofManagers() override;
+    DofManager *giveInternalDofManager(int i) override;
 
-    virtual bcType giveType() const { return UnknownBT; }
+    bcType giveType() const override { return UnknownBT; }
 
-    virtual IRResultType initializeFrom(InputRecord *ir);
-    virtual void giveInputRecord(DynamicInputRecord &input);
+    void initializeFrom(InputRecord &ir) override;
+    void giveInputRecord(DynamicInputRecord &input) override;
 
-    virtual void postInitialize();
+    void postInitialize() override;
 
-    virtual void computeField(FloatArray &sigma, TimeStep *tStep);
-    virtual void computeTangent(FloatMatrix &E, TimeStep *tStep);
+    void computeField(FloatArray &sigma, TimeStep *tStep) override;
+    void computeTangent(FloatMatrix &E, TimeStep *tStep) override;
 
-    virtual void assembleVector(FloatArray &answer, TimeStep *tStep,
-                                CharType type, ValueModeType mode,
-                                const UnknownNumberingScheme &s, FloatArray *eNorm = NULL);
+    void assembleVector(FloatArray &answer, TimeStep *tStep,
+                        CharType type, ValueModeType mode,
+                        const UnknownNumberingScheme &s, FloatArray *eNorm=nullptr, void* lock=nullptr) override;
 
     void computeExtForceElContrib(FloatArray &oContrib, TracSegArray &iEl, int iDim, TimeStep *tStep);
     void computeIntForceGPContrib(FloatArray &oContrib_disp, IntArray &oDisp_loc_array, FloatArray &oContrib_trac, IntArray &oTrac_loc_array,TracSegArray &iEl, GaussPoint &iGP, int iDim, TimeStep *tStep, const FloatArray &iBndCoord, const double &iScaleFac, ValueModeType mode, CharType type, const UnknownNumberingScheme &s);
 
 
-    virtual void assemble(SparseMtrx &answer, TimeStep *tStep,
-                          CharType type, const UnknownNumberingScheme &r_s, const UnknownNumberingScheme &c_s, double scale = 1.0);
+    void assemble(SparseMtrx &answer, TimeStep *tStep,
+                  CharType type, const UnknownNumberingScheme &r_s, const UnknownNumberingScheme &c_s, double scale = 1.0, void* lock=nullptr) override;
 
     virtual void assembleExtraDisplock(SparseMtrx &answer, TimeStep *tStep,
                           CharType type, const UnknownNumberingScheme &r_s, const UnknownNumberingScheme &c_s);
 
     virtual void assembleGPContrib(SparseMtrx &answer, TimeStep *tStep,
-                          CharType type, const UnknownNumberingScheme &r_s, const UnknownNumberingScheme &c_s, TracSegArray &iEl, GaussPoint &iGP, double k);
+                          CharType type, const UnknownNumberingScheme &r_s, const UnknownNumberingScheme &c_s, 
+                          TracSegArray &iEl, GaussPoint &iGP, double k, void* lock=nullptr);
 
-    virtual void giveLocationArrays(std :: vector< IntArray > &rows, std :: vector< IntArray > &cols, CharType type,
-                                    const UnknownNumberingScheme &r_s, const UnknownNumberingScheme &c_s);
+    void giveLocationArrays(std :: vector< IntArray > &rows, std :: vector< IntArray > &cols, CharType type,
+                            const UnknownNumberingScheme &r_s, const UnknownNumberingScheme &c_s) override;
 
     virtual void giveTractionLocationArray(IntArray &rows,
                                            const UnknownNumberingScheme &s);
@@ -167,12 +167,12 @@ public:
 //    virtual void giveDisplacementLocationArrays(int iTracElInd, IntArray &rows, CharType type,
 //                                                const UnknownNumberingScheme &s);
 
-    virtual const char *giveClassName() const { return "PrescribedGradientBCWeak"; }
-    virtual const char *giveInputRecordName() const { return _IFT_PrescribedGradientBCWeak_Name; }
+    const char *giveClassName() const override { return "PrescribedGradientBCWeak"; }
+    const char *giveInputRecordName() const override { return _IFT_PrescribedGradientBCWeak_Name; }
 
     // Routines for postprocessing
     size_t giveNumberOfTractionElements() const { return mpTracElNew.size(); }
-    void giveTractionElCoord(size_t iElInd, FloatArray &oStartCoord, FloatArray &oEndCoord) const { oStartCoord = mpTracElNew [ iElInd ]->mInteriorSegments[0].giveVertex(1); oEndCoord = mpTracElNew [ iElInd ]->mInteriorSegments.back().giveVertex(2); }
+    void giveTractionElCoord(size_t iElInd, FloatArray &oStartCoord, FloatArray &oEndCoord) const { oStartCoord = mpTracElNew [ iElInd ].mInteriorSegments[0].giveVertex(1); oEndCoord = mpTracElNew [ iElInd ].mInteriorSegments.back().giveVertex(2); }
     void giveTractionElNormal(size_t iElInd, FloatArray &oNormal, FloatArray &oTangent) const;
     void giveTractionElArcPos(size_t iElInd, double &oXiStart, double &oXiEnd) const;
     void giveBoundaries(IntArray &oBoundaries);
@@ -183,16 +183,16 @@ public:
     void computeDomainBoundingBox(Domain &iDomain, FloatArray &oLC, FloatArray &oUC);
 
 
-    const IntArray &giveTracDofIDs() const {return mTractionDofIDs;}
-    const IntArray &giveDispLockDofIDs() const {return mDispLockDofIDs;}
-    const IntArray &giveRegularDispDofIDs() const {return mRegularDispDofIDs;}
+    const IntArray &giveTracDofIDs() const { return mTractionDofIDs; }
+    const IntArray &giveDispLockDofIDs() const { return mDispLockDofIDs; }
+    const IntArray &giveRegularDispDofIDs() const { return mRegularDispDofIDs; }
 
 
     // Functions mainly for testing
-    void setPeriodicityNormal(const FloatArray &iPeriodicityNormal) {mPeriodicityNormal = iPeriodicityNormal; };
-    void setDomainSize(double iDomainSize) {mDomainSize = std::move(iDomainSize);};
-    void setLowerCorner(FloatArray iLC) {mLC = std::move(iLC);};
-    void setUpperCorner(FloatArray iUC) {mUC = std::move(iUC);};
+    void setPeriodicityNormal(const FloatArray &iPeriodicityNormal) { mPeriodicityNormal = iPeriodicityNormal; }
+    void setDomainSize(double iDomainSize) { mDomainSize = std::move(iDomainSize); }
+    void setLowerCorner(FloatArray iLC) { mLC = std::move(iLC); }
+    void setUpperCorner(FloatArray iUC) { mUC = std::move(iUC); }
 
     void setMirrorFunction(int iMirrorFunction) {mMirrorFunction = iMirrorFunction;};
 
@@ -253,7 +253,7 @@ protected:
 
 
     /// Lock displacements in one node if periodic
-    Node *mpDisplacementLock;
+    std::unique_ptr<Node> mpDisplacementLock;
     int mLockNodeInd;
     double mDispLockScaling;
 
@@ -264,7 +264,7 @@ protected:
 
 
     /// Elements for the independent traction discretization
-    std :: vector< TracSegArray * > mpTracElNew;
+    std :: vector< TracSegArray > mpTracElNew;
 
 
     /**
@@ -289,7 +289,7 @@ public:
 protected:
     void createTractionMesh(bool iEnforceCornerPeriodicity, int iNumSides);
 
-    void splitSegments(std :: vector< TracSegArray * > &ioElArray);
+    void splitSegments(std :: vector< TracSegArray > &ioElArray);
 
     bool damageExceedsTolerance(Element *el);
 
@@ -316,11 +316,10 @@ class ArcPosSortFunction
 {
 public:
     ArcPosSortFunction(const FloatArray &iStartPos) : mStartPos(iStartPos) {}
-    ~ArcPosSortFunction() {}
 
     bool operator()(const FloatArray &iVec1, const FloatArray &iVec2) const
     {
-        return mStartPos.distance_square(iVec1) < mStartPos.distance_square(iVec2);
+        return distance_square(mStartPos, iVec1) < distance_square(mStartPos, iVec2);
     }
 
 private:
@@ -338,8 +337,6 @@ public:
         mSideInd(iSideInd)
     {}
 
-    ~ArcPosSortFunction3() {}
-
     bool operator()(const std :: pair< FloatArray, T > &iVec1, const std :: pair< FloatArray, int > &iVec2) const
     {
         return calcArcPos(iVec1.first) < calcArcPos(iVec2.first);
@@ -352,24 +349,20 @@ public:
 
         if ( mSideInd == 0 ) {
             const FloatArray &x = { mUC [ 0 ], mLC [ 1 ] };
-            double dist = Lx + iPos.distance(x);
-            return dist;
+            return Lx + distance(iPos, x);
         }
 
         if ( mSideInd == 1 ) {
-            double dist = Lx + Ly + iPos.distance(mUC);
-            return dist;
+            return Lx + Ly + distance(iPos, mUC);
         }
 
         if ( mSideInd == 2 ) {
             const FloatArray &x = { mLC [ 0 ], mUC [ 1 ] };
-            double dist = Lx + Ly + Lx + iPos.distance(x);
-            return dist;
+            return Lx + Ly + Lx + distance(iPos, x);
         }
 
         if ( mSideInd == 3 ) {
-            double dist = iPos.distance(mLC);
-            return dist;
+            return distance(iPos, mLC);
         }
 
         OOFEM_ERROR("Could not compute distance.")
@@ -395,8 +388,6 @@ public:
         mRelTol(iRelTol)
     {}
 
-    ~ArcPosSortFunction4() {}
-
     bool operator()(const FloatArray &iVec1, const FloatArray &iVec2) const
     {
         return calcArcPos(iVec1) < calcArcPos(iVec2);
@@ -407,45 +398,40 @@ public:
         double Lx = mUC [ 0 ] - mLC [ 0 ];
         double Ly = mUC [ 1 ] - mLC [ 1 ];
 
-
         int sideInd = -1;
 
-        if( iPos[0] > Lx - Lx*mRelTol ) {
-        	sideInd = 0;
+        if ( iPos[0] > Lx - Lx*mRelTol ) {
+            sideInd = 0;
         }
 
-        if( iPos[1] > Ly - Ly*mRelTol ) {
-        	sideInd = 1;
+        if ( iPos[1] > Ly - Ly*mRelTol ) {
+            sideInd = 1;
         }
 
-        if( iPos[0] < Lx*mRelTol ) {
-        	sideInd = 2;
+        if ( iPos[0] < Lx*mRelTol ) {
+            sideInd = 2;
         }
 
-        if( iPos[1] < Ly*mRelTol ) {
-        	sideInd = 3;
+        if ( iPos[1] < Ly*mRelTol ) {
+            sideInd = 3;
         }
 
         if ( sideInd == 0 ) {
             const FloatArray &x = { mUC [ 0 ], mLC [ 1 ] };
-            double dist = Lx + iPos.distance(x);
-            return dist;
+            return Lx + distance(iPos, x);
         }
 
         if ( sideInd == 1 ) {
-            double dist = Lx + Ly + iPos.distance(mUC);
-            return dist;
+            return Lx + Ly + distance(iPos, mUC);
         }
 
         if ( sideInd == 2 ) {
             const FloatArray &x = { mLC [ 0 ], mUC [ 1 ] };
-            double dist = Lx + Ly + Lx + iPos.distance(x);
-            return dist;
+            return Lx + Ly + Lx + distance(iPos, x);
         }
 
         if ( sideInd == 3 ) {
-            double dist = iPos.distance(mLC);
-            return dist;
+            return distance(iPos, mLC);
         }
 
         OOFEM_ERROR("Could not compute distance.")
