@@ -32,39 +32,21 @@
  *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#include "sparselinsystemnm.h"
-#include "floatmatrix.h"
-#include "floatarray.h"
-#include "sparsemtrx.h"
-
+#ifndef convergedreason_h
+#define convergedreason_h
 namespace oofem {
-SparseLinearSystemNM :: SparseLinearSystemNM(Domain *d, EngngModel *m) : NumericalMethod(d, m)
-{ }
-
-SparseLinearSystemNM :: ~SparseLinearSystemNM()
-{ }
-
-ConvergedReason SparseLinearSystemNM :: solve(SparseMtrx &A, FloatMatrix &B, FloatMatrix &X)
-{
-    ConvergedReason status = CR_UNKNOWN;
-    int neq = A.giveNumberOfRows();
-    int nrhs = B.giveNumberOfColumns();
-    if ( A.giveNumberOfRows() != B.giveNumberOfRows() ) {
-        OOFEM_ERROR("A and B matrix mismatch");
-    }
-    FloatArray bi(neq), xi(neq);
-    if ( X.giveNumberOfRows() != neq || X.giveNumberOfColumns() != nrhs ) {
-        X.resize(neq, nrhs);
-    }
-    for ( int i = 1; i <= nrhs; ++i ) {
-        B.copyColumn(bi, i);
-        X.copyColumn(xi, i);
-        status = this->solve(A, bi, xi);
-        if ( status != CR_CONVERGED ) {
-            return status;
-        }
-        X.setColumn(xi, i);
-    }
-    return status;
-}
+  /**
+   * Typedef to determine reason for a  solver to have converged or diverged
+   */
+  typedef enum {
+    CR_UNKNOWN                             = 0,
+    /* converged */
+    CR_CONVERGED                           = 1,
+    /* diverged */
+    CR_DIVERGED_ITS                        = -1,
+    CR_DIVERGED_TOL                        = -2,
+    /* failed */
+    CR_FAILED                              = -99
+  } ConvergedReason;
 } // end namespace oofem
+#endif // convergedreason_h
