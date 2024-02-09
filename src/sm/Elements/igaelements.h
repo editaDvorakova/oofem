@@ -1,4 +1,4 @@
-/*
++/*
  *
  *                 #####    #####   ######  ######  ###   ###
  *               ##   ##  ##   ##  ##      ##      ## ### ##
@@ -50,6 +50,7 @@
 #define _IFT_NURBSPlaneStressElement_Name "nurbsplanestresselement"
 #define _IFT_TSplinePlaneStressElement_Name "tsplineplanestresselement"
 #define _IFT_NURBSSpace3dElement_Name "nurbs3delement"
+#define _IFT_NURBSBeam2dElement_Name "nurbsbeam2delement"
 
 namespace oofem {
 class BsplinePlaneStressElement : public IGAElement, public PlaneStressStructuralElementEvaluator
