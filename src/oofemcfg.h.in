@@ -1,43 +1,22 @@
-#include "oofem_version.h"
-#define PRG_VERSION "OOFEM version @oofem_VERSION_MAJOR@.@oofem_VERSION_MINOR@"
-#define OOFEG_VERSION "OOFEG version @oofem_VERSION_MAJOR@.@oofem_VERSION_MINOR@"
-#define OOFEM_COPYRIGHT "@oofem_COPYRIGHT@"
-
-#define PRG_HEADER_SM "\
-____________________________________________________\n\
-  ____  ____  __________  ___ \n\
- / __ \\/ __ \\/ __/ __/  |/  /___  _______ _\n\
-/ /_/ / /_/ / _// _// /|_/ // _ \\/ __/ _ `/\n\
-\\____/\\____/_/ /___/_/  /_(_)___/_/  \\_, / \n\
-                                    /___/  \n\
-        @oofem_COPYRIGHT@\n\
-____________________________________________________\n"
-
-#define PRG_HEADER "\
-############################################################## www.oofem.org ###\n\
-  ____  ____  __________  ___\n\
- / __ \\/ __ \\/ __/ __/  |/  /___  _______ _\n\
-/ /_/ / /_/ / _// _// /|_/ // _ \\/ __/ _ `/\n\
-\\____/\\____/_/ /___/_/  /_(_)___/_/  \\_, /  OOFEM ver. @oofem_VERSION_MAJOR@.@oofem_VERSION_MINOR@ \n\
-                                    /___/   @oofem_COPYRIGHT@\n\
-################################################################################\n\
-Git URL:" OOFEM_GIT_REPOURL ",\n    branch:" OOFEM_GIT_BRANCH ", hash:" OOFEM_GIT_HASH "\n\n"
-
-                               
-#define HOST_TYPE "@HOST_TYPE@"
-#define HOST_NAME "@HOST_NAME@"
-#define MODULE_LIST "@MODULE_LIST@"
-
-/* Headers */
-
-/* Define if execinfo.h defined */
-#cmakedefine HAVE_EXECINFO_H 1
-
-/* Symbols */
-/* Define if cbrt is defined */
-#cmakedefine HAVE_CBRT 1
-
-/* Define if isnan is defined */
-#cmakedefine HAVE_ISNAN 1
-
 @OOFEM_EXPORT_HEADER@
+
+#define __OOFEM_MAJOR_VERSION "@oofem_VERSION_MAJOR@"
+#define __OOFEM_MINOR_VERSION "@oofem_VERSION_MINOR@"
+#define __OOFEM_VERSION "@oofem_VERSION_MAJOR@" "." "@oofem_VERSION_MINOR@"
+#define __OOFEM_COPYRIGHT "@oofem_COPYRIGHT@"
+#define __HOST_TYPE "@HOST_TYPE@"
+#define __HOST_NAME "@HOST_NAME@"
+#define __MODULE_LIST "@MODULE_LIST@" 
+
+OOFEM_EXPORT extern const char* PRG_VERSION;
+OOFEM_EXPORT extern const char* OOFEG_VERSION;
+OOFEM_EXPORT extern const char* OOFEM_COPYRIGHT;
+OOFEM_EXPORT extern const char* PRG_HEADER;
+OOFEM_EXPORT extern const char* PRG_HEADER_SM;
+OOFEM_EXPORT extern const char* HOST_TYPE;
+OOFEM_EXPORT extern const char* HOST_NAME;
+OOFEM_EXPORT extern const char* MODULE_LIST;
+OOFEM_EXPORT extern const char* OOFEM_GIT_HASH;
+OOFEM_EXPORT extern const char* OOFEM_GIT_REPOURL;
+OOFEM_EXPORT extern const char* OOFEM_GIT_BRANCH;
+#

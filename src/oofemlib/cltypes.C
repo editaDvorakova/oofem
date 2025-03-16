@@ -69,8 +69,6 @@ char cltypesGiveUnknownTypeModeKey(ValueModeType mode)
 
     default: OOFEM_ERROR("unsupported ValueModeType");
     }
-
-    return 0;
 }
 
 
@@ -159,6 +157,9 @@ InternalStateValueType giveInternalStateValueType(InternalStateType type)
     case IST_PrincStressVector3:
     case IST_MacroSlipVector:
     case IST_TransferStress:
+    case IST_X_LCS:
+    case IST_Y_LCS:
+    case IST_Z_LCS:
         return ISVT_VECTOR;
 
     case IST_MaxEquivalentStrainLevel:
@@ -253,7 +254,6 @@ InternalStateValueType giveInternalStateValueType(UnknownType type)
         return ISVT_SCALAR;
     } else {
         OOFEM_ERROR( "unsupported UnknownType %s", __UnknownTypeToString(type) );
-        return ISVT_SCALAR; // To make compiler happy.
     }
 }
 

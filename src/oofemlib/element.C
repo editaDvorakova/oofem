@@ -630,7 +630,6 @@ Element :: giveCharacteristicValue(CharType mtrx, TimeStep *tStep)
 //
 {
     OOFEM_ERROR("Unknown Type of characteristic mtrx.");
-    return 0.;
 }
 
 
@@ -842,25 +841,25 @@ Element :: initForNewStep()
 IntArray
 Element::giveBoundaryEdgeNodes(int boundary) const
 {
-    return this->giveInterpolation()->boundaryEdgeGiveNodes(boundary);
+    return this->giveInterpolation()->boundaryEdgeGiveNodes(boundary, this->giveGeometryType());
 }
 
 IntArray
 Element::giveBoundarySurfaceNodes(int boundary) const
 {
-    return this->giveInterpolation()->boundarySurfaceGiveNodes(boundary);
+    return this->giveInterpolation()->boundarySurfaceGiveNodes(boundary, this->giveGeometryType());
 }
 
 std::unique_ptr<IntegrationRule>
 Element::giveBoundaryEdgeIntegrationRule(int order, int boundary)
 {
-    return this->giveInterpolation()->giveBoundaryEdgeIntegrationRule(order, boundary);
+    return this->giveInterpolation()->giveBoundaryEdgeIntegrationRule(order, boundary, this->giveGeometryType());
 }
 
 std::unique_ptr<IntegrationRule>
 Element::giveBoundarySurfaceIntegrationRule(int order, int boundary)
 {
-    return this->giveInterpolation()->giveBoundarySurfaceIntegrationRule(order, boundary);
+    return this->giveInterpolation()->giveBoundarySurfaceIntegrationRule(order, boundary, this->giveGeometryType());
 }
 
 
@@ -1070,7 +1069,6 @@ Element :: computeVolume()
 #ifdef DEBUG
     if ( !fei ) {
         OOFEM_ERROR("Function not overloaded and necessary interpolator isn't available");
-        return 0.0;
     }
 #endif
     return fei->giveVolume( FEIElementGeometryWrapper(this) );
@@ -1084,7 +1082,6 @@ Element :: computeArea()
 #ifdef DEBUG
     if ( !fei ) {
         OOFEM_ERROR("Function not overloaded and necessary interpolator isn't available");
-        return 0.0;
     }
 #endif
     return fei->giveArea( FEIElementGeometryWrapper(this) );
@@ -1098,7 +1095,6 @@ Element :: computeLength()
 #ifdef DEBUG
     if ( !fei ) {
         OOFEM_ERROR("Function not overloaded and necessary interpolator isn't available");
-        return 0.0;
     }
 #endif
     return fei->giveLength( FEIElementGeometryWrapper(this) );
@@ -1208,6 +1204,29 @@ Element :: giveLocalCoordinateSystem(FloatMatrix &answer)
     return 0;
 }
 
+void
+Element :: giveLocalCoordinateSystemVector(InternalStateType isttype, FloatArray &answer)
+{
+    int col = 0;
+    FloatMatrix rotMat;
+    
+    if ( isttype == IST_X_LCS ) {
+        col = 1;
+    } else if ( isttype == IST_Y_LCS ) {
+        col = 2;
+    } else if ( isttype == IST_Z_LCS ) {
+        col = 3;
+    } else {
+        OOFEM_ERROR("Only IST_X_LCS, IST_Y_LCS, IST_Z_LCS options are permitted, you provided %s", __InternalStateTypeToString(isttype));
+    }
+    
+    if ( !this->giveLocalCoordinateSystem(rotMat) ) {
+        rotMat.resize(3, 3);
+        rotMat.beUnitMatrix();
+    }
+    answer.beRowOf(rotMat, col);
+}
+
 
 void
 Element :: computeMidPlaneNormal(FloatArray &answer, const GaussPoint *)
@@ -1261,6 +1280,9 @@ Element :: giveIPValue(FloatArray &answer, GaussPoint *gp, InternalStateType typ
     } else if ( type == IST_ElementNumber ) {
         answer.resize(1);
         answer.at(1) = this->giveNumber();
+        return 1;
+    } else if ( type == IST_X_LCS || type == IST_Y_LCS || type == IST_Z_LCS ) {
+        this->giveLocalCoordinateSystemVector(type, answer);
         return 1;
     } else {
         return this->giveCrossSection()->giveIPValue(answer, gp, type, tStep);
@@ -1344,7 +1366,6 @@ Element :: giveSpatialDimension()
     }
 
     OOFEM_ERROR("failure (maybe new element type was registered)");
-    return 0; //to make compiler happy
 }
 
 
@@ -1391,7 +1412,6 @@ Element :: giveNumberOfBoundarySides()
 
     OOFEM_ERROR("failure, unsupported geometry type (%s)",
             __Element_Geometry_TypeToString( this->giveGeometryType() ));
-    return 0; // to make compiler happy
 }
 
 
@@ -1486,17 +1506,18 @@ integrationDomain
 Element :: giveIntegrationDomain() const
 {
     FEInterpolation *fei = this->giveInterpolation();
-    return fei ? fei->giveIntegrationDomain() : _UnknownIntegrationDomain;
+    return fei ? fei->giveIntegrationDomain(this->giveGeometryType()) : _UnknownIntegrationDomain;
 }
 
-
+/*
 Element_Geometry_Type
 Element :: giveGeometryType() const
 {
-    FEInterpolation *fei = this->giveInterpolation();
-    return fei ? fei->giveGeometryType() : EGT_unknown;
+    return EGT_unknown;
+    //FEInterpolation *fei = this->giveInterpolation();
+    //return fei ? fei->giveGeometryType() : EGT_unknown;
 }
-
+*/
 
 bool
 Element :: computeGtoLRotationMatrix(FloatMatrix &answer)

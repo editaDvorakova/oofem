@@ -81,6 +81,15 @@ file is compulsory, and it has following structure:
 When input line begins with ’#’ character, then it is ignored by the
 parser and can serve as a comment inside input file.
 
+Long input records can be splitted into multiple input lines using 
+continuation character '\\' at the end of each intermediate input line.
+Also, from the input file one can include another file using @include directive.
+The synatx is following:
+
+::
+
+   @include "mesh.in"
+
 The individual records consist of record keyword followed by one or more
 attributes. Each attribute is identified by its keyword, which can be
 followed by attribute value(s). Some attributes have no values. The
@@ -213,7 +222,7 @@ attribute values are following:
 
 | The general format of record is
 | [``attribute1_keyword #(type)``] ``...``
-  [``attributeXX_keyword #(type)``]
+  [``attributeXX_keyword #(type)``] <``ver. 1.6``>
 
 The keywords and their values are separated by one or more spaces.
 Please note, that a single record cooresponds to one input line in input
@@ -222,7 +231,7 @@ file.
 When some attribute is enclosed in brackets [ ], then it’s use is
 optional and often overwrites the default behavior or adds additional
 (but optional) information or property (for example adds a loading to
-node).
+node). The angle brackets < > are used to indicate the solver version requirements.
 
 | Example of input record.
 | As an example, consider the following record description:

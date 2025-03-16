@@ -64,6 +64,7 @@ public:
 
     double computeLength() override;
 
+    void computeInitialStressMatrix(FloatMatrix &answer, TimeStep *tStep) override;
     void computeLumpedMassMatrix(FloatMatrix &answer, TimeStep *tStep) override;
     void computeMassMatrix(FloatMatrix &answer, TimeStep *tStep) override
     { this->computeLumpedMassMatrix(answer, tStep); }
@@ -95,6 +96,8 @@ public:
     const char *giveClassName() const override { return "Truss3d"; }
     void initializeFrom(InputRecord &ir) override;
     MaterialMode giveMaterialMode() override { return _1dMat; }
+    Element_Geometry_Type giveGeometryType() const override {return EGT_line_1;}
+
     void computeStressVector(FloatArray &answer, const FloatArray &strain, GaussPoint *gp, TimeStep *tStep) override;
     void computeConstitutiveMatrixAt(FloatMatrix &answer, MatResponseMode rMode, GaussPoint *gp, TimeStep *tStep) override;
     void computeConstitutiveMatrix_dPdF_At(FloatMatrix &answer, MatResponseMode rMode, GaussPoint *gp, TimeStep *tStep) override;

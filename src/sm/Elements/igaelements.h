@@ -81,6 +81,8 @@ public:
     // definition & identification
     const char *giveInputRecordName() const override { return _IFT_BsplinePlaneStressElement_Name; }
     const char *giveClassName() const override { return "BsplinePlaneStressElement"; }
+    Element_Geometry_Type giveGeometryType() const override {return EGT_unknown;}
+
 
 #ifdef __OOFEG
     // Graphics output
@@ -91,7 +93,7 @@ public:
 #endif
 
 protected:
-    int giveNsd() override { return 2; }
+    int giveNsd(const Element_Geometry_Type) override { return 2; }
 };
 
 
@@ -123,6 +125,7 @@ public:
     // definition & identification
     const char *giveInputRecordName() const override { return _IFT_NURBSPlaneStressElement_Name; }
     const char *giveClassName() const override { return "NURBSPlaneStressElement"; }
+    Element_Geometry_Type giveGeometryType() const override {return EGT_unknown;}
 #ifdef __OOFEG
     //
     // Graphics output
@@ -135,7 +138,7 @@ public:
 #endif
 
 protected:
-    int giveNsd() override { return 2; }
+    int giveNsd(const Element_Geometry_Type) override { return 2; }
 };
 
 
@@ -170,13 +173,15 @@ public:
     // definition & identification
     const char *giveInputRecordName() const override { return _IFT_TSplinePlaneStressElement_Name; }
     const char *giveClassName() const override { return "TSplinePlaneStressElement"; }
+    Element_Geometry_Type giveGeometryType() const override {return EGT_unknown;}
+
 #ifdef __OOFEG
     // Graphics output
     void  drawScalar(oofegGraphicContext &gc, TimeStep *tStep) override;
 #endif
 
 protected:
-    int giveNsd() override { return 2; }
+    int giveNsd(const Element_Geometry_Type) override { return 2; }
 };
 
 
@@ -209,6 +214,8 @@ public:
     // definition & identification
     const char *giveInputRecordName() const override { return _IFT_NURBSSpace3dElement_Name; }
     const char *giveClassName() const override { return "NURBSSpace3dElement"; }
+    Element_Geometry_Type giveGeometryType() const override {return EGT_unknown;}
+
 #ifdef __OOFEG
     // Graphics output
     void drawScalar(oofegGraphicContext &gc, TimeStep *tStep) override;
@@ -218,7 +225,7 @@ public:
 #endif
 
 protected:
-    int giveNsd() override { return 3; }
+    int giveNsd(const Element_Geometry_Type) override { return 3; }
 };
 } // end namespace oofem
 #endif //igaelements_h

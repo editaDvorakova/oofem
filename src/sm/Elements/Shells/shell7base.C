@@ -325,7 +325,7 @@ Shell7Base :: setupInitialNodeDirectors()
     // Compute directors as normals to the surface
     FloatArray lcoords;
     FloatMatrix localNodeCoords;
-    this->giveInterpolation()->giveLocalNodeCoords(localNodeCoords);
+    this->giveInterpolation()->giveLocalNodeCoords(localNodeCoords, this->giveGeometryType());
     
     int nDofMan = this->giveNumberOfDofManagers();
     this->initialNodeDirectors.resize(nDofMan);
@@ -1802,7 +1802,7 @@ Shell7Base :: vtkEvalUpdatedGlobalCoordinateAt(const FloatArrayF<3> &localCoords
 }
 
 void
-Shell7Base :: giveCompositeExportData(std::vector< VTKPiece > &vtkPieces, IntArray &primaryVarsToExport, IntArray &internalVarsToExport, IntArray cellVarsToExport, TimeStep *tStep )
+Shell7Base :: giveCompositeExportData(std::vector< ExportRegion > &vtkPieces, IntArray &primaryVarsToExport, IntArray &internalVarsToExport, IntArray cellVarsToExport, TimeStep *tStep )
 {
     vtkPieces.resize(1);
     this->giveShellExportData(vtkPieces[0], primaryVarsToExport, internalVarsToExport, cellVarsToExport, tStep );
@@ -1810,7 +1810,7 @@ Shell7Base :: giveCompositeExportData(std::vector< VTKPiece > &vtkPieces, IntArr
 }
 
 void 
-Shell7Base :: giveShellExportData(VTKPiece &vtkPiece, IntArray &primaryVarsToExport, IntArray &internalVarsToExport, IntArray cellVarsToExport, TimeStep *tStep )            
+Shell7Base :: giveShellExportData(ExportRegion &vtkPiece, IntArray &primaryVarsToExport, IntArray &internalVarsToExport, IntArray cellVarsToExport, TimeStep *tStep )            
 {
     int numCells = this->layeredCS->giveNumberOfLayers();
     const int numCellNodes  = 15; // quadratic wedge
@@ -1962,7 +1962,7 @@ Shell7Base :: CopyIPvaluesToNodes(std::vector<FloatArray> &recoveredValues, int 
     
     // composite element interpolator
     FloatMatrix localNodeCoords;
-    this->interpolationForExport.giveLocalNodeCoords(localNodeCoords);
+    this->interpolationForExport.giveLocalNodeCoords(localNodeCoords, this->giveGeometryType());
 
     int numNodes = localNodeCoords.giveNumberOfColumns();
     recoveredValues.resize(numNodes);
@@ -2010,7 +2010,7 @@ Shell7Base :: nodalLeastSquareFitFromIP(std::vector<FloatArray> &recoveredValues
     
     // composite element interpolator
     FloatMatrix localNodeCoords;
-    this->interpolationForExport.giveLocalNodeCoords(localNodeCoords);
+    this->interpolationForExport.giveLocalNodeCoords(localNodeCoords, EGT_wedge_2);
 
     int numNodes = localNodeCoords.giveNumberOfColumns();
     recoveredValues.resize(numNodes);
@@ -2052,7 +2052,7 @@ Shell7Base :: nodalLeastSquareFitFromIP(std::vector<FloatArray> &recoveredValues
         auto nodes = giveFictiousNodeCoordsForExport(layer);
         FEInterpolation *interpol = static_cast< FEInterpolation * >( &this->interpolationForExport );
         FloatArray N;
-        interpol->evalN( N, ip->giveNaturalCoordinates(), FEIVertexListGeometryWrapper( nodes ) ); 
+        interpol->evalN( N, ip->giveNaturalCoordinates(), FEIVertexListGeometryWrapper( nodes, this->giveGeometryType() ) ); 
         Nbar.addSubVectorRow(N,i+1,1);
     }
     // Nhat = inv(Nbar^T*Nbar)*Nbar^T
@@ -2080,7 +2080,7 @@ Shell7Base :: giveL2contribution(FloatMatrix &ipValues, FloatMatrix &Nbar, int l
 { 
     // composite element interpolator
     FloatMatrix localNodeCoords;
-    this->interpolationForExport.giveLocalNodeCoords(localNodeCoords);
+    this->interpolationForExport.giveLocalNodeCoords(localNodeCoords, EGT_wedge_2);
 
     int numNodes = localNodeCoords.giveNumberOfColumns();
     
@@ -2106,7 +2106,7 @@ Shell7Base :: giveL2contribution(FloatMatrix &ipValues, FloatMatrix &Nbar, int l
         auto nodes = giveFictiousNodeCoordsForExport(layer);
         FEInterpolation *interpol = static_cast< FEInterpolation * >( &this->interpolationForExport );
         FloatArray N;
-        interpol->evalN( N, ip->giveNaturalCoordinates(), FEIVertexListGeometryWrapper( nodes ) ); 
+        interpol->evalN( N, ip->giveNaturalCoordinates(), FEIVertexListGeometryWrapper( nodes, this->giveGeometryType() ) ); 
         Nbar.addSubVectorRow(N,i+1,1);
     }
 }
@@ -3067,7 +3067,7 @@ Shell7Base :: giveFictiousNodeCoordsForExport(int layer)
 {
     // compute fictious node coords
     FloatMatrix localNodeCoords;
-    this->interpolationForExport.giveLocalNodeCoords(localNodeCoords);
+    this->interpolationForExport.giveLocalNodeCoords(localNodeCoords, EGT_wedge_2);
     
     std::vector<FloatArray> nodes(localNodeCoords.giveNumberOfColumns());
     for ( int i = 1; i <= localNodeCoords.giveNumberOfColumns(); i++ ){
@@ -3085,7 +3085,7 @@ Shell7Base :: giveFictiousCZNodeCoordsForExport(int interface)
 {
     // compute fictious node coords
     FloatMatrix localNodeCoords;
-    this->interpolationForCZExport.giveLocalNodeCoords(localNodeCoords);
+    this->interpolationForCZExport.giveLocalNodeCoords(localNodeCoords, EGT_triangle_2);
     
     std::vector<FloatArray> nodes(localNodeCoords.giveNumberOfColumns());
     for ( int i = 1; i <= localNodeCoords.giveNumberOfColumns(); i++ ){
@@ -3104,7 +3104,7 @@ Shell7Base :: giveFictiousUpdatedNodeCoordsForExport(int layer, TimeStep *tStep)
     // compute fictious node coords
 
     FloatMatrix localNodeCoords;
-    this->interpolationForExport.giveLocalNodeCoords(localNodeCoords);
+    this->interpolationForExport.giveLocalNodeCoords(localNodeCoords, EGT_wedge_2);
     std::vector<FloatArray> nodes(localNodeCoords.giveNumberOfColumns());
     for ( int i = 1; i <= localNodeCoords.giveNumberOfColumns(); i++ ){
         FloatArray localCoords(3);

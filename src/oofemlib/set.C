@@ -83,6 +83,12 @@ void Set :: initializeFrom(InputRecord &ir)
 
     this->elementSurfaces.clear();
     IR_GIVE_OPTIONAL_FIELD(ir, this->elementSurfaces, _IFT_Set_elementSurfaces);
+
+    this->elementInternalNodes.clear();
+    IR_GIVE_OPTIONAL_FIELD(ir, this->elementInternalNodes, _IFT_Set_internalElementNodes);
+#if 0
+    this->inputRec = ir.clone();
+#endif
 }
 
 
@@ -104,6 +110,9 @@ void Set :: giveInputRecord(DynamicInputRecord &input)
     }
     if ( this->giveSurfaceList().giveSize() ) {
         input.setField(this->elementSurfaces, _IFT_Set_elementSurfaces);
+    }
+    if ( this->giveInternalElementDofManagerList().giveSize() ) {
+        input.setField(this->elementInternalNodes, _IFT_Set_internalElementNodes);
     }
 }
 
@@ -141,6 +150,8 @@ const IntArray &Set :: giveEdgeList() { return elementEdges; }
 
 const IntArray &Set :: giveSurfaceList() { return elementSurfaces; }  
 
+const IntArray &Set :: giveInternalElementDofManagerList() { return this->elementInternalNodes;}
+
 const IntArray &Set :: giveNodeList()
 {
     // Lazy evaluation, we compute the unique set of nodes if needed (and store it).
@@ -159,7 +170,7 @@ const IntArray &Set :: giveNodeList()
             auto e = this->domain->giveElement( this->elementBoundaries.at(ibnd * 2 - 1) );
             auto boundary = this->elementBoundaries.at(ibnd * 2);
             auto fei = e->giveInterpolation();
-            auto bNodes = fei->boundaryGiveNodes(boundary);
+            auto bNodes = fei->boundaryGiveNodes(boundary, e->giveGeometryType());
             for ( int inode = 1; inode <= bNodes.giveSize(); ++inode ) {
                 afflictedNodes.at( e->giveNode( bNodes.at(inode) )->giveNumber() ) = 1;
             }
@@ -169,7 +180,7 @@ const IntArray &Set :: giveNodeList()
             auto e = this->domain->giveElement( this->elementEdges.at(iedge * 2 - 1) );
             auto edge = this->elementEdges.at(iedge * 2);
             auto fei = e->giveInterpolation();
-            auto eNodes = fei->boundaryEdgeGiveNodes(edge);
+            auto eNodes = fei->boundaryEdgeGiveNodes(edge, e->giveGeometryType());
             for ( int inode = 1; inode <= eNodes.giveSize(); ++inode ) {
                 afflictedNodes.at( e->giveNode( eNodes.at(inode) )->giveNumber() ) = 1;
             }
@@ -179,7 +190,7 @@ const IntArray &Set :: giveNodeList()
             auto e = this->domain->giveElement( this->elementSurfaces.at(isurf * 2 - 1) );
             auto surf = this->elementSurfaces.at(isurf * 2);
             auto fei = e->giveInterpolation();
-            auto eNodes = fei->boundarySurfaceGiveNodes(surf);
+            auto eNodes = fei->boundarySurfaceGiveNodes(surf, e->giveGeometryType());
             for ( int inode = 1; inode <= eNodes.giveSize(); ++inode ) {
                 afflictedNodes.at( e->giveNode( eNodes.at(inode) )->giveNumber() ) = 1;
             }
@@ -225,6 +236,7 @@ void Set :: clear()
     this->elementBoundaries.clear();
     this->elements.clear();
     this->nodes.clear();
+    this->elementInternalNodes.clear();
     this->totalNodes.clear();
 }
 
@@ -236,22 +248,67 @@ void Set :: updateLocalNumbering(EntityRenumberingFunctor &f)
 
 void Set :: updateLocalNodeNumbering(EntityRenumberingFunctor &f)
 {
+    int localNum;
+    IntArray mappedNumbers;
+
     for ( int i = 1; i <= nodes.giveSize(); i++ ) {
-        nodes.at(i) = f(nodes.at(i), ERS_DofManager);
+        try {
+            localNum = f(nodes.at(i), ERS_DofManager);
+        } catch ( std :: out_of_range &e ) {
+//#ifndef __MPI_PARALLEL_MODE
+            OOFEM_WARNING("Set :: updateLocalNodeNumbering - Node %d not found", nodes.at(i));
+//#endif
+            continue;       
+        }
+        mappedNumbers.followedBy(localNum,10);
     }
+    nodes = mappedNumbers;
 }
 
 void Set :: updateLocalElementNumbering(EntityRenumberingFunctor &f)
 {
+    int localNum;
+    IntArray mappedNumbers;
     for ( int i = 1; i <= elements.giveSize(); i++ ) {
-        elements.at(i) = f(elements.at(i), ERS_Element);
+        try {
+            localNum = f(elements.at(i), ERS_Element);
+        } catch ( std :: out_of_range &e ) {
+//#ifndef __MPI_PARALLEL_MODE
+            OOFEM_WARNING("Set :: updateLocalElementNumbering - Element %d with indx %d not found", elements.at(i), i);
+//#endif
+            continue;
+        }
+        mappedNumbers.followedBy(localNum,10);
     }
+    elements = mappedNumbers;
+
     ///@todo Check order of element number and boundary number (same for edges)
+    mappedNumbers.resize(0);
     for ( int i = 1; i <= elementBoundaries.giveSize(); i += 2 ) {
-        elementBoundaries.at(i) = f(elementBoundaries.at(i), ERS_Element);
+        try {
+            localNum = f(elementBoundaries.at(i), ERS_Element);
+        } catch ( std :: out_of_range &e ) {
+            continue;
+        }
+        mappedNumbers.followedBy(localNum,10);
+        mappedNumbers.followedBy(elementBoundaries.at(i+1));
     }
+    elementBoundaries = mappedNumbers;
+
+    mappedNumbers.resize(0);
     for ( int i = 1; i <= elementEdges.giveSize(); i += 2 ) {
-        elementEdges.at(i) = f(elementEdges.at(i), ERS_Element);
+        try {
+            localNum = f(elementEdges.at(i), ERS_Element);
+        } catch ( std :: out_of_range &e ) {
+            continue;
+        }
+        mappedNumbers.followedBy(localNum,10);
+        mappedNumbers.followedBy(elementEdges.at(i+1));
+    }
+    elementEdges = mappedNumbers;
+        
+    for ( int i = 1; i <= this->elementInternalNodes.giveSize(); i += 2 ) {
+        elementInternalNodes.at(i) = f(elementInternalNodes.at(i), ERS_Element);
     }
 
     mElementListIsSorted = false;
@@ -276,6 +333,9 @@ void Set :: saveContext(DataStream &stream, ContextMode mode)
         if ( ( iores = nodes.storeYourself(stream) ) != CIO_OK ) {
             THROW_CIOERR(iores);
         }
+        if ( ( iores = this->elementInternalNodes.storeYourself(stream) ) != CIO_OK ) {
+            THROW_CIOERR(iores);
+        }
     }
 }
 
@@ -295,6 +355,9 @@ void Set :: restoreContext(DataStream &stream, ContextMode mode)
             THROW_CIOERR(iores);
         }
         if ( ( iores = nodes.restoreYourself(stream) ) != CIO_OK ) {
+            THROW_CIOERR(iores);
+        }
+        if ( ( iores = this->elementInternalNodes.restoreYourself(stream) ) != CIO_OK ) {
             THROW_CIOERR(iores);
         }
     }

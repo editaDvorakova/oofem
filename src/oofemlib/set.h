@@ -53,6 +53,7 @@ namespace oofem {
 #define _IFT_Set_elementBoundaries "elementboundaries" ///< Interleaved array of element index + boundary number
 #define _IFT_Set_elementEdges "elementedges" ///< Interleaved array of element index + edge number
 #define _IFT_Set_elementSurfaces "elementsurfaces" ///< Interleaved array of element index + surface number
+#define _IFT_Set_internalElementNodes "internalelementnodes" ///< Interleaved array of element index + internal node number
 //@}
 
 class EntityRenumberingFunction;
@@ -61,6 +62,14 @@ class Range;
 /**
  * Set of elements, boundaries, edges and/or nodes.
  * Describes a collection of components which are given easy access to for example boundary conditions.
+ * 
+ * @note bp: sets are defined using component labels (global numbers). In the initialization, the sets are resolved to local component numbers.
+ * In parallel mode (MPI), the sets are resolved to local component numbers on each processor, but set definition is TYPICALLY duplicated on all processors.
+ * In turn, the sets are resolved to local component numbers on each processor. As the set definition can contain global component, 
+ * hat are not present on the processor, these entries are removed from the set during resolution process.
+ * To support also dynamic load balancing, the set resolution has to be done after each load balancing step and thus we need to keep the original set definition.
+ * This can be achieved by keeping the original input record of the set.
+ *   
  * @author Mikael Öhman
  */
 class OOFEM_EXPORT Set : public FEMComponent
@@ -72,9 +81,13 @@ protected:
     IntArray elementBoundaries; /// Element numbers + boundary numbers (interleaved).
     IntArray elementEdges; /// Element numbers + edge numbers (interleaved).
     IntArray elementSurfaces; /// Element numbers + surface numbers (interleaved).
+    IntArray elementInternalNodes; /// Element numbers + internal dof manager numbers (interleaved).
     IntArray nodes; ///< Node numbers.
     IntArray totalNodes; ///< Unique set of nodes (computed).
-
+#if 0
+    /// receiver original input record
+    std::unique_ptr<InputRecord> inputRec;
+#endif
 public:
     /**
      * Creates a empty set with given number and belonging to given domain.
@@ -107,6 +120,11 @@ public:
      * @return List of element surfaces.
      */
     const IntArray &giveSurfaceList();
+    /**
+     * Returns list of internal element dof managers within set 
+     * @return List of internal element dofManagers.
+     */
+    const IntArray &giveInternalElementDofManagerList();
     /**
      * Returns list of all nodes within set.
      * This list is computed automatically, based on all elements, boundaries, edges, and specified nodes within the set.

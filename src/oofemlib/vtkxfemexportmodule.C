@@ -114,7 +114,7 @@ VTKXMLXFemExportModule::giveOutputStream(TimeStep *tStep)
 }
 
 void
-VTKXMLXFemExportModule::exportIntVars(VTKPiece &vtkPiece, Set& region, int field, int enrItIndex,  IntArray& internalVarsToExport, NodalRecoveryModel& smoother, TimeStep *tStep)
+VTKXMLXFemExportModule::exportIntVars2(ExportRegion &vtkPiece, Set& region, int field, int enrItIndex,  IntArray& internalVarsToExport, NodalRecoveryModel& smoother, TimeStep *tStep)
 {
     Domain *d = emodel->giveDomain(1);
     FloatArray answer;
@@ -187,7 +187,7 @@ VTKXMLXFemExportModule::getNodalVariableFromXFEMST(FloatArray &answer, Node *nod
 
 
 bool
-VTKXMLXFemExportModule::writeXFEMVars(VTKPiece &vtkPiece, int field, int enrItIndex)
+VTKXMLXFemExportModule::writeXFEMVars(ExportRegion &vtkPiece, int field, int enrItIndex)
 {
     Domain *d = emodel->giveDomain(1);
     XfemManager *xFemMan = d->giveXfemManager();
@@ -321,7 +321,7 @@ VTKXMLXFemExportModule::doOutput(TimeStep *tStep, bool forcedOutput)
             for ( int enrItIndex = 1; enrItIndex <= nEnrIt; enrItIndex++ ) {
               // Fills a data struct (VTKPiece) with all the necessary data.
               //this->setupVTKPiece(this->defaultVTKPiece, tStep, *region);
-              this->exportIntVars(this->defaultVTKPiece, *region, field, enrItIndex, internalVarsToExport, *smoother, tStep);
+              this->exportIntVars2(this->defaultVTKPiece, *region, field, enrItIndex, internalVarsToExport, *smoother, tStep);
               // Write the VTK piece to file.
               anyPieceNonEmpty +=this->writeXFEMVars(this->defaultVTKPiece, field, enrItIndex);
             }

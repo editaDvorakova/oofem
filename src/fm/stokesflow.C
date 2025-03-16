@@ -144,7 +144,7 @@ void StokesFlow :: solveYourselfAt(TimeStep *tStep)
     this->initMetaStepAttributes( this->giveCurrentMetaStep() );
 #if 1
     double loadLevel;
-    int currentIterations;
+    int currentIterations=0;
     this->updateInternalRHS( this->internalForces, tStep, d, &this->eNorm );
     ConvergedReason status = this->nMethod->solve(*this->stiffnessMatrix,
                                             externalForces,
@@ -209,11 +209,11 @@ void StokesFlow :: updateSolution(FloatArray &solutionVector, TimeStep *tStep, D
 }
 
 
-void StokesFlow :: updateInternalRHS(FloatArray &answer, TimeStep *tStep, Domain *d, FloatArray *eNorm)
+void StokesFlow :: updateInternalRHS(FloatArray &answer, TimeStep *tStep, Domain *d, FloatArray *enorm)
 {
     answer.zero();
     this->assembleVector(answer, tStep, InternalForceAssembler(), VM_Total,
-                         EModelDefaultEquationNumbering(), d, eNorm);
+                         EModelDefaultEquationNumbering(), d, enorm);
     this->updateSharedDofManagers(answer, EModelDefaultEquationNumbering(), InternalForcesExchangeTag);
 }
 

@@ -40,6 +40,10 @@ set (core_unsorted
     unstructuredgridfield.C
     # 
     loadbalancer.C
+    #
+    vtkhdf5reader.C
+    #
+    oofemcfg.C
     )
 
 #oofegutils
@@ -176,6 +180,7 @@ set (core_export
     outputmanager.C
     exportmodule.C
     exportmodulemanager.C
+    exportregion.C
     outputexportmodule.C
     errorcheckingexportmodule.C
     vtkexportmodule.C
@@ -190,6 +195,7 @@ set (core_export
     matlabexportmodule.C
     gpexportmodule.C
     solutionstatusexportmodule.C
+    vtkhdf5exportmodule.C
     )
 
 set (core_monitors
@@ -248,6 +254,7 @@ set (core_fei
     fei3dhexatriquad.C
     fei3dwedgelin.C 
     fei3dwedgequad.C
+    fei3dhexaconst.C
     )
 
 set (core_xfem
@@ -371,7 +378,7 @@ set (core
     ${core_mapping}
     )
 
-if (USE_PARALLEL)
+if (USE_MPI_PARALLEL)
     list (APPEND core ${core_parallel})
 endif ()
 

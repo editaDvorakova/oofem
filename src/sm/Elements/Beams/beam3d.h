@@ -47,6 +47,7 @@
 #define _IFT_Beam3d_dofstocondense "dofstocondense"
 #define _IFT_Beam3d_refnode "refnode"
 #define _IFT_Beam3d_refangle "refangle"
+#define _IFT_Beam3d_yaxis "yaxis"
 #define _IFT_Beam3d_zaxis "zaxis"
 #define _IFT_Beam3d_subsoilmat "subsoilmat"
 //@}
@@ -79,7 +80,7 @@ protected:
 
     double kappay, kappaz, length;
     int referenceNode;
-    FloatArray zaxis;
+    FloatArray yaxis, zaxis;
     double referenceAngle = 0;
     //IntArray *dofsToCondense;
     /*
@@ -128,7 +129,6 @@ public:
             return ghostNodes [ 1 ];
         } else {
             OOFEM_ERROR("No such DOF available on Element %d", number);
-            return nullptr;
         }
     }
     void giveInternalDofManDofIDMask(int i, IntArray &answer) const override {
@@ -191,7 +191,7 @@ public:
     */
     FloatMatrixF<6,6> B3SSMI_getUnknownsGtoLRotationMatrix() const override;
 
-    void giveCompositeExportData(std::vector< VTKPiece > &vtkPieces, IntArray &primaryVarsToExport, IntArray &internalVarsToExport, IntArray cellVarsToExport, TimeStep *tStep ) override;
+    void giveCompositeExportData(std::vector< ExportRegion > &vtkPieces, IntArray &primaryVarsToExport, IntArray &internalVarsToExport, IntArray cellVarsToExport, TimeStep *tStep ) override;
 
 #ifdef __OOFEG
     void drawRawGeometry(oofegGraphicContext &gc, TimeStep *tStep) override;

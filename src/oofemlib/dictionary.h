@@ -35,7 +35,7 @@
 #ifndef dictionr_h
 #define dictionr_h
 
-#include "oofemcfg.h"
+#include "oofemenv.h"
 #include "pair.h"
 #include "error.h"
 #include "contextioresulttype.h"
@@ -68,6 +68,27 @@ public:
     Dictionary() : first(NULL), last(NULL) { }
     /// Destructor
     ~Dictionary();
+
+    /// copy constructor
+    Dictionary(const Dictionary& other) {
+        Pair *next = other.first;
+        while ( next ) {
+            this->add(next->giveKey(), next->giveValue());
+            next = next->giveNext();
+        }    
+    }
+
+    /// copy assignment constructor
+    Dictionary& operator=(const Dictionary& other) { 
+        this->clear();
+        Pair *next = other.first;
+        while ( next ) {
+            this->add(next->giveKey(), next->giveValue());
+            next = next->giveNext();
+        }
+
+        return *this;
+    }
 
     /// Clears the receiver.
     void clear();

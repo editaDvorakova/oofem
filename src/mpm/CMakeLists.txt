@@ -1,9 +1,14 @@
 set (mpm_element
     termlibrary.C
+    termlibrary2.C
+    termlibrary3.C
     prototype.C
+    prototype2.C
     up.C
+    tm.C
     )
-set (mpm_problems
+
+    set (mpm_problems
     mpmproblem.C
     )
 
