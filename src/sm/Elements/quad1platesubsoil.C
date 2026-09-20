@@ -10,7 +10,7 @@
  *
  *             OOFEM : Object Oriented Finite Element Code
  *
- *               Copyright (C) 1993 - 2014   Borek Patzak
+ *               Copyright (C) 1993 - 2025   Borek Patzak
  *
  *
  *
@@ -127,15 +127,6 @@ Quad1PlateSubSoil :: computeConstitutiveMatrixAt(FloatMatrix &answer, MatRespons
 {
     answer = this->giveStructuralCrossSection()->give2dPlateSubSoilStiffMtrx(rMode, gp, tStep);
 }
-
-
-void
-Quad1PlateSubSoil :: initializeFrom(InputRecord &ir)
-{
-    this->numberOfGaussPoints = 4;
-    StructuralElement :: initializeFrom(ir);
-}
-
 
 void
 Quad1PlateSubSoil :: giveDofManDofIDMask(int inode, IntArray &answer) const

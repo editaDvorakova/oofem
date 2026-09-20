@@ -10,7 +10,7 @@
  *
  *             OOFEM : Object Oriented Finite Element Code
  *
- *               Copyright (C) 1993 - 2013   Borek Patzak
+ *               Copyright (C) 1993 - 2025   Borek Patzak
  *
  *
  *
@@ -308,10 +308,9 @@ CCTPlate::computeArea()
 }
 
 void
-CCTPlate::initializeFrom(InputRecord &ir)
+CCTPlate::initializeFrom(InputRecord &ir, int priority)
 {
-    numberOfGaussPoints = 1;
-    StructuralElement::initializeFrom(ir);
+    StructuralElement::initializeFrom(ir, priority);
 }
 
 

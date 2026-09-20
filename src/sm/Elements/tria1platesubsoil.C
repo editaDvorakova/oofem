@@ -10,7 +10,7 @@
  *
  *             OOFEM : Object Oriented Finite Element Code
  *
- *               Copyright (C) 1993 - 2014   Borek Patzak
+ *               Copyright (C) 1993 - 2025   Borek Patzak
  *
  *
  *
@@ -126,14 +126,6 @@ void
 Tria1PlateSubSoil :: computeConstitutiveMatrixAt(FloatMatrix &answer, MatResponseMode rMode, GaussPoint *gp, TimeStep *tStep)
 {
     answer = this->giveStructuralCrossSection()->give2dPlateSubSoilStiffMtrx(rMode, gp, tStep);
-}
-
-
-void
-Tria1PlateSubSoil :: initializeFrom(InputRecord &ir)
-{
-    this->numberOfGaussPoints = 1;
-    StructuralElement :: initializeFrom(ir);
 }
 
 

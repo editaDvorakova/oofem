@@ -10,7 +10,7 @@
  *
  *             OOFEM : Object Oriented Finite Element Code
  *
- *               Copyright (C) 1993 - 2014   Borek Patzak
+ *               Copyright (C) 1993 - 2025   Borek Patzak
  *
  *
  *
@@ -97,15 +97,6 @@ Quad2PlateSubSoil :: computeBmatrixAt(GaussPoint *gp, FloatMatrix &answer, int l
         answer(2, i) = dn(i, 1); // gamma_yz
     }
 }
-
-
-void
-Quad2PlateSubSoil :: initializeFrom(InputRecord &ir)
-{
-    this->numberOfGaussPoints = 4;
-    StructuralElement :: initializeFrom(ir);
-}
-
 
 void
 Quad2PlateSubSoil :: SPRNodalRecoveryMI_giveSPRAssemblyPoints(IntArray &pap)

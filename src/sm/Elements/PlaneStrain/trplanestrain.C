@@ -10,7 +10,7 @@
  *
  *             OOFEM : Object Oriented Finite Element Code
  *
- *               Copyright (C) 1993 - 2013   Borek Patzak
+ *               Copyright (C) 1993 - 2025   Borek Patzak
  *
  *
  *
@@ -91,14 +91,10 @@ TrPlaneStrain :: giveInterface(InterfaceType interface)
 }
 
 void
-TrPlaneStrain :: initializeFrom(InputRecord &ir)
+TrPlaneStrain :: postInitialize()
 {
     numberOfGaussPoints = 1;
-    PlaneStrainElement :: initializeFrom(ir);
-
-    if ( numberOfGaussPoints != 1 ) {
-        numberOfGaussPoints = 1;
-    }
+    PlaneStrainElement :: postInitialize();
 }
 
 
