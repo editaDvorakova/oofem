@@ -1001,6 +1001,14 @@ FloatArray &operator -= ( FloatArray & x, const FloatArray & y )
     return x;
 }
 
+FloatArray operator /( const FloatArray & x, const double & a )
+{
+    FloatArray result;
+    result.beScaled(1./a, x);
+    return result;
+}
+
+
 FloatArray &operator /= ( FloatArray & x, const double & a )
 {
     x.times(1./a);

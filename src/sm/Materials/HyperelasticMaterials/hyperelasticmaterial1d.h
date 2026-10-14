@@ -10,7 +10,7 @@
  *
  *             OOFEM : Object Oriented Finite Element Code
  *
- *               Copyright (C) 1993 - 2025   Borek Patzak
+ *               Copyright (C) 1993 - 2020   Borek Patzak
  *
  *
  *
@@ -44,6 +44,7 @@
 #define _IFT_HyperelasticMaterial1d_Name "hyperelasticmaterial1d"
 #define _IFT_HyperelasticMaterial1d_type "mtype"
 #define _IFT_HyperelasticMaterial1d_E "e"
+#define _IFT_HyperelasticMaterial1d_nu "nu"
 //@}
 
 namespace oofem {
@@ -58,10 +59,13 @@ class HyperelasticMaterial1d : public StructuralMaterial
 {
 protected:
   double E = 0;
+  double nu = 0;
 
   enum HyperElasticMaterialType {
         HEMT_Biot=0,
         HEMT_StVenantKirchhoff=1,
+        HEMT_IncompressibleNeoHookean=2,
+        HEMT_Logarithmic=3,
         HEMT_Unknown = 100
     };
     /// Parameter specifying the definition of used constitutive model
@@ -72,6 +76,8 @@ public:
     HyperelasticMaterial1d(int n, Domain *d);
 
     void initializeFrom(InputRecord &ir) override;
+    void saveContext(DataStream &stream, ContextMode mode) override;
+    void restoreContext(DataStream &stream, ContextMode mode) override;
 
     FloatMatrixF< 6, 6 >give3dMaterialStiffnessMatrix(MatResponseMode mode, GaussPoint *gp, TimeStep *tStep) const override { OOFEM_ERROR("not implemented, this material supports only 1d case"); }
 
@@ -86,11 +92,17 @@ public:
     FloatArrayF< 1 > giveFirstPKStressVector_1d(const FloatArrayF< 1 > &vF, GaussPoint *gp, TimeStep *tStep) const override;
     FloatMatrixF< 1, 1 > give1dStressStiffnessMatrix_dPdF(MatResponseMode mmode, GaussPoint *gp, TimeStep *tStep) const override;
    
-
-    std::unique_ptr<MaterialStatus> CreateStatus(GaussPoint *gp) const override;
+  FloatArrayF< 1 > giveFirstPKStress_fromStretch(double lambda) const;
+  FloatMatrixF< 1, 1 > givedPdF_fromStretch(double lambda) const;
+  double giveLateralStretch(double lambda) const;
+  double giveLateralStretchDerivative(double lambda) const;
+  //
+  std::unique_ptr<MaterialStatus> CreateStatus(GaussPoint *gp) const override;
 
     const char *giveInputRecordName() const override { return _IFT_HyperelasticMaterial1d_Name; }
     const char *giveClassName() const override { return "HyperelasticMaterial1d"; }
+  double giveE() const { return this->E; }
+  bool isBiot() const { return this->hyperelasticMaterialType == HEMT_Biot; }
 };
 } // end namespace oofem
 #endif

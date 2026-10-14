@@ -87,6 +87,7 @@ NRSolver :: NRSolver(Domain *d, EngngModel *m) :
     this->forceErrVecOld.resize(0);
     this->forceErrVec.resize(0);
     constrainedNRalpha = 0.5; // default
+    newtonDamping = 1.0;
 
     smConstraintVersion = 0;
     mCalcStiffBeforeRes = true;
@@ -184,6 +185,10 @@ NRSolver :: initializeFrom(InputRecord &ir)
     IR_GIVE_OPTIONAL_FIELD(ir, this->constrainedNRminiter, _IFT_NRSolver_constrainedNRminiter);
     this->constrainedNRFlag = this->constrainedNRminiter != 0;
 
+    IR_GIVE_OPTIONAL_FIELD(ir, this->newtonDamping, _IFT_NRSolver_newtonDamping);
+    if ( this->newtonDamping <= 0.0 || this->newtonDamping > 1.0 ) {
+        OOFEM_ERROR("newtondamping must lie in (0,1]");
+    }
 
     IR_GIVE_OPTIONAL_FIELD(ir, this->maxIncAllowed, _IFT_NRSolver_maxinc);
 
@@ -317,13 +322,18 @@ NRSolver :: solve(SparseMtrx &k, FloatArray &R, FloatArray *R0,
             LineSearchNM :: LS_status LSstatus;
             double eta;
             this->giveLineSearchSolver()->solve(X, ddX, F, R, R0, prescribedEqs, 1.0, eta, LSstatus, tStep);
-        } else if ( this->constrainedNRFlag && ( nite > this->constrainedNRminiter ) ) {
-            ///@todo This doesn't check units, it is nonsense and must be corrected / Mikael
-            if ( this->forceErrVec.computeSquaredNorm() > this->forceErrVecOld.computeSquaredNorm() ) {
-                OOFEM_LOG_INFO("Constraining increment to be %e times full increment...\n", this->constrainedNRalpha);
-                ddX.times(this->constrainedNRalpha);
+        } else {
+            if ( this->constrainedNRFlag && ( nite > this->constrainedNRminiter ) ) {
+                ///@todo This does not check units, it is nonsense and must be corrected / Mikael
+                if ( this->forceErrVec.computeSquaredNorm() > this->forceErrVecOld.computeSquaredNorm() ) {
+                    OOFEM_LOG_INFO("Constraining increment to be %e times full increment...\n", this->constrainedNRalpha);
+                    ddX.times(this->constrainedNRalpha);
+                }
             }
-            //this->giveConstrainedNRSolver()->solve(X, & ddX, this->forceErrVec, this->forceErrVecOld, status, tStep);
+            if ( this->newtonDamping < 1.0 ) {
+                OOFEM_LOG_INFO("Damping Newton increment by %e...\n", this->newtonDamping);
+                ddX.times(this->newtonDamping);
+            }
         }
 
 

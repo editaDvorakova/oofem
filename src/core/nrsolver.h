@@ -67,6 +67,7 @@
 #define _IFT_NRSolver_calcstiffbeforeres "calcstiffbeforeres"
 #define _IFT_NRSolver_constrainedNRalpha "constrainednralpha"
 #define _IFT_NRSolver_constrainedNRminiter "constrainednrminiter"
+#define _IFT_NRSolver_newtonDamping "newtondamping"
 #define _IFT_NRSolver_maxinc "maxinc"
 #define _IFT_NRSolver_forceScale "forcescale"
 #define _IFT_NRSolver_forceScaleDofs "forcescaledofs"
@@ -145,6 +146,9 @@ protected:
     double constrainedNRalpha;
     /// Minimum number of iterations before constraint is activated
     int constrainedNRminiter;
+    /// Optional constant damping of an otherwise unglobalized Newton step.
+    double newtonDamping;
+
 
     /// Relative unbalanced force tolerance for each group
     FloatArray rtolf;

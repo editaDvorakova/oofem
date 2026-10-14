@@ -48,6 +48,8 @@ set (core_unsorted
     interpolationcatalogue.C
     #
     oofemcfg.C
+    #
+    elementmatlabexportmodule.C
     )
 
 #oofegutils
