@@ -542,6 +542,20 @@ NonLinearStatic :: proceedStep(int di, TimeStep *tStep)
         linSolver->solve(* stiffnessMatrix, extrapolatedForces, incrementOfDisplacement);
         OOFEM_LOG_RELEVANT("initial guess found\n");
         totalDisplacement.add(incrementOfDisplacement);
+    } else if ( this->initialGuessType == IG_Extrapolated ) {
+        if ( this->controlMode != nls_directControl ) {
+            OOFEM_ERROR("Extrapolated initial guess is supported only with direct control");
+        }
+        TimeStep *previousStep = tStep->givePreviousStep();
+        if ( !tStep->isTheFirstStep() && previousStep &&
+             previousStep->giveTimeIncrement() != 0.0 &&
+             incrementOfDisplacement.giveSize() == totalDisplacement.giveSize() ) {
+            const double scale = tStep->giveTimeIncrement() / previousStep->giveTimeIncrement();
+            incrementOfDisplacement.times(scale);
+            totalDisplacement.add(incrementOfDisplacement);
+        } else {
+            incrementOfDisplacement.zero();
+        }
     } else if ( this->initialGuessType != IG_None ) {
         OOFEM_ERROR("Initial guess type: %d not supported", initialGuessType);
     } else {

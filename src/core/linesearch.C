@@ -76,9 +76,8 @@ LineSearchNM :: solve(FloatArray &r, FloatArray &dr, FloatArray &F, FloatArray &
     if ( s0 >= 0.0 ) {
         //printf ("\nLineSearchNM::solve starting inner product uphill, val=%e",s0);
         OOFEM_LOG_DEBUG("LS: product uphill, eta=%e\n", 1.0);
-        r.add(dr);
-        tStep->incrementStateCounter();        // update solution state counter
-        engngModel->updateComponent(tStep, InternalRhs, domain);
+        // NRSolver applies dr after this function returns. Do not apply the
+        // same full increment here as well.
         etaValue = 1.0;
         status = ls_ok;
         return CR_CONVERGED;
@@ -125,6 +124,10 @@ LineSearchNM :: solve(FloatArray &r, FloatArray &dr, FloatArray &F, FloatArray &
         // check if line-search tolerance is satisfied
         if ( fabs(si) < ls_tolerance ) {
             dr.times( this->eta.at(ils) );
+            // The trial internal state already corresponds to rb + eta*dr,
+            // but NRSolver owns the update of the global solution vector.
+            // Restore its baseline so the accepted increment is added once.
+            r = rb;
             //printf ("\nLineSearchNM::solve tolerance satisfied for eta=%e, ils=%d", eta.at(ils),ils);
             OOFEM_LOG_DEBUG( "LS: ils=%d, eta=%e\n", ils, eta.at(ils) );
 
@@ -150,6 +153,8 @@ LineSearchNM :: solve(FloatArray &r, FloatArray &dr, FloatArray &F, FloatArray &
 
     tStep->incrementStateCounter();           // update solution state counter
     engngModel->updateComponent(tStep, InternalRhs, domain);
+    // The caller will apply the fallback full increment.
+    r = rb;
     etaValue = 1.0;
     status = ls_failed;
     return CR_DIVERGED_ITS;
